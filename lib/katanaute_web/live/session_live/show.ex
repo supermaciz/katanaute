@@ -21,6 +21,8 @@ defmodule KatanauteWeb.SessionLive.Show do
       </.header>
 
       <.list>
+        <:item title="Kata">{@session.kata.name}</:item>
+        <:item title="Level">{String.capitalize(to_string(@session.kata.level))}</:item>
         <:item title="Practiced at">{@session.practiced_at}</:item>
         <:item title="In course">{@session.in_course}</:item>
         <:item title="Notes">{@session.notes}</:item>

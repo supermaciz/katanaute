@@ -21,6 +21,10 @@ defmodule KatanauteWeb.SessionLive.Index do
         rows={@streams.sessions}
         row_click={fn {_id, session} -> JS.navigate(~p"/sessions/#{session}") end}
       >
+        <:col :let={{_id, session}} label="Kata">{session.kata.name}</:col>
+        <:col :let={{_id, session}} label="Level">
+          {String.capitalize(to_string(session.kata.level))}
+        </:col>
         <:col :let={{_id, session}} label="Practiced at">{session.practiced_at}</:col>
         <:col :let={{_id, session}} label="In course">{session.in_course}</:col>
         <:col :let={{_id, session}} label="Notes">{session.notes}</:col>

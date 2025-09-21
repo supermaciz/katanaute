@@ -15,7 +15,8 @@ defmodule Katanaute.Training.Session do
   @doc false
   def changeset(session, attrs) do
     session
-    |> cast(attrs, [:practiced_at, :in_course, :notes])
-    |> validate_required([:practiced_at, :in_course, :notes])
+    |> cast(attrs, [:practiced_at, :in_course, :notes, :kata_id])
+    |> validate_required([:practiced_at, :in_course, :kata_id])
+    |> foreign_key_constraint(:kata_id)
   end
 end

@@ -3,6 +3,7 @@ defmodule KatanauteWeb.SessionLive.Form do
 
   alias Katanaute.Training
   alias Katanaute.Training.Session
+  alias Katanaute.Curriculum
 
   @impl true
   def render(assigns) do
@@ -14,6 +15,13 @@ defmodule KatanauteWeb.SessionLive.Form do
       </.header>
 
       <.form for={@form} id="session-form" phx-change="validate" phx-submit="save">
+        <.input
+          field={@form[:kata_id]}
+          type="select"
+          label="Kata"
+          options={kata_options(@katas)}
+          prompt="Select a kata"
+        />
         <.input field={@form[:practiced_at]} type="datetime-local" label="Practiced at" />
         <.input field={@form[:in_course]} type="checkbox" label="In course" />
         <.input field={@form[:notes]} type="text" label="Notes" />
@@ -31,6 +39,7 @@ defmodule KatanauteWeb.SessionLive.Form do
     {:ok,
      socket
      |> assign(:return_to, return_to(params["return_to"]))
+     |> assign(:katas, Curriculum.list_katas())
      |> apply_action(socket.assigns.live_action, params)}
   end
 
@@ -93,4 +102,10 @@ defmodule KatanauteWeb.SessionLive.Form do
 
   defp return_path("index", _session), do: ~p"/sessions"
   defp return_path("show", session), do: ~p"/sessions/#{session}"
+
+  defp kata_options(katas) do
+    Enum.map(katas, fn kata ->
+      {kata.name, kata.id}
+    end)
+  end
 end

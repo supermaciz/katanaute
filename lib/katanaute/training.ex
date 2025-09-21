@@ -19,6 +19,7 @@ defmodule Katanaute.Training do
   """
   def list_sessions do
     Repo.all(Session)
+    |> Repo.preload(:kata)
   end
 
   @doc """
@@ -35,7 +36,10 @@ defmodule Katanaute.Training do
       ** (Ecto.NoResultsError)
 
   """
-  def get_session!(id), do: Repo.get!(Session, id)
+  def get_session!(id) do
+    Repo.get!(Session, id)
+    |> Repo.preload(:kata)
+  end
 
   @doc """
   Creates a session.
