@@ -26,9 +26,11 @@ defmodule KatanauteWeb.Router do
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api", KatanauteWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", KatanauteWeb do
+    pipe_through :api
+
+    resources "/sessions", SessionController, except: [:new, :edit]
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:katanaute, :dev_routes) do

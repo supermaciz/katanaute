@@ -43,3 +43,5 @@ npm-debug.log
 .idea/
 .vscode/
 .zed/
+.elixir_ls/
+.expert/
