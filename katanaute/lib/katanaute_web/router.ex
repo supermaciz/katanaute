@@ -30,6 +30,7 @@ defmodule KatanauteWeb.Router do
     pipe_through :api
 
     resources "/sessions", SessionController, except: [:new, :edit]
+    resources "/katas", KataController, only: [:index, :show]
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

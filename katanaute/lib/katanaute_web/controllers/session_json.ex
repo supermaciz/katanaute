@@ -1,5 +1,6 @@
 defmodule KatanauteWeb.SessionJSON do
   alias Katanaute.Training.Session
+  alias KatanauteWeb.KataJSON
 
   @doc """
   Renders a list of session.
@@ -21,7 +22,7 @@ defmodule KatanauteWeb.SessionJSON do
       practiced_at: session.practiced_at,
       in_course: session.in_course,
       notes: session.notes,
-      kata_id: session.kata_id
+      kata: KataJSON.data(session.kata)
     }
   end
 end
