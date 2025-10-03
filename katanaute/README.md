@@ -1,6 +1,6 @@
 # Katanaute
 
-A simple kata tracker to learn LiveView.
+A simple kata tracker ~~to learn LiveView~~.
 
 To start your Phoenix server:
 
