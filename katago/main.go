@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -20,17 +19,10 @@ func NewConfig() *Config {
 
 func main() {
 	config := NewConfig()
-	sessions, err := GetSessions(config)
-	if err != nil {
-		fmt.Println("GET /sessions error", err)
-		os.Exit(1)
+	if katanauteBaseURL, ok := os.LookupEnv("KATANAUTE_API_URL"); ok {
+		config.katanauteBaseURL = katanauteBaseURL
 	}
-	//fmt.Println(sessions)
-	items := make([]list.Item, len(sessions))
-	for i, session := range sessions {
-		items[i] = session
-	}
-	m := model{list: list.New(items, list.NewDefaultDelegate(), 0, 0)}
+	m := NewModel(config)
 	m.list.Title = "Kata training sessions"
 	p := tea.NewProgram(m, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
