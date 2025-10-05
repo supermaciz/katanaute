@@ -11,10 +11,11 @@ import (
 )
 
 var listStyle = lipgloss.NewStyle().Margin(1, 2)
-var textStyle = lipgloss.NewStyle().
-	//Border(lipgloss.RoundedBorder()).
-	Padding(1, 3).
-	Margin(1, 1)
+var textStyle = lipgloss.NewStyle().Margin(1, 1)
+var headerStyle = lipgloss.NewStyle().
+	Margin(1, 1).
+	Foreground(lipgloss.Color("205")).
+	Border(lipgloss.RoundedBorder())
 
 type Model struct {
 	config   *Config
@@ -117,13 +118,21 @@ func (m Model) renderListOnlyView() string {
 
 func (m Model) renderDetailedView(session *Session) string {
 	listView := listStyle.Render(m.list.View())
+	headerView := m.renderSessionHeader(session)
 	notesView := m.renderSessionNotes(session)
 
 	return lipgloss.JoinHorizontal(
 		lipgloss.Top,
 		listView,
-		notesView,
+		lipgloss.JoinVertical(lipgloss.Left, headerView, notesView),
 	)
+}
+
+func (m Model) renderSessionHeader(session *Session) string {
+	if session.InCourse {
+		return headerStyle.Render("  🥋  Dojo Course Session  ")
+	}
+	return headerStyle.Render("  📝  Independent Practice  ")
 }
 
 func (m Model) renderSessionNotes(session *Session) string {
