@@ -9,7 +9,11 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-var docStyle = lipgloss.NewStyle().Margin(1, 2)
+var listStyle = lipgloss.NewStyle().Margin(1, 2)
+var textStyle = lipgloss.NewStyle().
+	//Border(lipgloss.RoundedBorder()).
+	Padding(1, 3).
+	Margin(1, 1)
 
 type Model struct {
 	config   *Config
@@ -78,7 +82,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		fmt.Println("Window size changed", msg)
 		if m.sessions != nil {
-			h, v := docStyle.GetFrameSize()
+			h, v := listStyle.GetFrameSize()
 			m.list.SetSize(msg.Width-h, msg.Height-v)
 		}
 	}
@@ -93,7 +97,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) View() string {
 	if m.sessions != nil {
-		return docStyle.Render(m.list.View())
+		if item, ok := m.list.SelectedItem().(*Session); ok {
+			return lipgloss.JoinHorizontal(
+				lipgloss.Top,
+				listStyle.Render(m.list.View()),
+				textStyle.Render(item.Notes),
+			)
+		} else {
+			return listStyle.Render(m.list.View())
+		}
 	}
-	return docStyle.Render(fmt.Sprintf("\n\n   %s Waiting for Katanaute API\n\n", m.spinner.View()))
+	return listStyle.Render(fmt.Sprintf("\n\n   %s Waiting for Katanaute API\n\n", m.spinner.View()))
 }

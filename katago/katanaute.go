@@ -31,7 +31,7 @@ func (s Session) Title() string {
 }
 
 func (s Session) Description() string {
-	return fmt.Sprintf("(%s)\n%s", s.PracticedAt.Format("2006-01-02"), s.Notes)
+	return fmt.Sprintf("(%s)", s.PracticedAt.Format("2006-01-02"))
 }
 
 func (s Session) String() string {

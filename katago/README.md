@@ -53,6 +53,7 @@ By default, Katago connects to `http://localhost:4000/api`. To modify the base U
 
 ## TODO
 - [ ] Implement session editing and deletion
-- [ ] Show sessions notes in the TUI
-- [ ] Add unit tests for katanaute.go
+- [X] Show sessions notes in the TUI
+- [ ] Clean views (first spinner)
+- [ ] Add unit tests
 
