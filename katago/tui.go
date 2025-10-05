@@ -6,6 +6,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -96,16 +97,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
-	if m.sessions != nil {
-		if item, ok := m.list.SelectedItem().(*Session); ok {
-			return lipgloss.JoinHorizontal(
-				lipgloss.Top,
-				listStyle.Render(m.list.View()),
-				textStyle.Render(item.Notes),
-			)
-		} else {
-			return listStyle.Render(m.list.View())
-		}
+	if m.sessions == nil {
+		return listStyle.Render(fmt.Sprintf("\n\n   %s Waiting for Katanaute API\n\n", m.spinner.View()))
 	}
-	return listStyle.Render(fmt.Sprintf("\n\n   %s Waiting for Katanaute API\n\n", m.spinner.View()))
+
+	item, ok := m.list.SelectedItem().(*Session)
+	if !ok {
+		return listStyle.Render(m.list.View())
+	}
+
+	listView := listStyle.Render(m.list.View())
+	renderedNotes, err := glamour.Render(item.Notes, "dark")
+	if err != nil {
+		renderedNotes = item.Notes + "\n\n" + err.Error()
+	}
+
+	return lipgloss.JoinHorizontal(
+		lipgloss.Top,
+		listView,
+		textStyle.Render(renderedNotes),
+	)
 }
