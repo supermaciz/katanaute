@@ -23,7 +23,6 @@ func main() {
 		config.katanauteBaseURL = katanauteBaseURL
 	}
 	m := NewModel(config)
-	m.list.Title = "Kata training sessions"
 	p := tea.NewProgram(m, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Println("Oh no! Something went wrong:", err)

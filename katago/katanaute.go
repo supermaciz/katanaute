@@ -42,7 +42,8 @@ type Data[T Session | Kata] struct {
 	Data []*T `json:"data"`
 }
 
-func GetSessions(config *Config) ([]*Session, error) {
+// FetchSessions returns all training sessions
+func FetchSessions(config *Config) ([]*Session, error) {
 	resp, err := http.Get(config.katanauteBaseURL + "/sessions")
 	if err != nil {
 		return nil, err
@@ -60,7 +61,7 @@ func GetSessions(config *Config) ([]*Session, error) {
 	return sessions.Data, nil
 }
 
-func GetKatas(config *Config) ([]*Kata, error) {
+func FetchKatas(config *Config) ([]*Kata, error) {
 	var katas Data[Kata]
 
 	resp, err := http.Get(config.katanauteBaseURL + "/katas")

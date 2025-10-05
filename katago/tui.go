@@ -34,10 +34,9 @@ func NewModel(config *Config) Model {
 	}
 }
 
-func chekServer(config *Config) tea.Msg {
-	sessions, err := GetSessions(config)
+func checkServer(config *Config) tea.Msg {
+	sessions, err := FetchSessions(config)
 	if err != nil {
-		fmt.Println("checkeServer error", err)
 		return errMsg{err}
 	}
 	return sessions
@@ -59,7 +58,7 @@ func toItems(sessions []*Session) []list.Item {
 
 func (m Model) Init() tea.Cmd {
 	checkServerCmd := func() tea.Msg {
-		return chekServer(m.config)
+		return checkServer(m.config)
 	}
 
 	return tea.Batch(tea.Sequence(checkServerCmd, tea.WindowSize()), m.spinner.Tick)
@@ -81,7 +80,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.list, cmd = m.list.Update(msg)
 		return m, cmd
 	case tea.WindowSizeMsg:
-		fmt.Println("Window size changed", msg)
 		if m.sessions != nil {
 			h, v := listStyle.GetFrameSize()
 			m.list.SetSize(msg.Width-h, msg.Height-v)
@@ -98,23 +96,40 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) View() string {
 	if m.sessions == nil {
-		return listStyle.Render(fmt.Sprintf("\n\n   %s Waiting for Katanaute API\n\n", m.spinner.View()))
+		return m.renderLoadingView()
 	}
 
 	item, ok := m.list.SelectedItem().(*Session)
 	if !ok {
-		return listStyle.Render(m.list.View())
+		return m.renderListOnlyView()
 	}
 
+	return m.renderDetailedView(item)
+}
+
+func (m Model) renderLoadingView() string {
+	return listStyle.Render(fmt.Sprintf("\n\n   %s Waiting for Katanaute API\n\n", m.spinner.View()))
+}
+
+func (m Model) renderListOnlyView() string {
+	return listStyle.Render(m.list.View())
+}
+
+func (m Model) renderDetailedView(session *Session) string {
 	listView := listStyle.Render(m.list.View())
-	renderedNotes, err := glamour.Render(item.Notes, "dark")
-	if err != nil {
-		renderedNotes = item.Notes + "\n\n" + err.Error()
-	}
+	notesView := m.renderSessionNotes(session)
 
 	return lipgloss.JoinHorizontal(
 		lipgloss.Top,
 		listView,
-		textStyle.Render(renderedNotes),
+		notesView,
 	)
+}
+
+func (m Model) renderSessionNotes(session *Session) string {
+	renderedNotes, err := glamour.Render(session.Notes, "dark")
+	if err != nil {
+		renderedNotes = session.Notes + "\n\n" + err.Error()
+	}
+	return textStyle.Render(renderedNotes)
 }
