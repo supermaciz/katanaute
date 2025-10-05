@@ -24,7 +24,7 @@ defmodule KatanauteWeb.SessionLive.Form do
         />
         <.input field={@form[:practiced_at]} type="datetime-local" label="Practiced at" />
         <.input field={@form[:in_course]} type="checkbox" label="In course" />
-        <.input field={@form[:notes]} type="text" label="Notes" />
+        <.input field={@form[:notes]} type="textarea" label="Notes" />
         <footer>
           <.button phx-disable-with="Saving..." variant="primary">Save Session</.button>
           <.button navigate={return_path(@return_to, @session)}>Cancel</.button>
