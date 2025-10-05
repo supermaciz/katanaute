@@ -19,7 +19,7 @@ config :katanaute, KatanauteWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: String.to_integer(System.get_env("PORT") || "4000")],
   check_origin: false,
   code_reloader: true,
-  debug_errors: true,
+  debug_errors: false,
   secret_key_base: "XTFUdRB96pCObdS/Z+9SxiVyt3HFViW79tsUMbEVHlMP4lqJlYvbWehwiA9uX0M3",
   watchers: [
     esbuild: {Esbuild, :install_and_run, [:katanaute, ~w(--sourcemap=inline --watch)]},
