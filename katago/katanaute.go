@@ -20,7 +20,7 @@ func (k Kata) String() string {
 }
 
 type Session struct {
-	ID          int       `json:"id"`
+	ID          int       `json:"id,omitempty"`
 	InCourse    bool      `json:"in_course"`
 	Notes       string    `json:"notes,omitempty"`
 	PracticedAt time.Time `json:"practiced_at"`

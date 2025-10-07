@@ -31,6 +31,7 @@ var headerStyle = lipgloss.NewStyle().
 	Margin(1, 1).
 	Foreground(lipgloss.Color("205")).
 	Border(lipgloss.RoundedBorder())
+var formStyle = lipgloss.NewStyle().Margin(2, 1)
 
 type Model struct {
 	config     *Config
@@ -115,6 +116,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, func() tea.Msg { return fetchKataCmd(m.config) }
 		}
 	case errMsg:
+		log.Println("Error:", msg.err)
 		return m, tea.Quit
 	case []*Session:
 		m.viewType = ListView
