@@ -1,42 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 )
-
-type Kata struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Level string `json:"level"`
-}
-
-type Session struct {
-	ID          int       `json:"id"`
-	InCourse    bool      `json:"in_course"`
-	Notes       string    `json:"notes"`
-	PracticedAt time.Time `json:"practiced_at"`
-	Kata        *Kata     `json:"kata"`
-}
-
-func (s Session) FilterValue() string {
-	return s.Kata.Name
-}
-
-func (s Session) Title() string {
-	return s.Kata.Name
-}
-
-func (s Session) Description() string {
-	return fmt.Sprintf("(%s)", s.PracticedAt.Format("2006-01-02"))
-}
-
-func (s Session) String() string {
-	return fmt.Sprintf("%s (%s): %s", s.Kata.Name, s.PracticedAt, s.Notes)
-}
 
 type Data[T Session | Kata] struct {
 	Data []*T `json:"data"`
@@ -59,6 +29,27 @@ func FetchSessions(config *Config) ([]*Session, error) {
 		return nil, err
 	}
 	return sessions.Data, nil
+}
+
+// CreateSession creates a new training session
+func CreateSession(config *Config, session *SessionInput) error {
+	jsonData, err := json.Marshal(map[string]interface{}{"session": session})
+	if err != nil {
+		return fmt.Errorf("failed to marshal session: %w", err)
+	}
+
+	resp, err := http.Post(config.katanauteBaseURL+"/sessions", "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return fmt.Errorf("failed to post session: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode, string(body))
+	}
+
+	return nil
 }
 
 func FetchKatas(config *Config) ([]*Kata, error) {

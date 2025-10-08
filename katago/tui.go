@@ -2,12 +2,28 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"time"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
+	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
+)
+
+type viewType uint
+
+func (v viewType) String() string {
+	return [...]string{"StartView", "ListView", "CreateSessionView"}[v]
+}
+
+const (
+	StartView viewType = iota
+	ListView
+	CreateSessionView
 )
 
 var listStyle = lipgloss.NewStyle().Margin(1, 2)
@@ -16,13 +32,17 @@ var headerStyle = lipgloss.NewStyle().
 	Margin(1, 1).
 	Foreground(lipgloss.Color("205")).
 	Border(lipgloss.RoundedBorder())
+var formStyle = lipgloss.NewStyle().Margin(2, 1)
 
 type Model struct {
-	config   *Config
-	list     list.Model
-	spinner  spinner.Model
-	data     any
-	sessions []*Session
+	config     *Config
+	list       list.Model
+	spinner    spinner.Model
+	sessions   []*Session
+	katas      []*Kata
+	viewType   viewType
+	form       *huh.Form
+	newSession *SessionInput
 }
 
 func NewModel(config *Config) Model {
@@ -30,8 +50,9 @@ func NewModel(config *Config) Model {
 	s.Spinner = spinner.Hamburger
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 	return Model{
-		config:  config,
-		spinner: s,
+		config:   config,
+		spinner:  s,
+		viewType: StartView,
 	}
 }
 
@@ -41,6 +62,24 @@ func checkServer(config *Config) tea.Msg {
 		return errMsg{err}
 	}
 	return sessions
+}
+
+func fetchKataCmd(config *Config) tea.Msg {
+	katas, err := FetchKatas(config)
+	if err != nil {
+		return err
+	}
+	log.Printf("Fetched %d katas", len(katas))
+	return katas
+}
+
+func customKeys() []key.Binding {
+	return []key.Binding{
+		key.NewBinding(
+			key.WithKeys("a"),
+			key.WithHelp("a", "add item"),
+		),
+	}
 }
 
 type errMsg struct{ err error }
@@ -72,13 +111,29 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.String() == "ctrl+c" {
 			return m, tea.Quit
 		}
+		if m.viewType == ListView && msg.String() == "a" {
+			//m.viewType = CreateSessionView
+			log.Println("Create session")
+			return m, func() tea.Msg { return fetchKataCmd(m.config) }
+		}
 	case errMsg:
+		log.Println("Error:", msg.err)
 		return m, tea.Quit
 	case []*Session:
+		m.viewType = ListView
 		m.sessions = msg
 		m.list = list.New(toItems(msg), list.NewDefaultDelegate(), 0, 0)
 		m.list.Title = "Kata training sessions"
+		m.list.AdditionalShortHelpKeys = customKeys
+		m.list.AdditionalFullHelpKeys = customKeys
 		m.list, cmd = m.list.Update(msg)
+		return m, cmd
+	case []*Kata:
+		log.Println("Got katas")
+		m.viewType = CreateSessionView
+		m.katas = msg
+		m.buildCreateSessionForm()
+		cmd = m.form.Init()
 		return m, cmd
 	case tea.WindowSizeMsg:
 		if m.sessions != nil {
@@ -86,7 +141,26 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.list.SetSize(msg.Width-h, msg.Height-v)
 		}
 	}
-	if m.sessions != nil {
+	if m.form != nil && (m.form.State == huh.StateCompleted) {
+		checkServerCmd := func() tea.Msg {
+			return checkServer(m.config)
+		}
+		err := CreateSession(m.config, m.newSession)
+		if err != nil {
+			log.Println("Error creating session:", err)
+		}
+		m.viewType = StartView
+		m.form = nil
+		m.newSession = nil
+		m.sessions = nil
+		return m, tea.Batch(tea.Sequence(checkServerCmd, tea.WindowSize()), m.spinner.Tick)
+	} else if m.viewType == CreateSessionView && m.form != nil {
+		form, cmd := m.form.Update(msg)
+		if f, ok := form.(*huh.Form); ok {
+			m.form = f
+		}
+		return m, cmd
+	} else if m.sessions != nil {
 		m.list, cmd = m.list.Update(msg)
 		return m, cmd
 	} else {
@@ -95,17 +169,60 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 }
 
+func (m *Model) buildCreateSessionForm() {
+	kataOptions := make([]huh.Option[int], len(m.katas))
+	for i, kata := range m.katas {
+		kataOptions[i] = huh.NewOption(kata.Name, kata.ID)
+	}
+	m.newSession = new(SessionInput)
+	var dateTimeVal string
+	m.form = huh.NewForm(
+		huh.NewGroup(
+			huh.NewInput().
+				Title("Date and time").
+				Placeholder("2025-01-01 15:00").
+				Value(&dateTimeVal).
+				Validate(func(s string) error {
+					parse, err := time.Parse("2006-01-02 15:04", s)
+					if err != nil {
+						return err
+					}
+					m.newSession.PracticedAt = parse
+					return nil
+				}),
+			huh.NewSelect[int]().
+				Title("Select a kata").
+				Options(kataOptions...).
+				Value(&(m.newSession.KataID)),
+			huh.NewSelect[bool]().
+				Title("Location").
+				Options(
+					huh.NewOption("Regular Course Session (dojo or outside)", true),
+					huh.NewOption("Independent Practice", false),
+				).
+				Value(&(m.newSession.InCourse)),
+			huh.NewText().Title("Notes").Value(&(m.newSession.Notes)),
+		),
+	)
+}
+
 func (m Model) View() string {
-	if m.sessions == nil {
+	switch m.viewType {
+	case StartView:
 		return m.renderLoadingView()
+	case ListView:
+		item, ok := m.list.SelectedItem().(*Session)
+		if !ok {
+			return m.renderListOnlyView()
+		}
+		return m.renderDetailedView(item)
+	case CreateSessionView:
+		//log.Println("Creating session view")
+		return m.renderCreateSessionView()
+	default:
+		return "ERROR: Unknown view type"
 	}
 
-	item, ok := m.list.SelectedItem().(*Session)
-	if !ok {
-		return m.renderListOnlyView()
-	}
-
-	return m.renderDetailedView(item)
 }
 
 func (m Model) renderLoadingView() string {
@@ -141,4 +258,15 @@ func (m Model) renderSessionNotes(session *Session) string {
 		renderedNotes = session.Notes + "\n\n" + err.Error()
 	}
 	return textStyle.Render(renderedNotes)
+}
+
+func (m Model) renderCreateSessionView() string {
+	listView := listStyle.Render(m.list.View())
+	formView := formStyle.Render(m.form.View())
+
+	return lipgloss.JoinHorizontal(
+		lipgloss.Top,
+		listView,
+		formView,
+	)
 }
