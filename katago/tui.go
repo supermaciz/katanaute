@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -140,14 +141,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.list.SetSize(msg.Width-h, msg.Height-v)
 		}
 	}
-	if m.form != nil && (m.form.State == huh.StateCompleted || m.form.State == huh.StateAborted) {
-		//checkServerCmd := func() tea.Msg {
-		//	return checkServer(m.config)
-		//}
-		m.viewType = ListView
-		//return m, checkServerCmd
-	}
-	if m.viewType == CreateSessionView && m.form != nil {
+	if m.form != nil && (m.form.State == huh.StateCompleted) {
+		checkServerCmd := func() tea.Msg {
+			return checkServer(m.config)
+		}
+		m.viewType = StartView
+		m.form = nil
+		m.newSession = nil
+		m.sessions = nil
+		return m, tea.Batch(tea.Sequence(checkServerCmd, tea.WindowSize()), m.spinner.Tick)
+	} else if m.viewType == CreateSessionView && m.form != nil {
 		form, cmd := m.form.Update(msg)
 		if f, ok := form.(*huh.Form); ok {
 			m.form = f
@@ -168,8 +171,21 @@ func (m *Model) buildCreateSessionForm() {
 		kataOptions[i] = huh.NewOption(kata.Name, kata.ID)
 	}
 	m.newSession = new(SessionPost)
+	var dateTimeVal string
 	m.form = huh.NewForm(
 		huh.NewGroup(
+			huh.NewInput().
+				Title("Date and time").
+				Placeholder("2025-01-01 15:00").
+				Value(&dateTimeVal).
+				Validate(func(s string) error {
+					parse, err := time.Parse("2006-01-02 15:04", s)
+					if err != nil {
+						return err
+					}
+					m.newSession.PracticedAt = parse
+					return nil
+				}),
 			huh.NewSelect[int]().
 				Title("Select a kata").
 				Options(kataOptions...).
@@ -181,6 +197,7 @@ func (m *Model) buildCreateSessionForm() {
 					huh.NewOption("Independent Practice", false),
 				).
 				Value(&(m.newSession.InCourse)),
+			huh.NewText().Title("Notes").Value(&(m.newSession.Notes)),
 		),
 	)
 }
