@@ -17,12 +17,18 @@ defmodule KatanauteWeb.SessionJSON do
   end
 
   defp data(%Session{} = session) do
+    kata =
+      if Ecto.assoc_loaded?(session.kata),
+        do: KataJSON.data(session.kata),
+        else: nil
+
     %{
       id: session.id,
       practiced_at: session.practiced_at,
       in_course: session.in_course,
       notes: session.notes,
-      kata: KataJSON.data(session.kata)
+      kata: kata,
+      kata_id: session.kata_id
     }
   end
 end
