@@ -23,10 +23,9 @@ type Session struct {
 	Kata        *Kata     `json:"kata,omitempty"`
 }
 
-type SessionPost struct {
+type SessionInput struct {
 	Session
-	KataID         int    `json:"kata_id"`
-	TmpPracticedAt string `json:"-"`
+	KataID int `json:"kata_id"`
 }
 
 func (s Session) FilterValue() string {

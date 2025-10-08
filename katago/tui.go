@@ -42,7 +42,7 @@ type Model struct {
 	katas      []*Kata
 	viewType   viewType
 	form       *huh.Form
-	newSession *SessionPost
+	newSession *SessionInput
 }
 
 func NewModel(config *Config) Model {
@@ -145,6 +145,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		checkServerCmd := func() tea.Msg {
 			return checkServer(m.config)
 		}
+		err := CreateSession(m.config, m.newSession)
+		if err != nil {
+			log.Println("Error creating session:", err)
+		}
 		m.viewType = StartView
 		m.form = nil
 		m.newSession = nil
@@ -170,7 +174,7 @@ func (m *Model) buildCreateSessionForm() {
 	for i, kata := range m.katas {
 		kataOptions[i] = huh.NewOption(kata.Name, kata.ID)
 	}
-	m.newSession = new(SessionPost)
+	m.newSession = new(SessionInput)
 	var dateTimeVal string
 	m.form = huh.NewForm(
 		huh.NewGroup(

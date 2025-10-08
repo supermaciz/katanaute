@@ -32,8 +32,8 @@ func FetchSessions(config *Config) ([]*Session, error) {
 }
 
 // CreateSession creates a new training session
-func CreateSession(config *Config, session *SessionPost) error {
-	jsonData, err := json.Marshal(session)
+func CreateSession(config *Config, session *SessionInput) error {
+	jsonData, err := json.Marshal(map[string]interface{}{"session": session})
 	if err != nil {
 		return fmt.Errorf("failed to marshal session: %w", err)
 	}
