@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"sort"
 	"time"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -122,7 +123,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case []*Session:
 		m.viewType = ListView
 		m.sessions = msg
-		m.list = list.New(toItems(msg), list.NewDefaultDelegate(), 0, 0)
+		sort.Slice(m.sessions, func(i, j int) bool {
+			return m.sessions[i].PracticedAt.After(m.sessions[j].PracticedAt)
+		})
+		m.list = list.New(toItems(m.sessions), list.NewDefaultDelegate(), 0, 0)
 		m.list.Title = "Kata training sessions"
 		m.list.AdditionalShortHelpKeys = customKeys
 		m.list.AdditionalFullHelpKeys = customKeys
