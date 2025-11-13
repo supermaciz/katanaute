@@ -1,16 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../services/api'
-
-// Backend returns kata levels as atom strings (yellow, orange, etc.)
-const KATA_LEVELS = {
-  yellow: 'Yellow',
-  orange: 'Orange',
-  green: 'Green',
-  blue: 'Blue',
-  brown: 'Brown',
-  shodan: 'Shodan',
-}
+import { getKataLevelName } from '../utils/kataLevels'
 
 function NewSessionPage() {
   const navigate = useNavigate()
@@ -110,7 +101,7 @@ function NewSessionPage() {
             >
               {katas.map((kata) => (
                 <option key={kata.id} value={kata.id}>
-                  {kata.name} ({KATA_LEVELS[kata.level]})
+                  {kata.name} ({getKataLevelName(kata.level)})
                 </option>
               ))}
             </select>
