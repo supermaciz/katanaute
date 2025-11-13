@@ -60,6 +60,21 @@ describe('SessionsPage', () => {
     })
   })
 
+  it('displays kata levels correctly with proper names', async () => {
+    api.getSessions.mockResolvedValue({ data: mockSessions })
+    api.getKatas.mockResolvedValue({ data: mockKatas })
+
+    renderWithRouter(<SessionsPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Yellow')).toBeInTheDocument()
+      expect(screen.getByText('Orange')).toBeInTheDocument()
+    })
+
+    // Should NOT show N/A for valid kata levels
+    expect(screen.queryByText('N/A')).not.toBeInTheDocument()
+  })
+
   it('shows "In Course" badge for in-course sessions', async () => {
     api.getSessions.mockResolvedValue({ data: mockSessions })
     api.getKatas.mockResolvedValue({ data: mockKatas })

@@ -29,7 +29,7 @@ describe('SessionDetailPage', () => {
   const mockKata = {
     id: 1,
     name: 'FizzBuzz',
-    level: 1,
+    level: 'yellow', // Backend returns kata levels as atom strings
   }
 
   beforeEach(() => {

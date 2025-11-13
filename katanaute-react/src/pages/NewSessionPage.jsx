@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../services/api'
 
+// Backend returns kata levels as atom strings (yellow, orange, etc.)
 const KATA_LEVELS = {
-  1: 'Yellow',
-  2: 'Orange',
-  3: 'Green',
-  4: 'Blue',
-  5: 'Brown',
-  6: 'Shodan',
+  yellow: 'Yellow',
+  orange: 'Orange',
+  green: 'Green',
+  blue: 'Blue',
+  brown: 'Brown',
+  shodan: 'Shodan',
 }
 
 function NewSessionPage() {

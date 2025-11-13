@@ -26,20 +26,21 @@ export const mockSessions = [
   },
 ]
 
+// Backend returns kata levels as atom strings, not integers
 export const mockKatas = [
   {
     id: 1,
     name: 'FizzBuzz',
-    level: 1,
+    level: 'yellow',
   },
   {
     id: 2,
     name: 'Roman Numerals',
-    level: 2,
+    level: 'orange',
   },
   {
     id: 3,
     name: 'Bowling Game',
-    level: 4,
+    level: 'blue',
   },
 ]
