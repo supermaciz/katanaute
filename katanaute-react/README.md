@@ -18,6 +18,8 @@ A modern React frontend for the Katanaute kata training tracker application.
 - **React Router** - Client-side routing
 - **Tailwind CSS** - Utility-first CSS framework
 - **React Markdown** - Markdown rendering for session notes
+- **Vitest** - Fast unit testing framework
+- **React Testing Library** - Component testing utilities
 
 ## Prerequisites
 
@@ -45,6 +47,36 @@ bun run dev
 The application will be available at http://localhost:3000
 
 The dev server is configured to proxy API requests to the Phoenix backend at http://localhost:4000.
+
+## Testing
+
+The project includes a comprehensive test suite using Vitest and React Testing Library.
+
+```bash
+# Run tests in watch mode
+npm test
+# or
+bun test
+
+# Run tests with UI
+npm run test:ui
+# or
+bun run test:ui
+
+# Run tests with coverage
+npm run test:coverage
+# or
+bun run test:coverage
+```
+
+### Test Coverage
+
+- **API Client** - Full coverage of all API methods
+- **SessionsPage** - Loading states, data display, delete functionality
+- **NewSessionPage** - Form validation, submission, navigation
+- **SessionDetailPage** - Data display, Markdown rendering, delete functionality
+
+All tests use mocked API responses and follow React Testing Library best practices.
 
 ## Building for Production
 
@@ -75,11 +107,18 @@ katanaute-react/
 ├── src/
 │   ├── components/        # Reusable React components
 │   ├── pages/            # Page components
-│   │   ├── SessionsPage.jsx       # List all sessions
-│   │   ├── NewSessionPage.jsx     # Create new session
-│   │   └── SessionDetailPage.jsx  # View session details
+│   │   ├── SessionsPage.jsx          # List all sessions
+│   │   ├── SessionsPage.test.jsx     # Tests for sessions list
+│   │   ├── NewSessionPage.jsx        # Create new session
+│   │   ├── NewSessionPage.test.jsx   # Tests for session form
+│   │   ├── SessionDetailPage.jsx     # View session details
+│   │   └── SessionDetailPage.test.jsx # Tests for session detail
 │   ├── services/         # API client and utilities
-│   │   └── api.js        # Backend API client
+│   │   ├── api.js        # Backend API client
+│   │   └── api.test.js   # API client tests
+│   ├── test/             # Test utilities
+│   │   ├── setup.js      # Vitest setup
+│   │   └── utils.jsx     # Test helpers and mocks
 │   ├── App.jsx           # Main app component with routing
 │   ├── main.jsx          # Application entry point
 │   └── index.css         # Global styles and Tailwind imports

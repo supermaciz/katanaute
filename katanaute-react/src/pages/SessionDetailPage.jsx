@@ -31,7 +31,7 @@ function SessionDetailPage() {
       setSession(sessionData.data)
 
       // Load the associated kata
-      if (sessionData.data.kata_id) {
+      if (sessionData.data && sessionData.data.kata_id) {
         const kataData = await api.getKata(sessionData.data.kata_id)
         setKata(kataData.data)
       }
