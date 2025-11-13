@@ -102,6 +102,51 @@ describe('SessionsPage', () => {
     })
   })
 
+  it('sorts sessions by practice date in descending order (newest first)', async () => {
+    const unsortedSessions = [
+      {
+        id: 1,
+        kata_id: 1,
+        practiced_at: '2025-01-10T10:00:00Z',
+        in_course: true,
+        notes: 'Oldest session',
+      },
+      {
+        id: 3,
+        kata_id: 2,
+        practiced_at: '2025-01-15T14:30:00Z',
+        in_course: false,
+        notes: 'Newest session',
+      },
+      {
+        id: 2,
+        kata_id: 1,
+        practiced_at: '2025-01-12T11:00:00Z',
+        in_course: false,
+        notes: 'Middle session',
+      },
+    ]
+
+    api.getSessions.mockResolvedValue({ data: unsortedSessions })
+    api.getKatas.mockResolvedValue({ data: mockKatas })
+
+    renderWithRouter(<SessionsPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Roman Numerals')).toBeInTheDocument()
+    })
+
+    // Get all kata name links in order they appear in the table
+    const kataLinks = screen.getAllByRole('link', { name: /FizzBuzz|Roman Numerals/i })
+
+    // First row should be the newest session (id: 3, kata_id: 2 = Roman Numerals)
+    // Second row should be middle session (id: 2, kata_id: 1 = FizzBuzz)
+    // Third row should be oldest session (id: 1, kata_id: 1 = FizzBuzz)
+    expect(kataLinks[0]).toHaveTextContent('Roman Numerals')
+    expect(kataLinks[1]).toHaveTextContent('FizzBuzz')
+    expect(kataLinks[2]).toHaveTextContent('FizzBuzz')
+  })
+
   it('deletes a session when delete button is clicked and confirmed', async () => {
     const user = userEvent.setup()
     api.getSessions.mockResolvedValue({ data: mockSessions })
@@ -114,14 +159,15 @@ describe('SessionsPage', () => {
     renderWithRouter(<SessionsPage />)
 
     await waitFor(() => {
-      expect(screen.getByText('FizzBuzz')).toBeInTheDocument()
+      expect(screen.getByText('Roman Numerals')).toBeInTheDocument()
     })
 
     const deleteButtons = screen.getAllByText('Delete')
     await user.click(deleteButtons[0])
 
     expect(window.confirm).toHaveBeenCalledWith('Are you sure you want to delete this session?')
-    expect(api.deleteSession).toHaveBeenCalledWith(1)
+    // After sorting by date desc, session 2 (newest) is first in the list
+    expect(api.deleteSession).toHaveBeenCalledWith(2)
   })
 
   it('does not delete session when user cancels', async () => {
