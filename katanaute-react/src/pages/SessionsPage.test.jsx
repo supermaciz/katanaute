@@ -75,6 +75,21 @@ describe('SessionsPage', () => {
     expect(screen.queryByText('N/A')).not.toBeInTheDocument()
   })
 
+  it('applies correct color classes to kata level badges', async () => {
+    api.getSessions.mockResolvedValue({ data: mockSessions })
+    api.getKatas.mockResolvedValue({ data: mockKatas })
+
+    renderWithRouter(<SessionsPage />)
+
+    await waitFor(() => {
+      const yellowBadge = screen.getByText('Yellow')
+      expect(yellowBadge).toHaveClass('bg-yellow-100', 'text-yellow-800')
+
+      const orangeBadge = screen.getByText('Orange')
+      expect(orangeBadge).toHaveClass('bg-orange-100', 'text-orange-800')
+    })
+  })
+
   it('shows "In Course" badge for in-course sessions', async () => {
     api.getSessions.mockResolvedValue({ data: mockSessions })
     api.getKatas.mockResolvedValue({ data: mockKatas })

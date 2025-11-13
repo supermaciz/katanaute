@@ -1,16 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../services/api'
-
-// Backend returns kata levels as atom strings (yellow, orange, etc.)
-const KATA_LEVELS = {
-  yellow: 'Yellow',
-  orange: 'Orange',
-  green: 'Green',
-  blue: 'Blue',
-  brown: 'Brown',
-  shodan: 'Shodan',
-}
+import { getKataLevelName, getKataLevelColor } from '../utils/kataLevels'
 
 function SessionsPage() {
   const [sessions, setSessions] = useState([])
@@ -147,8 +138,8 @@ function SessionsPage() {
                       </Link>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                        {KATA_LEVELS[kata?.level] || 'N/A'}
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getKataLevelColor(kata?.level)}`}>
+                        {getKataLevelName(kata?.level)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

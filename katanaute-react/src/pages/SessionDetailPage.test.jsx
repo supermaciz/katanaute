@@ -60,6 +60,18 @@ describe('SessionDetailPage', () => {
     expect(screen.getByText('Notes')).toBeInTheDocument()
   })
 
+  it('applies correct color classes to kata level badge', async () => {
+    api.getSession.mockResolvedValue({ data: mockSession })
+    api.getKata.mockResolvedValue({ data: mockKata })
+
+    renderWithRouter(<SessionDetailPage />)
+
+    await waitFor(() => {
+      const yellowBadge = screen.getByText('Yellow')
+      expect(yellowBadge).toHaveClass('bg-yellow-100', 'text-yellow-800')
+    })
+  })
+
   it('renders markdown notes correctly', async () => {
     api.getSession.mockResolvedValue({ data: mockSession })
     api.getKata.mockResolvedValue({ data: mockKata })

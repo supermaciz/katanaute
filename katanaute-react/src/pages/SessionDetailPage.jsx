@@ -2,16 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { api } from '../services/api'
-
-// Backend returns kata levels as atom strings (yellow, orange, etc.)
-const KATA_LEVELS = {
-  yellow: 'Yellow',
-  orange: 'Orange',
-  green: 'Green',
-  blue: 'Blue',
-  brown: 'Brown',
-  shodan: 'Shodan',
-}
+import { getKataLevelName, getKataLevelColor } from '../utils/kataLevels'
 
 function SessionDetailPage() {
   const { id } = useParams()
@@ -106,8 +97,8 @@ function SessionDetailPage() {
                 {kata?.name || 'Unknown Kata'}
               </h1>
               <div className="flex items-center space-x-4">
-                <span className="px-3 py-1 text-sm font-semibold rounded-full bg-blue-100 text-blue-800">
-                  {KATA_LEVELS[kata?.level] || 'N/A'}
+                <span className={`px-3 py-1 text-sm font-semibold rounded-full ${getKataLevelColor(kata?.level)}`}>
+                  {getKataLevelName(kata?.level)}
                 </span>
                 {session.in_course && (
                   <span className="px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800">
