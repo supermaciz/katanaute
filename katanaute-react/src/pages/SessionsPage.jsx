@@ -27,7 +27,12 @@ function SessionsPage() {
         katasMap[kata.id] = kata
       })
 
-      setSessions(sessionsData.data)
+      // Sort sessions by practice date (descending - newest first)
+      const sortedSessions = [...sessionsData.data].sort((a, b) => {
+        return new Date(b.practiced_at) - new Date(a.practiced_at)
+      })
+
+      setSessions(sortedSessions)
       setKatas(katasMap)
     } catch (err) {
       setError(err.message)
