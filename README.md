@@ -10,7 +10,7 @@ It's useless. I'm doing this for fun and to learn some stuff.
 
 - **katanaute/** - Backend: API and LiveView UI (Elixir/Phoenix)
 - **katago/** - Terminal UI client (Go/Bubble Tea)
-- **katanaute-react/** - Web UI (JavaScript/React)
+- **katareact/** - Web UI (JavaScript/React)
 
 ## Quick Start
 
