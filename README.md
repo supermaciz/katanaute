@@ -1,15 +1,20 @@
 # Katanaute
 
-A kata training tracker with a Phoenix web backend and a terminal UI client.
+A kata (Uechi-Ryu Karate) training tracker with a Phoenix backend aand multiple clients.
+
+## Purpose
+
+It's useless. I'm doing this for fun and to learn some stuff.
 
 ## Project Structure
 
-- **katanaute/** - Phoenix web application (Elixir/Phoenix)
+- **katanaute/** - Backend: API and LiveView UI (Elixir/Phoenix)
 - **katago/** - Terminal UI client (Go/Bubble Tea)
+- **katanaute-react/** - Web UI (JavaScript/React)
 
 ## Quick Start
 
-### Backend (Phoenix)
+### Backend (Elixir/Phoenix)
 
 ```bash
 cd katanaute
@@ -29,7 +34,7 @@ go build
 
 ## Features
 
-- Track coding kata practice sessions
+- Track kata practice sessions
 - Record session notes with Markdown support
 - Browse sessions via web UI or terminal
 - RESTful API for external integrations

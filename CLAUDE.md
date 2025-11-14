@@ -1,6 +1,6 @@
 # Katanaute - Kata Training Tracker
 
-A multi-client kata training tracker application with a Phoenix backend, React web frontend, and Go terminal UI client.
+A multi-client (Uechi-Ryu) Karate kata training tracker application with a Phoenix backend, React web frontend, and Go terminal UI client.
 
 ## Repository Structure
 
