@@ -103,7 +103,7 @@ VITE_API_URL=http://localhost:4000/api
 ## Project Structure
 
 ```
-katanaute-react/
+katareact/
 ├── src/
 │   ├── components/        # Reusable React components
 │   ├── pages/            # Page components

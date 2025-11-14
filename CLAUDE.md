@@ -11,7 +11,7 @@ katanaute/
 ├── katanaute/          # Phoenix backend (Elixir/Phoenix 1.8)
 │   ├── CLAUDE.md       # Phoenix-specific development guidelines
 │   └── AGENTS.md       # Additional Phoenix guidelines
-├── katanaute-react/    # React frontend (React 18 + Vite)
+├── katareact/          # React frontend (React 18 + Vite)
 │   └── CLAUDE.md       # React-specific development guidelines
 ├── katago/             # Terminal UI client (Go + Bubble Tea)
 │   ├── CLAUDE.md       # Go TUI development guidelines
@@ -31,7 +31,7 @@ katanaute/
   - Database migrations and seeding
   - LiveDashboard for monitoring (dev only)
 
-### Frontend: React SPA (katanaute-react/)
+### Frontend: React SPA (katareact/)
 - **Framework**: React 18 with Vite
 - **Styling**: Tailwind CSS v3
 - **Testing**: Vitest + React Testing Library
@@ -117,9 +117,9 @@ mix setup                    # Install deps, create DB, run migrations, seed dat
 mix phx.server              # Start server on http://localhost:4000
 ```
 
-**2. React Frontend Setup (katanaute-react/)**
+**2. React Frontend Setup (katareact/)**
 ```bash
-cd katanaute-react
+cd katareact
 npm install                  # or: bun install
 npm run dev                 # Start dev server on http://localhost:3000
 ```
@@ -167,7 +167,7 @@ When working on a specific component, **ALWAYS** refer to its CLAUDE.md file:
   - Testing with Phoenix.LiveViewTest
   - Elixir-specific coding patterns
 
-- **React Frontend**: See `katanaute-react/CLAUDE.md` for:
+- **React Frontend**: See `katareact/CLAUDE.md` for:
   - React hooks and functional components
   - Tailwind CSS styling conventions
   - Vitest testing practices
@@ -273,7 +273,7 @@ mix ecto.migrate
 1. Update router: `katanaute/lib/katanaute_web/router.ex`
 2. Create/update controller: `katanaute/lib/katanaute_web/controllers/`
 3. Add JSON view: `katanaute/lib/katanaute_web/controllers/*_json.ex`
-4. Update React API client: `katanaute-react/src/services/api.js`
+4. Update React API client: `katareact/src/services/api.js`
 5. Update Go API client: `katago/katanaute_api.go`
 
 ### Debugging
