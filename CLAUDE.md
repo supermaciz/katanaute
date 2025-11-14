@@ -14,6 +14,7 @@ katanaute/
 ├── katanaute-react/    # React frontend (React 18 + Vite)
 │   └── CLAUDE.md       # React-specific development guidelines
 ├── katago/             # Terminal UI client (Go + Bubble Tea)
+│   ├── CLAUDE.md       # Go TUI development guidelines
 │   └── README.md       # Go TUI documentation
 └── CLAUDE.md           # This file - overall project guidelines
 ```
@@ -44,10 +45,12 @@ katanaute/
 ### CLI Client: Go TUI (katago/)
 - **Framework**: Bubble Tea (terminal UI framework)
 - **Language**: Go 1.25+
-- **Purpose**: Terminal-based session viewer
+- **Purpose**: Terminal-based session viewer and creator
 - **Key Features**:
   - Interactive list-based session browser
-  - Keyboard navigation (arrow keys, j/k, Ctrl+C to quit)
+  - Create new training sessions with form UI
+  - Keyboard navigation (arrow keys, j/k, 'a' to add, Ctrl+C to quit)
+  - Markdown rendering for session notes
   - API integration with Phoenix backend
 
 ## Data Model
@@ -148,7 +151,9 @@ npm run preview            # Preview production build
 #### Go TUI
 ```bash
 go build                    # Compile binary
+go fmt ./...               # Format code
 ./katago                   # Run TUI client
+DEBUG=1 ./katago          # Run with debug logging to debug.log
 ```
 
 ### Component-Specific Guidelines
@@ -169,10 +174,14 @@ When working on a specific component, **ALWAYS** refer to its CLAUDE.md file:
   - API integration patterns
   - Form handling and validation
 
-- **Go TUI**: See `katago/README.md` for:
-  - Bubble Tea architecture
-  - API client implementation
-  - Terminal UI patterns
+- **Go TUI**: See `katago/CLAUDE.md` for:
+  - Bubble Tea MVU (Model-View-Update) architecture
+  - Bubble Tea components (list, spinner, forms)
+  - Lip Gloss styling and layout
+  - API client patterns and error handling
+  - Markdown rendering with Glamour
+  - Go-specific coding conventions
+  - Debugging with DEBUG mode
 
 ## Commit Conventions
 
@@ -196,9 +205,9 @@ style(react): improve responsive layout
 
 ### Go TUI
 ```
-feat(go): implement session detail view
-fix(go): handle API connection errors
-docs(go): update usage instructions
+feat(katago): implement session detail view
+fix(katago): handle API connection errors
+docs(katago): update usage instructions
 ```
 
 ### Repository-wide
@@ -223,8 +232,9 @@ ci: add GitHub Actions workflow
   ```
 
 ### Go TUI Configuration
-- **API Base URL**: `http://localhost:4000/api` (hardcoded in main.go)
+- **API Base URL**: `http://localhost:4000/api` (default in Config struct)
 - **Override**: Set `KATANAUTE_API_URL` environment variable
+- **Debug Mode**: Set `DEBUG=1` to enable logging to `debug.log`
 
 ## Testing Strategy
 
@@ -241,7 +251,9 @@ ci: add GitHub Actions workflow
 - **Mocking**: Mock API responses in `src/test/utils.jsx`
 
 ### Go TUI Testing
-- **Status**: Not yet implemented (see katago/README.md TODO)
+- **Status**: Not yet implemented (see katago/CLAUDE.md TODO)
+- **Planned Framework**: Go's built-in `testing` package
+- **Coverage Goals**: API client tests, Bubble Tea Update logic tests
 
 ## Common Development Tasks
 
@@ -277,8 +289,11 @@ mix ecto.migrate
 - Vite dev server shows compilation errors
 
 **Go TUI**
-- Use `fmt.Printf()` for debugging (output to stderr to avoid UI corruption)
-- Check network requests to backend API
+- Set `DEBUG=1` environment variable to enable logging to `debug.log`
+- Use `log.Println()` for debug output (never `fmt.Println()` - it corrupts the TUI)
+- Check `debug.log` file for error messages
+- Verify backend API is running and accessible
+- Check network requests with debug logs
 
 ## Key Technical Decisions
 
@@ -317,6 +332,7 @@ VITE_API_URL=http://localhost:4000/api    # Backend API URL
 ### Go TUI
 ```bash
 KATANAUTE_API_URL=http://localhost:4000/api    # Backend API URL
+DEBUG=1                                         # Enable debug logging to debug.log
 ```
 
 ## Security Considerations
@@ -375,10 +391,12 @@ Currently development-focused. For production:
 - Check Vite proxy config in `vite.config.js`
 - Inspect browser Network tab for failed requests
 
-### Go TUI shows empty list
-- Verify backend is running
-- Check API URL configuration
-- Ensure database has seeded data: `mix run priv/repo/seeds.exs`
+### Go TUI shows empty list or errors
+- Verify backend is running on port 4000
+- Check API URL configuration with `KATANAUTE_API_URL` env var
+- Ensure database has seeded data: `cd katanaute && mix run priv/repo/seeds.exs`
+- Enable debug mode (`DEBUG=1 ./katago`) and check `debug.log` for errors
+- Verify network connectivity to backend
 
 ## Contributing
 
@@ -406,22 +424,27 @@ When making changes:
 - ✅ Phoenix backend with REST API
 - ✅ Phoenix LiveView web UI
 - ✅ React SPA with full session management
-- ✅ Go TUI for session viewing
+- ✅ Go TUI for session viewing and creation
 - ✅ Comprehensive test coverage (Phoenix, React)
 - ✅ Color-coded kata level system
 - ✅ Markdown notes support
 - ✅ Session sorting by date
+- ✅ Split-view layout in Go TUI
 
 **Known Limitations**
-- Go TUI is read-only (no session creation/editing)
+- No session editing in Go TUI (only create and view)
+- No session deletion in Go TUI
 - SQLite database (not suitable for production scale)
 - No user authentication/authorization
 - No session editing in React (only create/delete)
+- No tests for Go TUI
 
 **Future Enhancements** (See component TODOs)
 - Session editing in React frontend
-- Session creation in Go TUI
+- Session editing and deletion in Go TUI
+- Unit tests for Go TUI
 - User authentication
 - Session filtering and search
 - Statistics and progress tracking
 - PostgreSQL support for production
+- Error recovery UI in Go TUI
