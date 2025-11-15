@@ -1,10 +1,10 @@
 # Katanaute
 
-A kata (Uechi-Ryu Karate) training tracker with a Phoenix backend aand multiple clients.
+A kata (Uechi-Ryu Karate) training tracker with a Phoenix backend and multiple clients.
 
 ## Purpose
 
-It's useless. I'm doing this for fun and to learn some stuff.
+It's useless. I'm doing this for fun and to learn some stuff. 
 
 ## Project Structure
 
