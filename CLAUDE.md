@@ -33,6 +33,7 @@ katanaute/
 
 ### Frontend: React SPA (katareact/)
 - **Framework**: React 18 with Vite
+- **Language**: TypeScript
 - **Styling**: Tailwind CSS v3
 - **Testing**: Vitest + React Testing Library
 - **Purpose**: Modern web interface for managing training sessions
@@ -41,6 +42,7 @@ katanaute/
   - Create sessions with Markdown notes
   - Color-coded kata level badges
   - Responsive design
+  - Full TypeScript type safety
 
 ### CLI Client: Go TUI (katago/)
 - **Framework**: Bubble Tea (terminal UI framework)

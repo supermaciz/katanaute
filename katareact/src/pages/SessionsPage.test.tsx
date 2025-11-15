@@ -13,8 +13,8 @@ describe('SessionsPage', () => {
   })
 
   it('renders loading state initially', () => {
-    api.getSessions.mockReturnValue(new Promise(() => {}))
-    api.getKatas.mockReturnValue(new Promise(() => {}))
+    ;(api.getSessions as any).mockReturnValue(new Promise(() => {}))
+    ;(api.getKatas as any).mockReturnValue(new Promise(() => {}))
 
     renderWithRouter(<SessionsPage />)
 
@@ -22,8 +22,8 @@ describe('SessionsPage', () => {
   })
 
   it('displays sessions in a table after loading', async () => {
-    api.getSessions.mockResolvedValue({ data: mockSessions })
-    api.getKatas.mockResolvedValue({ data: mockKatas })
+    ;(api.getSessions as any).mockResolvedValue({ data: mockSessions })
+    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
 
     renderWithRouter(<SessionsPage />)
 
@@ -37,8 +37,8 @@ describe('SessionsPage', () => {
   })
 
   it('shows empty state when no sessions exist', async () => {
-    api.getSessions.mockResolvedValue({ data: [] })
-    api.getKatas.mockResolvedValue({ data: mockKatas })
+    ;(api.getSessions as any).mockResolvedValue({ data: [] })
+    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
 
     renderWithRouter(<SessionsPage />)
 
@@ -50,8 +50,8 @@ describe('SessionsPage', () => {
   })
 
   it('displays error message when API fails', async () => {
-    api.getSessions.mockRejectedValue(new Error('Network error'))
-    api.getKatas.mockResolvedValue({ data: mockKatas })
+    ;(api.getSessions as any).mockRejectedValue(new Error('Network error'))
+    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
 
     renderWithRouter(<SessionsPage />)
 
@@ -61,8 +61,8 @@ describe('SessionsPage', () => {
   })
 
   it('displays kata levels correctly with proper names', async () => {
-    api.getSessions.mockResolvedValue({ data: mockSessions })
-    api.getKatas.mockResolvedValue({ data: mockKatas })
+    ;(api.getSessions as any).mockResolvedValue({ data: mockSessions })
+    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
 
     renderWithRouter(<SessionsPage />)
 
@@ -76,8 +76,8 @@ describe('SessionsPage', () => {
   })
 
   it('applies correct color classes to kata level badges', async () => {
-    api.getSessions.mockResolvedValue({ data: mockSessions })
-    api.getKatas.mockResolvedValue({ data: mockKatas })
+    ;(api.getSessions as any).mockResolvedValue({ data: mockSessions })
+    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
 
     renderWithRouter(<SessionsPage />)
 
@@ -91,8 +91,8 @@ describe('SessionsPage', () => {
   })
 
   it('shows "In Course" badge for in-course sessions', async () => {
-    api.getSessions.mockResolvedValue({ data: mockSessions })
-    api.getKatas.mockResolvedValue({ data: mockKatas })
+    ;(api.getSessions as any).mockResolvedValue({ data: mockSessions })
+    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
 
     renderWithRouter(<SessionsPage />)
 
@@ -110,6 +110,8 @@ describe('SessionsPage', () => {
         practiced_at: '2025-01-10T10:00:00Z',
         in_course: true,
         notes: 'Oldest session',
+        inserted_at: '2025-01-10T10:00:00Z',
+        updated_at: '2025-01-10T10:00:00Z',
       },
       {
         id: 3,
@@ -117,6 +119,8 @@ describe('SessionsPage', () => {
         practiced_at: '2025-01-15T14:30:00Z',
         in_course: false,
         notes: 'Newest session',
+        inserted_at: '2025-01-15T14:30:00Z',
+        updated_at: '2025-01-15T14:30:00Z',
       },
       {
         id: 2,
@@ -124,11 +128,13 @@ describe('SessionsPage', () => {
         practiced_at: '2025-01-12T11:00:00Z',
         in_course: false,
         notes: 'Middle session',
+        inserted_at: '2025-01-12T11:00:00Z',
+        updated_at: '2025-01-12T11:00:00Z',
       },
     ]
 
-    api.getSessions.mockResolvedValue({ data: unsortedSessions })
-    api.getKatas.mockResolvedValue({ data: mockKatas })
+    ;(api.getSessions as any).mockResolvedValue({ data: unsortedSessions })
+    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
 
     renderWithRouter(<SessionsPage />)
 
@@ -149,9 +155,9 @@ describe('SessionsPage', () => {
 
   it('deletes a session when delete button is clicked and confirmed', async () => {
     const user = userEvent.setup()
-    api.getSessions.mockResolvedValue({ data: mockSessions })
-    api.getKatas.mockResolvedValue({ data: mockKatas })
-    api.deleteSession.mockResolvedValue(null)
+    ;(api.getSessions as any).mockResolvedValue({ data: mockSessions })
+    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
+    ;(api.deleteSession as any).mockResolvedValue(null)
 
     // Mock window.confirm
     window.confirm = vi.fn(() => true)
@@ -172,8 +178,8 @@ describe('SessionsPage', () => {
 
   it('does not delete session when user cancels', async () => {
     const user = userEvent.setup()
-    api.getSessions.mockResolvedValue({ data: mockSessions })
-    api.getKatas.mockResolvedValue({ data: mockKatas })
+    ;(api.getSessions as any).mockResolvedValue({ data: mockSessions })
+    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
 
     window.confirm = vi.fn(() => false)
 
@@ -190,8 +196,8 @@ describe('SessionsPage', () => {
   })
 
   it('renders links to session detail pages', async () => {
-    api.getSessions.mockResolvedValue({ data: mockSessions })
-    api.getKatas.mockResolvedValue({ data: mockKatas })
+    ;(api.getSessions as any).mockResolvedValue({ data: mockSessions })
+    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
 
     renderWithRouter(<SessionsPage />)
 
@@ -202,8 +208,8 @@ describe('SessionsPage', () => {
   })
 
   it('renders "New Session" button', async () => {
-    api.getSessions.mockResolvedValue({ data: mockSessions })
-    api.getKatas.mockResolvedValue({ data: mockKatas })
+    ;(api.getSessions as any).mockResolvedValue({ data: mockSessions })
+    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
 
     renderWithRouter(<SessionsPage />)
 

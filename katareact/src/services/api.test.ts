@@ -3,13 +3,13 @@ import { api } from './api'
 
 describe('API Client', () => {
   beforeEach(() => {
-    global.fetch = vi.fn()
+    global.fetch = vi.fn() as any
   })
 
   describe('getSessions', () => {
     it('fetches sessions from the API', async () => {
       const mockData = { data: [{ id: 1, kata_id: 1 }] }
-      global.fetch.mockResolvedValueOnce({
+      ;(global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => mockData,
       })
@@ -21,7 +21,7 @@ describe('API Client', () => {
     })
 
     it('throws error on failed request', async () => {
-      global.fetch.mockResolvedValueOnce({
+      ;(global.fetch as any).mockResolvedValueOnce({
         ok: false,
         status: 500,
         json: async () => ({ message: 'Server error' }),
@@ -34,7 +34,7 @@ describe('API Client', () => {
   describe('getSession', () => {
     it('fetches a single session by id', async () => {
       const mockData = { data: { id: 1, kata_id: 1 } }
-      global.fetch.mockResolvedValueOnce({
+      ;(global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => mockData,
       })
@@ -48,10 +48,15 @@ describe('API Client', () => {
 
   describe('createSession', () => {
     it('creates a new session', async () => {
-      const sessionData = { kata_id: 1, practiced_at: '2025-01-10T10:00:00Z' }
+      const sessionData = {
+        kata_id: 1,
+        practiced_at: '2025-01-10T10:00:00Z',
+        in_course: false,
+        notes: ''
+      }
       const mockResponse = { data: { id: 1, ...sessionData } }
 
-      global.fetch.mockResolvedValueOnce({
+      ;(global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
       })
@@ -72,7 +77,7 @@ describe('API Client', () => {
       const sessionData = { notes: 'Updated notes' }
       const mockResponse = { data: { id: 1, ...sessionData } }
 
-      global.fetch.mockResolvedValueOnce({
+      ;(global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
       })
@@ -90,7 +95,7 @@ describe('API Client', () => {
 
   describe('deleteSession', () => {
     it('deletes a session', async () => {
-      global.fetch.mockResolvedValueOnce({
+      ;(global.fetch as any).mockResolvedValueOnce({
         ok: true,
         status: 204,
       })
@@ -104,7 +109,7 @@ describe('API Client', () => {
     })
 
     it('throws error when delete fails', async () => {
-      global.fetch.mockResolvedValueOnce({
+      ;(global.fetch as any).mockResolvedValueOnce({
         ok: false,
         status: 404,
       })
@@ -115,8 +120,8 @@ describe('API Client', () => {
 
   describe('getKatas', () => {
     it('fetches all katas', async () => {
-      const mockData = { data: [{ id: 1, name: 'FizzBuzz', level: 1 }] }
-      global.fetch.mockResolvedValueOnce({
+      const mockData = { data: [{ id: 1, name: 'FizzBuzz', level: 'yellow' }] }
+      ;(global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => mockData,
       })
@@ -130,8 +135,8 @@ describe('API Client', () => {
 
   describe('getKata', () => {
     it('fetches a single kata by id', async () => {
-      const mockData = { data: { id: 1, name: 'FizzBuzz', level: 1 } }
-      global.fetch.mockResolvedValueOnce({
+      const mockData = { data: { id: 1, name: 'FizzBuzz', level: 'yellow' } }
+      ;(global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => mockData,
       })

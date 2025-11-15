@@ -1,6 +1,8 @@
+import type { ApiResponse, Kata, Session, SessionInput } from '../types'
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
-async function handleResponse(response) {
+async function handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: 'An error occurred' }))
     throw new Error(error.message || `HTTP error! status: ${response.status}`)
@@ -10,17 +12,17 @@ async function handleResponse(response) {
 
 export const api = {
   // Sessions
-  async getSessions() {
+  async getSessions(): Promise<ApiResponse<Session[]>> {
     const response = await fetch(`${API_BASE_URL}/sessions`)
-    return handleResponse(response)
+    return handleResponse<Session[]>(response)
   },
 
-  async getSession(id) {
+  async getSession(id: number): Promise<ApiResponse<Session>> {
     const response = await fetch(`${API_BASE_URL}/sessions/${id}`)
-    return handleResponse(response)
+    return handleResponse<Session>(response)
   },
 
-  async createSession(sessionData) {
+  async createSession(sessionData: SessionInput): Promise<ApiResponse<Session>> {
     const response = await fetch(`${API_BASE_URL}/sessions`, {
       method: 'POST',
       headers: {
@@ -28,10 +30,10 @@ export const api = {
       },
       body: JSON.stringify({ session: sessionData }),
     })
-    return handleResponse(response)
+    return handleResponse<Session>(response)
   },
 
-  async updateSession(id, sessionData) {
+  async updateSession(id: number, sessionData: Partial<SessionInput>): Promise<ApiResponse<Session>> {
     const response = await fetch(`${API_BASE_URL}/sessions/${id}`, {
       method: 'PUT',
       headers: {
@@ -39,27 +41,27 @@ export const api = {
       },
       body: JSON.stringify({ session: sessionData }),
     })
-    return handleResponse(response)
+    return handleResponse<Session>(response)
   },
 
-  async deleteSession(id) {
+  async deleteSession(id: number): Promise<null> {
     const response = await fetch(`${API_BASE_URL}/sessions/${id}`, {
       method: 'DELETE',
     })
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
-    return response.status === 204 ? null : response.json()
+    return null
   },
 
   // Katas
-  async getKatas() {
+  async getKatas(): Promise<ApiResponse<Kata[]>> {
     const response = await fetch(`${API_BASE_URL}/katas`)
-    return handleResponse(response)
+    return handleResponse<Kata[]>(response)
   },
 
-  async getKata(id) {
+  async getKata(id: number): Promise<ApiResponse<Kata>> {
     const response = await fetch(`${API_BASE_URL}/katas/${id}`)
-    return handleResponse(response)
+    return handleResponse<Kata>(response)
   },
 }

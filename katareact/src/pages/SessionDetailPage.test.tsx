@@ -24,12 +24,16 @@ describe('SessionDetailPage', () => {
     practiced_at: '2025-01-10T10:00:00Z',
     in_course: true,
     notes: '# Test Notes\n\nThis is a **test** session with `code`.',
+    inserted_at: '2025-01-10T10:00:00Z',
+    updated_at: '2025-01-10T10:00:00Z',
   }
 
   const mockKata = {
     id: 1,
     name: 'FizzBuzz',
-    level: 'yellow', // Backend returns kata levels as atom strings
+    level: 'yellow' as const, // Backend returns kata levels as atom strings
+    inserted_at: '2025-01-01T00:00:00Z',
+    updated_at: '2025-01-01T00:00:00Z',
   }
 
   beforeEach(() => {
@@ -38,7 +42,7 @@ describe('SessionDetailPage', () => {
   })
 
   it('renders loading state initially', () => {
-    api.getSession.mockReturnValue(new Promise(() => {}))
+    ;(api.getSession as any).mockReturnValue(new Promise(() => {}))
 
     renderWithRouter(<SessionDetailPage />)
 
@@ -46,8 +50,8 @@ describe('SessionDetailPage', () => {
   })
 
   it('displays session details after loading', async () => {
-    api.getSession.mockResolvedValue({ data: mockSession })
-    api.getKata.mockResolvedValue({ data: mockKata })
+    ;(api.getSession as any).mockResolvedValue({ data: mockSession })
+    ;(api.getKata as any).mockResolvedValue({ data: mockKata })
 
     renderWithRouter(<SessionDetailPage />)
 
@@ -61,8 +65,8 @@ describe('SessionDetailPage', () => {
   })
 
   it('applies correct color classes to kata level badge', async () => {
-    api.getSession.mockResolvedValue({ data: mockSession })
-    api.getKata.mockResolvedValue({ data: mockKata })
+    ;(api.getSession as any).mockResolvedValue({ data: mockSession })
+    ;(api.getKata as any).mockResolvedValue({ data: mockKata })
 
     renderWithRouter(<SessionDetailPage />)
 
@@ -73,8 +77,8 @@ describe('SessionDetailPage', () => {
   })
 
   it('renders markdown notes correctly', async () => {
-    api.getSession.mockResolvedValue({ data: mockSession })
-    api.getKata.mockResolvedValue({ data: mockKata })
+    ;(api.getSession as any).mockResolvedValue({ data: mockSession })
+    ;(api.getKata as any).mockResolvedValue({ data: mockKata })
 
     renderWithRouter(<SessionDetailPage />)
 
@@ -92,8 +96,8 @@ describe('SessionDetailPage', () => {
 
   it('does not show "In Course" badge for non-course sessions', async () => {
     const nonCourseSession = { ...mockSession, in_course: false }
-    api.getSession.mockResolvedValue({ data: nonCourseSession })
-    api.getKata.mockResolvedValue({ data: mockKata })
+    ;(api.getSession as any).mockResolvedValue({ data: nonCourseSession })
+    ;(api.getKata as any).mockResolvedValue({ data: mockKata })
 
     renderWithRouter(<SessionDetailPage />)
 
@@ -105,7 +109,7 @@ describe('SessionDetailPage', () => {
   })
 
   it('displays error message when API fails', async () => {
-    api.getSession.mockRejectedValue(new Error('Session not found'))
+    ;(api.getSession as any).mockRejectedValue(new Error('Session not found'))
 
     renderWithRouter(<SessionDetailPage />)
 
@@ -115,7 +119,7 @@ describe('SessionDetailPage', () => {
   })
 
   it('shows session not found message when session is null', async () => {
-    api.getSession.mockResolvedValue({ data: null })
+    ;(api.getSession as any).mockResolvedValue({ data: null })
 
     renderWithRouter(<SessionDetailPage />)
 
@@ -126,9 +130,9 @@ describe('SessionDetailPage', () => {
 
   it('deletes session and navigates when delete button is clicked', async () => {
     const user = userEvent.setup()
-    api.getSession.mockResolvedValue({ data: mockSession })
-    api.getKata.mockResolvedValue({ data: mockKata })
-    api.deleteSession.mockResolvedValue(null)
+    ;(api.getSession as any).mockResolvedValue({ data: mockSession })
+    ;(api.getKata as any).mockResolvedValue({ data: mockKata })
+    ;(api.deleteSession as any).mockResolvedValue(null)
 
     window.confirm = vi.fn(() => true)
 
@@ -142,14 +146,14 @@ describe('SessionDetailPage', () => {
     await user.click(deleteButton)
 
     expect(window.confirm).toHaveBeenCalledWith('Are you sure you want to delete this session?')
-    expect(api.deleteSession).toHaveBeenCalledWith('1')
+    expect(api.deleteSession).toHaveBeenCalledWith(1)
     expect(mockNavigate).toHaveBeenCalledWith('/')
   })
 
   it('does not delete when user cancels confirmation', async () => {
     const user = userEvent.setup()
-    api.getSession.mockResolvedValue({ data: mockSession })
-    api.getKata.mockResolvedValue({ data: mockKata })
+    ;(api.getSession as any).mockResolvedValue({ data: mockSession })
+    ;(api.getKata as any).mockResolvedValue({ data: mockKata })
 
     window.confirm = vi.fn(() => false)
 
@@ -168,9 +172,9 @@ describe('SessionDetailPage', () => {
 
   it('shows alert when delete fails', async () => {
     const user = userEvent.setup()
-    api.getSession.mockResolvedValue({ data: mockSession })
-    api.getKata.mockResolvedValue({ data: mockKata })
-    api.deleteSession.mockRejectedValue(new Error('Delete failed'))
+    ;(api.getSession as any).mockResolvedValue({ data: mockSession })
+    ;(api.getKata as any).mockResolvedValue({ data: mockKata })
+    ;(api.deleteSession as any).mockRejectedValue(new Error('Delete failed'))
 
     window.confirm = vi.fn(() => true)
     window.alert = vi.fn()
@@ -192,8 +196,8 @@ describe('SessionDetailPage', () => {
   })
 
   it('renders back to sessions link', async () => {
-    api.getSession.mockResolvedValue({ data: mockSession })
-    api.getKata.mockResolvedValue({ data: mockKata })
+    ;(api.getSession as any).mockResolvedValue({ data: mockSession })
+    ;(api.getKata as any).mockResolvedValue({ data: mockKata })
 
     renderWithRouter(<SessionDetailPage />)
 
@@ -204,8 +208,8 @@ describe('SessionDetailPage', () => {
   })
 
   it('displays session ID', async () => {
-    api.getSession.mockResolvedValue({ data: mockSession })
-    api.getKata.mockResolvedValue({ data: mockKata })
+    ;(api.getSession as any).mockResolvedValue({ data: mockSession })
+    ;(api.getKata as any).mockResolvedValue({ data: mockKata })
 
     renderWithRouter(<SessionDetailPage />)
 
@@ -216,8 +220,8 @@ describe('SessionDetailPage', () => {
 
   it('does not render notes section when notes are empty', async () => {
     const sessionWithoutNotes = { ...mockSession, notes: '' }
-    api.getSession.mockResolvedValue({ data: sessionWithoutNotes })
-    api.getKata.mockResolvedValue({ data: mockKata })
+    ;(api.getSession as any).mockResolvedValue({ data: sessionWithoutNotes })
+    ;(api.getKata as any).mockResolvedValue({ data: mockKata })
 
     renderWithRouter(<SessionDetailPage />)
 
@@ -229,8 +233,8 @@ describe('SessionDetailPage', () => {
   })
 
   it('formats the practiced_at date correctly', async () => {
-    api.getSession.mockResolvedValue({ data: mockSession })
-    api.getKata.mockResolvedValue({ data: mockKata })
+    ;(api.getSession as any).mockResolvedValue({ data: mockSession })
+    ;(api.getKata as any).mockResolvedValue({ data: mockKata })
 
     renderWithRouter(<SessionDetailPage />)
 

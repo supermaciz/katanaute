@@ -3,23 +3,28 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { api } from '../services/api'
 import { getKataLevelName, getKataLevelColor } from '../utils/kataLevels'
+import type { Session, Kata } from '../types'
 
 function SessionDetailPage() {
-  const { id } = useParams()
+  const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [session, setSession] = useState(null)
-  const [kata, setKata] = useState(null)
+  const [session, setSession] = useState<Session | null>(null)
+  const [kata, setKata] = useState<Kata | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    loadSession()
+    if (id) {
+      loadSession()
+    }
   }, [id])
 
   async function loadSession() {
+    if (!id) return
+
     try {
       setLoading(true)
-      const sessionData = await api.getSession(id)
+      const sessionData = await api.getSession(parseInt(id, 10))
       setSession(sessionData.data)
 
       // Load the associated kata
@@ -28,26 +33,27 @@ function SessionDetailPage() {
         setKata(kataData.data)
       }
     } catch (err) {
-      setError(err.message)
+      setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setLoading(false)
     }
   }
 
   async function handleDelete() {
+    if (!id) return
     if (!window.confirm('Are you sure you want to delete this session?')) {
       return
     }
 
     try {
-      await api.deleteSession(id)
+      await api.deleteSession(parseInt(id, 10))
       navigate('/')
     } catch (err) {
-      alert('Failed to delete session: ' + err.message)
+      alert('Failed to delete session: ' + (err instanceof Error ? err.message : 'Unknown error'))
     }
   }
 
-  function formatDate(dateString) {
+  function formatDate(dateString: string) {
     return new Date(dateString).toLocaleString('en-US', {
       year: 'numeric',
       month: 'long',

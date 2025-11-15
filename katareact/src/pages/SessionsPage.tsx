@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../services/api'
 import { getKataLevelName, getKataLevelColor } from '../utils/kataLevels'
+import type { Session, KataMap } from '../types'
 
 function SessionsPage() {
-  const [sessions, setSessions] = useState([])
-  const [katas, setKatas] = useState({})
+  const [sessions, setSessions] = useState<Session[]>([])
+  const [katas, setKatas] = useState<KataMap>({})
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadData()
@@ -22,26 +23,26 @@ function SessionsPage() {
       ])
 
       // Create a map of kata IDs to kata objects
-      const katasMap = {}
+      const katasMap: KataMap = {}
       katasData.data.forEach((kata) => {
         katasMap[kata.id] = kata
       })
 
       // Sort sessions by practice date (descending - newest first)
       const sortedSessions = [...sessionsData.data].sort((a, b) => {
-        return new Date(b.practiced_at) - new Date(a.practiced_at)
+        return new Date(b.practiced_at).getTime() - new Date(a.practiced_at).getTime()
       })
 
       setSessions(sortedSessions)
       setKatas(katasMap)
     } catch (err) {
-      setError(err.message)
+      setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setLoading(false)
     }
   }
 
-  async function handleDelete(id) {
+  async function handleDelete(id: number) {
     if (!window.confirm('Are you sure you want to delete this session?')) {
       return
     }
@@ -50,11 +51,11 @@ function SessionsPage() {
       await api.deleteSession(id)
       setSessions(sessions.filter((s) => s.id !== id))
     } catch (err) {
-      alert('Failed to delete session: ' + err.message)
+      alert('Failed to delete session: ' + (err instanceof Error ? err.message : 'Unknown error'))
     }
   }
 
-  function formatDate(dateString) {
+  function formatDate(dateString: string) {
     return new Date(dateString).toLocaleString('en-US', {
       year: 'numeric',
       month: 'short',

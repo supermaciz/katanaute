@@ -1,15 +1,23 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, ChangeEvent, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../services/api'
 import { getKataLevelName } from '../utils/kataLevels'
+import type { Kata, SessionInput } from '../types'
+
+interface FormData {
+  kata_id: string
+  practiced_at: string
+  in_course: boolean
+  notes: string
+}
 
 function NewSessionPage() {
   const navigate = useNavigate()
-  const [katas, setKatas] = useState([])
+  const [katas, setKatas] = useState<Kata[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState(null)
-  const [formData, setFormData] = useState({
+  const [error, setError] = useState<string | null>(null)
+  const [formData, setFormData] = useState<FormData>({
     kata_id: '',
     practiced_at: new Date().toISOString().slice(0, 16),
     in_course: false,
@@ -26,38 +34,41 @@ function NewSessionPage() {
       setKatas(data.data)
       // Set first kata as default
       if (data.data.length > 0) {
-        setFormData((prev) => ({ ...prev, kata_id: data.data[0].id }))
+        setFormData((prev) => ({ ...prev, kata_id: data.data[0].id.toString() }))
       }
     } catch (err) {
-      setError(err.message)
+      setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setLoading(false)
     }
   }
 
-  function handleChange(e) {
-    const { name, value, type, checked } = e.target
+  function handleChange(e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
+    const { name, value, type } = e.target
+    const checked = (e.target as HTMLInputElement).checked
     setFormData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }))
   }
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setSubmitting(true)
     setError(null)
 
     try {
       // Convert kata_id to integer
-      const sessionData = {
-        ...formData,
+      const sessionData: SessionInput = {
         kata_id: parseInt(formData.kata_id, 10),
+        practiced_at: formData.practiced_at,
+        in_course: formData.in_course,
+        notes: formData.notes,
       }
       await api.createSession(sessionData)
       navigate('/')
     } catch (err) {
-      setError(err.message)
+      setError(err instanceof Error ? err.message : 'An error occurred')
       setSubmitting(false)
     }
   }

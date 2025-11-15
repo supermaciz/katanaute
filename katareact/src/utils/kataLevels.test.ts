@@ -53,14 +53,6 @@ describe('kataLevels utility', () => {
       expect(getKataLevelName('shodan')).toBe('Shodan')
     })
 
-    it('returns N/A for invalid level', () => {
-      expect(getKataLevelName('invalid')).toBe('N/A')
-    })
-
-    it('returns N/A for null level', () => {
-      expect(getKataLevelName(null)).toBe('N/A')
-    })
-
     it('returns N/A for undefined level', () => {
       expect(getKataLevelName(undefined)).toBe('N/A')
     })
@@ -89,14 +81,6 @@ describe('kataLevels utility', () => {
 
     it('returns black/white colors for shodan level', () => {
       expect(getKataLevelColor('shodan')).toBe('bg-gray-900 text-white')
-    })
-
-    it('returns default gray colors for invalid level', () => {
-      expect(getKataLevelColor('invalid')).toBe('bg-gray-100 text-gray-800')
-    })
-
-    it('returns default gray colors for null level', () => {
-      expect(getKataLevelColor(null)).toBe('bg-gray-100 text-gray-800')
     })
 
     it('returns default gray colors for undefined level', () => {

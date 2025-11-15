@@ -24,7 +24,7 @@ describe('NewSessionPage', () => {
   })
 
   it('renders loading state initially', () => {
-    api.getKatas.mockReturnValue(new Promise(() => {}))
+    ;(api.getKatas as any).mockReturnValue(new Promise(() => {}))
 
     renderWithRouter(<NewSessionPage />)
 
@@ -32,7 +32,7 @@ describe('NewSessionPage', () => {
   })
 
   it('displays the form after loading katas', async () => {
-    api.getKatas.mockResolvedValue({ data: mockKatas })
+    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
 
     renderWithRouter(<NewSessionPage />)
 
@@ -47,7 +47,7 @@ describe('NewSessionPage', () => {
   })
 
   it('displays error message when API fails', async () => {
-    api.getKatas.mockRejectedValue(new Error('Failed to load katas'))
+    ;(api.getKatas as any).mockRejectedValue(new Error('Failed to load katas'))
 
     renderWithRouter(<NewSessionPage />)
 
@@ -57,7 +57,7 @@ describe('NewSessionPage', () => {
   })
 
   it('populates kata dropdown with available katas', async () => {
-    api.getKatas.mockResolvedValue({ data: mockKatas })
+    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
 
     renderWithRouter(<NewSessionPage />)
 
@@ -71,8 +71,8 @@ describe('NewSessionPage', () => {
 
   it('submits form with correct data', async () => {
     const user = userEvent.setup()
-    api.getKatas.mockResolvedValue({ data: mockKatas })
-    api.createSession.mockResolvedValue({ data: { id: 1 } })
+    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
+    ;(api.createSession as any).mockResolvedValue({ data: { id: 1 } })
 
     renderWithRouter(<NewSessionPage />)
 
@@ -109,7 +109,7 @@ describe('NewSessionPage', () => {
 
   it('navigates back when cancel button is clicked', async () => {
     const user = userEvent.setup()
-    api.getKatas.mockResolvedValue({ data: mockKatas })
+    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
 
     renderWithRouter(<NewSessionPage />)
 
@@ -125,8 +125,8 @@ describe('NewSessionPage', () => {
 
   it('disables submit button while submitting', async () => {
     const user = userEvent.setup()
-    api.getKatas.mockResolvedValue({ data: mockKatas })
-    api.createSession.mockReturnValue(new Promise(() => {})) // Never resolves
+    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
+    ;(api.createSession as any).mockReturnValue(new Promise(() => {})) // Never resolves
 
     renderWithRouter(<NewSessionPage />)
 
@@ -145,8 +145,8 @@ describe('NewSessionPage', () => {
 
   it('shows error message when submission fails', async () => {
     const user = userEvent.setup()
-    api.getKatas.mockResolvedValue({ data: mockKatas })
-    api.createSession.mockRejectedValue(new Error('Failed to create session'))
+    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
+    ;(api.createSession as any).mockRejectedValue(new Error('Failed to create session'))
 
     renderWithRouter(<NewSessionPage />)
 
@@ -166,12 +166,12 @@ describe('NewSessionPage', () => {
   })
 
   it('has default datetime value set to current time', async () => {
-    api.getKatas.mockResolvedValue({ data: mockKatas })
+    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
 
     renderWithRouter(<NewSessionPage />)
 
     await waitFor(() => {
-      const datetimeInput = screen.getByLabelText('Practiced At')
+      const datetimeInput = screen.getByLabelText('Practiced At') as HTMLInputElement
       expect(datetimeInput).toHaveValue()
       // Value should be in ISO format (yyyy-MM-ddThh:mm)
       expect(datetimeInput.value).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)
@@ -179,7 +179,7 @@ describe('NewSessionPage', () => {
   })
 
   it('unchecks "in course" checkbox by default', async () => {
-    api.getKatas.mockResolvedValue({ data: mockKatas })
+    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
 
     renderWithRouter(<NewSessionPage />)
 
