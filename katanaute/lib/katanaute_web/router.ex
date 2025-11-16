@@ -81,8 +81,8 @@ defmodule KatanauteWeb.Router do
     post "/auth/device/code", API.AuthController, :device_code
     post "/auth/device/token", API.AuthController, :device_token
 
-    # Public kata list
-    resources "/katas", KataController, only: [:index, :show]
+    # Public kata list and management
+    resources "/katas", KataController
   end
 
   # Authenticated API routes
