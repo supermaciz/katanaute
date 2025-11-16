@@ -12,7 +12,7 @@
   </div>
 
   <div class="mt-8 flex gap-4">
-    <.simple_form
+    <.form
       :let={f}
       for={%{}}
       as={:device}
@@ -21,14 +21,12 @@
       class="flex-1"
     >
       <.input field={f[:device_code_id]} type="hidden" value={@device_code.id} />
-      <:actions>
-        <.button class="w-full" variant="primary">
-          Approve
-        </.button>
-      </:actions>
-    </.simple_form>
+      <.button class="w-full" variant="primary">
+        Approve
+      </.button>
+    </.form>
 
-    <.simple_form
+    <.form
       :let={f}
       for={%{}}
       as={:device}
@@ -37,12 +35,10 @@
       class="flex-1"
     >
       <.input field={f[:device_code_id]} type="hidden" value={@device_code.id} />
-      <:actions>
-        <.button class="w-full" variant="outline">
-          Deny
-        </.button>
-      </:actions>
-    </.simple_form>
+      <.button class="w-full">
+        Deny
+      </.button>
+    </.form>
   </div>
 
   <p class="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
