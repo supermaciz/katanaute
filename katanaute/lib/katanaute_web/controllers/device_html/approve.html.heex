@@ -1,0 +1,51 @@
+<div class="mx-auto max-w-sm">
+  <.header class="text-center">
+    Authorize Device
+    <:subtitle>
+      Do you want to authorize this device to access your Katanaute account?
+    </:subtitle>
+  </.header>
+
+  <div class="mt-8 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+    <p class="text-center text-sm text-gray-600 dark:text-gray-400">Device Code</p>
+    <p class="text-center text-2xl font-bold font-mono mt-2"><%= @device_code.user_code %></p>
+  </div>
+
+  <div class="mt-8 flex gap-4">
+    <.simple_form
+      :let={f}
+      for={%{}}
+      as={:device}
+      action={~p"/device/approve"}
+      method="post"
+      class="flex-1"
+    >
+      <.input field={f[:device_code_id]} type="hidden" value={@device_code.id} />
+      <:actions>
+        <.button class="w-full" variant="primary">
+          Approve
+        </.button>
+      </:actions>
+    </.simple_form>
+
+    <.simple_form
+      :let={f}
+      for={%{}}
+      as={:device}
+      action={~p"/device/deny"}
+      method="post"
+      class="flex-1"
+    >
+      <.input field={f[:device_code_id]} type="hidden" value={@device_code.id} />
+      <:actions>
+        <.button class="w-full" variant="outline">
+          Deny
+        </.button>
+      </:actions>
+    </.simple_form>
+  </div>
+
+  <p class="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
+    Only approve if you initiated this request on your device.
+  </p>
+</div>

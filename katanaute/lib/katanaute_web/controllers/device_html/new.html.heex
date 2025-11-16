@@ -1,0 +1,28 @@
+<div class="mx-auto max-w-sm">
+  <.header class="text-center">
+    Device Authorization
+    <:subtitle>
+      Enter the code shown on your device to authorize it.
+    </:subtitle>
+  </.header>
+
+  <.simple_form :let={f} for={%{}} as={:device} action={~p"/device"} method="post">
+    <.error :if={@error}><%= @error %></.error>
+
+    <.input
+      field={f[:user_code]}
+      type="text"
+      label="Device Code"
+      placeholder="ABCD-1234"
+      value={@user_code}
+      required
+      autocomplete="off"
+    />
+
+    <:actions>
+      <.button phx-disable-with="Verifying..." class="w-full">
+        Continue
+      </.button>
+    </:actions>
+  </.simple_form>
+</div>
