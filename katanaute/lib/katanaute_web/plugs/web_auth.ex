@@ -19,6 +19,17 @@ defmodule KatanauteWeb.Plugs.WebAuth do
   @remember_me_cookie "_katanaute_web_user_remember_me"
   @remember_me_options [sign: true, max_age: @max_age, same_site: "Lax"]
 
+  def init(opts), do: opts
+
+  def call(conn, opts) do
+    case opts do
+      :fetch_current_user -> fetch_current_user(conn, [])
+      :require_authenticated_user -> require_authenticated_user(conn, [])
+      :redirect_if_user_is_authenticated -> redirect_if_user_is_authenticated(conn, [])
+      _ -> conn
+    end
+  end
+
   @doc """
   Logs the user in.
 
