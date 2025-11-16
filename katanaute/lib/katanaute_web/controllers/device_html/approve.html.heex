@@ -1,10 +1,12 @@
 <div class="mx-auto max-w-sm">
-  <.header class="text-center">
-    Authorize Device
-    <:subtitle>
-      Do you want to authorize this device to access your Katanaute account?
-    </:subtitle>
-  </.header>
+  <div class="text-center">
+    <.header>
+      Authorize Device
+      <:subtitle>
+        Do you want to authorize this device to access your Katanaute account?
+      </:subtitle>
+    </.header>
+  </div>
 
   <div class="mt-8 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
     <p class="text-center text-sm text-gray-600 dark:text-gray-400">Device Code</p>
@@ -20,7 +22,7 @@
       method="post"
       class="flex-1"
     >
-      <.input field={f[:device_code_id]} type="hidden" value={@device_code.id} />
+      <input type="hidden" name="device[device_code_id]" value={@device_code.id} />
       <.button class="w-full" variant="primary">
         Approve
       </.button>
@@ -34,7 +36,7 @@
       method="post"
       class="flex-1"
     >
-      <.input field={f[:device_code_id]} type="hidden" value={@device_code.id} />
+      <input type="hidden" name="device[device_code_id]" value={@device_code.id} />
       <.button class="w-full">
         Deny
       </.button>

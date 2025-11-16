@@ -1,10 +1,12 @@
 <div class="mx-auto max-w-sm">
-  <.header class="text-center">
-    Device Authorization
-    <:subtitle>
-      Enter the code shown on your device to authorize it.
-    </:subtitle>
-  </.header>
+  <div class="text-center">
+    <.header>
+      Device Authorization
+      <:subtitle>
+        Enter the code shown on your device to authorize it.
+      </:subtitle>
+    </.header>
+  </div>
 
   <.form :let={f} for={%{}} as={:device} action={~p"/device"} method="post">
     <%= if @error do %>
