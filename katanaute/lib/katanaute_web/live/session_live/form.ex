@@ -5,6 +5,8 @@ defmodule KatanauteWeb.SessionLive.Form do
   alias Katanaute.Training.Session
   alias Katanaute.Curriculum
 
+  on_mount {KatanauteWeb.Plugs.WebAuth, :ensure_authenticated}
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -51,7 +53,8 @@ defmodule KatanauteWeb.SessionLive.Form do
   defp return_to(_), do: "index"
 
   defp apply_action(socket, :edit, %{"id" => id}) do
-    session = Training.get_session!(id)
+    user = socket.assigns.current_user
+    session = Training.get_user_session!(user.id, id)
 
     socket
     |> assign(:page_title, "Edit Session")
@@ -92,12 +95,17 @@ defmodule KatanauteWeb.SessionLive.Form do
   end
 
   defp save_session(socket, :new, session_params) do
-    # Add user_id if available (from mount params for testing, or from current_user in production)
+    # Add user_id: prefer current_user (production), fall back to params user_id (testing)
     session_params =
-      if socket.assigns.user_id do
-        Map.put(session_params, "user_id", socket.assigns.user_id)
-      else
-        session_params
+      cond do
+        Map.has_key?(socket.assigns, :current_user) && socket.assigns.current_user ->
+          Map.put(session_params, "user_id", socket.assigns.current_user.id)
+
+        socket.assigns.user_id ->
+          Map.put(session_params, "user_id", socket.assigns.user_id)
+
+        true ->
+          session_params
       end
 
     case Training.create_session(session_params) do

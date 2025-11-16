@@ -3,6 +3,8 @@ defmodule KatanauteWeb.SessionLive.Show do
 
   alias Katanaute.Training
 
+  on_mount {KatanauteWeb.Plugs.WebAuth, :ensure_authenticated}
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -33,9 +35,11 @@ defmodule KatanauteWeb.SessionLive.Show do
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
+    user = socket.assigns.current_user
+
     {:ok,
      socket
      |> assign(:page_title, "Show Session")
-     |> assign(:session, Training.get_session!(id))}
+     |> assign(:session, Training.get_user_session!(user.id, id))}
   end
 end

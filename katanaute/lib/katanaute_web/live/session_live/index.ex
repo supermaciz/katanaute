@@ -3,6 +3,8 @@ defmodule KatanauteWeb.SessionLive.Index do
 
   alias Katanaute.Training
 
+  on_mount {KatanauteWeb.Plugs.WebAuth, :ensure_authenticated}
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -52,18 +54,19 @@ defmodule KatanauteWeb.SessionLive.Index do
     {:ok,
      socket
      |> assign(:page_title, "Listing Sessions")
-     |> stream(:sessions, list_sessions())}
+     |> stream(:sessions, list_sessions(socket.assigns.current_user))}
   end
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    session = Training.get_session!(id)
+    user = socket.assigns.current_user
+    session = Training.get_user_session!(user.id, id)
     {:ok, _} = Training.delete_session(session)
 
     {:noreply, stream_delete(socket, :sessions, session)}
   end
 
-  defp list_sessions() do
-    Training.list_sessions()
+  defp list_sessions(user) do
+    Training.list_user_sessions(user.id)
   end
 end
