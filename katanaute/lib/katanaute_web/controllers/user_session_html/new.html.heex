@@ -1,6 +1,7 @@
 <div class="mx-auto max-w-sm">
-  <.header class="text-center">
-    Log in to account
+  <div class="text-center">
+    <.header>
+      Log in to account
     <:subtitle>
       Don't have an account?
       <.link navigate={~p"/users/register"} class="font-semibold text-brand hover:underline">
@@ -8,7 +9,8 @@
       </.link>
       for an account now.
     </:subtitle>
-  </.header>
+    </.header>
+  </div>
 
   <.form :let={f} for={%{}} as={:user} action={~p"/users/log_in"}>
     <%= if @error_message do %>
