@@ -158,7 +158,10 @@ defmodule KatanauteWeb.API.AuthController do
   defp handle_device_code_status(conn, %{status: "denied"}) do
     conn
     |> put_status(:forbidden)
-    |> json(%{error: "access_denied", error_description: "The user denied the authorization request"})
+    |> json(%{
+      error: "access_denied",
+      error_description: "The user denied the authorization request"
+    })
   end
 
   defp handle_device_code_status(conn, %{status: "approved", user_id: user_id}) do
