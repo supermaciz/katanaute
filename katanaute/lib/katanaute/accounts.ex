@@ -261,10 +261,11 @@ defmodule Katanaute.Accounts do
   Gets a device code by its device_code value.
   """
   def get_device_code_by_code(device_code) do
+    now = DateTime.utc_now()
+
     Repo.one(
-      from d in DeviceCode.by_device_code_query(device_code),
-        join: _ in DeviceCode.valid_device_codes_query(),
-        on: true
+      from d in DeviceCode,
+        where: d.device_code == ^device_code and d.expires_at > ^now
     )
   end
 
@@ -272,10 +273,11 @@ defmodule Katanaute.Accounts do
   Gets a device code by its user_code value.
   """
   def get_device_code_by_user_code(user_code) do
+    now = DateTime.utc_now()
+
     Repo.one(
-      from d in DeviceCode.by_user_code_query(user_code),
-        join: _ in DeviceCode.valid_device_codes_query(),
-        on: true
+      from d in DeviceCode,
+        where: d.user_code == ^user_code and d.expires_at > ^now
     )
   end
 
