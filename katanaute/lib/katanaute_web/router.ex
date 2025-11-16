@@ -12,6 +12,11 @@ defmodule KatanauteWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug KatanauteWeb.Plugs.ApiAuth
+  end
+
+  pipeline :api_authenticated do
+    plug KatanauteWeb.Plugs.ApiAuth, :require_authenticated_user
   end
 
   scope "/", KatanauteWeb do
@@ -25,12 +30,50 @@ defmodule KatanauteWeb.Router do
     live "/sessions/:id/edit", SessionLive.Form, :edit
   end
 
-  # Other scopes may use custom stacks.
+  ## Authentication routes
+  scope "/", KatanauteWeb do
+    pipe_through [:browser, KatanauteWeb.Plugs.WebAuth, :redirect_if_user_is_authenticated]
+
+    get "/users/register", UserRegistrationController, :new
+    post "/users/register", UserRegistrationController, :create
+    get "/users/log_in", UserSessionController, :new
+    post "/users/log_in", UserSessionController, :create
+  end
+
+  scope "/", KatanauteWeb do
+    pipe_through [:browser, KatanauteWeb.Plugs.WebAuth, :fetch_current_user]
+
+    delete "/users/log_out", UserSessionController, :delete
+
+    # Device authorization flow
+    get "/device", DeviceController, :new
+    post "/device", DeviceController, :verify
+    get "/device/authorize", DeviceController, :authorize
+    post "/device/approve", DeviceController, :approve
+    post "/device/deny", DeviceController, :deny
+  end
+
+  # Public API routes (no authentication required)
   scope "/api", KatanauteWeb do
     pipe_through :api
 
-    resources "/sessions", SessionController, except: [:new, :edit]
+    # Authentication endpoints
+    post "/auth/register", API.AuthController, :register
+    post "/auth/token", API.AuthController, :create_token
+    delete "/auth/token", API.AuthController, :delete_token
+    post "/auth/device/code", API.AuthController, :device_code
+    post "/auth/device/token", API.AuthController, :device_token
+
+    # Public kata list
     resources "/katas", KataController, only: [:index, :show]
+  end
+
+  # Authenticated API routes
+  scope "/api", KatanauteWeb do
+    pipe_through [:api, :api_authenticated]
+
+    get "/auth/me", API.AuthController, :me
+    resources "/sessions", SessionController, except: [:new, :edit]
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

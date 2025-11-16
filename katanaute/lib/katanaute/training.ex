@@ -23,6 +23,21 @@ defmodule Katanaute.Training do
   end
 
   @doc """
+  Returns the list of sessions for a specific user.
+
+  ## Examples
+
+      iex> list_user_sessions(user_id)
+      [%Session{}, ...]
+
+  """
+  def list_user_sessions(user_id) do
+    from(s in Session, where: s.user_id == ^user_id)
+    |> Repo.all()
+    |> Repo.preload(:kata)
+  end
+
+  @doc """
   Gets a single session.
 
   Raises `Ecto.NoResultsError` if the Session does not exist.
@@ -38,6 +53,26 @@ defmodule Katanaute.Training do
   """
   def get_session!(id) do
     Repo.get!(Session, id)
+    |> Repo.preload(:kata)
+  end
+
+  @doc """
+  Gets a single session for a specific user.
+
+  Raises `Ecto.NoResultsError` if the Session does not exist or doesn't belong to the user.
+
+  ## Examples
+
+      iex> get_user_session!(user_id, session_id)
+      %Session{}
+
+      iex> get_user_session!(user_id, other_user_session_id)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_user_session!(user_id, id) do
+    from(s in Session, where: s.id == ^id and s.user_id == ^user_id)
+    |> Repo.one!()
     |> Repo.preload(:kata)
   end
 
