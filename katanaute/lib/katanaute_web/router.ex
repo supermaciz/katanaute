@@ -19,6 +19,17 @@ defmodule KatanauteWeb.Router do
     plug KatanauteWeb.Plugs.ApiAuth, :require_authenticated_user
   end
 
+  # Pipelines for web authentication
+  pipeline :redirect_if_authenticated do
+    plug KatanauteWeb.Plugs.WebAuth, :fetch_current_user
+    plug KatanauteWeb.Plugs.WebAuth, :redirect_if_user_is_authenticated
+  end
+
+  pipeline :require_authenticated do
+    plug KatanauteWeb.Plugs.WebAuth, :fetch_current_user
+    plug KatanauteWeb.Plugs.WebAuth, :require_authenticated_user
+  end
+
   scope "/", KatanauteWeb do
     pipe_through :browser
 
@@ -32,7 +43,7 @@ defmodule KatanauteWeb.Router do
 
   ## Authentication routes
   scope "/", KatanauteWeb do
-    pipe_through [:browser, KatanauteWeb.Plugs.WebAuth, :redirect_if_user_is_authenticated]
+    pipe_through [:browser, :redirect_if_authenticated]
 
     get "/users/register", UserRegistrationController, :new
     post "/users/register", UserRegistrationController, :create
@@ -41,13 +52,19 @@ defmodule KatanauteWeb.Router do
   end
 
   scope "/", KatanauteWeb do
-    pipe_through [:browser, KatanauteWeb.Plugs.WebAuth, :fetch_current_user]
+    pipe_through :browser
 
     delete "/users/log_out", UserSessionController, :delete
 
-    # Device authorization flow
+    # Device authorization flow (publicly accessible to enter code)
     get "/device", DeviceController, :new
     post "/device", DeviceController, :verify
+  end
+
+  scope "/", KatanauteWeb do
+    pipe_through [:browser, :require_authenticated]
+
+    # Device authorization (requires authentication)
     get "/device/authorize", DeviceController, :authorize
     post "/device/approve", DeviceController, :approve
     post "/device/deny", DeviceController, :deny
