@@ -22,15 +22,17 @@ kata4 = Repo.insert!(%Kata{name: "Seichin", level: :brown})
 kata5 = Repo.insert!(%Kata{name: "Seisan", level: :shodan})
 
 # Create test users
-{:ok, user1} = Accounts.register_user(%{
-  email: "test@example.com",
-  password: "testpassword123"
-})
+{:ok, user1} =
+  Accounts.register_user(%{
+    email: "test@example.com",
+    password: "testpassword123"
+  })
 
-{:ok, user2} = Accounts.register_user(%{
-  email: "demo@example.com",
-  password: "demopassword123"
-})
+{:ok, user2} =
+  Accounts.register_user(%{
+    email: "demo@example.com",
+    password: "demopassword123"
+  })
 
 # Create sample sessions for test user
 alias Katanaute.Training

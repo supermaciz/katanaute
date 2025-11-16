@@ -32,7 +32,11 @@ defmodule Katanaute.Accounts.DeviceCode do
   def build_device_code do
     device_code = generate_device_code()
     user_code = generate_user_code()
-    expires_at = DateTime.utc_now() |> DateTime.add(@device_code_validity_in_minutes * 60, :second) |> DateTime.truncate(:second)
+
+    expires_at =
+      DateTime.utc_now()
+      |> DateTime.add(@device_code_validity_in_minutes * 60, :second)
+      |> DateTime.truncate(:second)
 
     %__MODULE__{
       device_code: device_code,
