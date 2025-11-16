@@ -3,9 +3,6 @@ defmodule KatanauteWeb.DeviceController do
 
   alias Katanaute.Accounts
 
-  plug KatanauteWeb.Plugs.WebAuth, :fetch_current_user
-  plug KatanauteWeb.Plugs.WebAuth, :require_authenticated_user when action in [:approve, :deny]
-
   @doc """
   GET /device
   Show the device authorization page where users enter their code.

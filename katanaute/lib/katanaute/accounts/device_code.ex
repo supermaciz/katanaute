@@ -42,17 +42,13 @@ defmodule Katanaute.Accounts.DeviceCode do
     }
   end
 
-  @doc """
-  Generates a random device code (UUID-like).
-  """
+  # Generates a random device code (UUID-like).
   defp generate_device_code do
     :crypto.strong_rand_bytes(32)
     |> Base.url_encode64(padding: false)
   end
 
-  @doc """
-  Generates a human-readable user code (e.g., "ABCD-1234").
-  """
+  # Generates a human-readable user code (e.g., "ABCD-1234").
   defp generate_user_code do
     # Generate 8 random alphanumeric characters
     part1 = generate_code_part(4)
