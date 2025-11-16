@@ -58,4 +58,15 @@ defmodule KatanauteWeb.ConnCase do
 
     %{user: user, user_token: token}
   end
+
+  @doc """
+  Logs the given user into the provided connection for browser tests.
+  """
+  def log_in_user(conn, user) do
+    token = Katanaute.Accounts.generate_user_session_token(user)
+
+    conn
+    |> Phoenix.ConnTest.init_test_session(%{})
+    |> Plug.Conn.put_session(:user_token, token)
+  end
 end
