@@ -10,18 +10,20 @@
     </:subtitle>
   </.header>
 
-  <.simple_form :let={f} for={@changeset} action={~p"/users/register"}>
-    <.error :if={@changeset.action == :insert}>
-      Oops, something went wrong! Please check the errors below.
-    </.error>
+  <.form :let={f} for={@changeset} action={~p"/users/register"}>
+    <%= if @changeset.action == :insert do %>
+      <div class="alert alert-danger">
+        <p>Oops, something went wrong! Please check the errors below.</p>
+      </div>
+    <% end %>
 
     <.input field={f[:email]} type="email" label="Email" required />
     <.input field={f[:password]} type="password" label="Password" required />
 
-    <:actions>
+    <div class="mt-2">
       <.button phx-disable-with="Creating account..." class="w-full">
         Create an account
       </.button>
-    </:actions>
-  </.simple_form>
+    </div>
+  </.form>
 </div>
