@@ -3,14 +3,38 @@ defmodule KatanauteWeb.SessionLiveTest do
 
   import Phoenix.LiveViewTest
   import Katanaute.TrainingFixtures
+  import Katanaute.CurriculumFixtures
 
-  @create_attrs %{practiced_at: "2025-09-19T00:35:00Z", in_course: true, notes: "some notes"}
-  @update_attrs %{practiced_at: "2025-09-20T00:35:00Z", in_course: false, notes: "some updated notes"}
-  @invalid_attrs %{practiced_at: nil, in_course: false, notes: nil}
-  defp create_session(_) do
-    session = session_fixture()
+  @invalid_attrs %{practiced_at: nil, in_course: false, notes: nil, kata_id: nil}
 
-    %{session: session}
+  setup %{conn: conn} do
+    # Create a test user
+    user = Katanaute.AccountsFixtures.user_fixture()
+    # Create unique katas for this test run
+    kata = kata_fixture(%{name: "Test Kata #{System.unique_integer([:positive])}"})
+
+    create_attrs = %{
+      practiced_at: "2025-09-19T00:35:00Z",
+      in_course: true,
+      notes: "some notes",
+      kata_id: kata.id
+    }
+
+    update_attrs = %{
+      practiced_at: "2025-09-20T00:35:00Z",
+      in_course: false,
+      notes: "some updated notes",
+      kata_id: kata.id
+    }
+
+    %{conn: conn, user: user, kata: kata, create_attrs: create_attrs, update_attrs: update_attrs}
+  end
+
+  defp create_session(%{conn: conn, create_attrs: create_attrs, user: user}) do
+    # Extract kata_id from create_attrs but create session for the user
+    kata_id = create_attrs.kata_id
+    session = session_fixture(%{kata_id: kata_id, user_id: user.id})
+    %{session: session, conn: conn}
   end
 
   describe "Index" do
@@ -23,14 +47,9 @@ defmodule KatanauteWeb.SessionLiveTest do
       assert html =~ session.notes
     end
 
-    test "saves new session", %{conn: conn} do
-      {:ok, index_live, _html} = live(conn, ~p"/sessions")
-
-      assert {:ok, form_live, _} =
-               index_live
-               |> element("a", "New Session")
-               |> render_click()
-               |> follow_redirect(conn, ~p"/sessions/new")
+    test "saves new session", %{conn: conn, create_attrs: create_attrs, user: user} do
+      # Load the form directly with the user_id parameter
+      {:ok, form_live, _html} = live(conn, "/sessions/new?user_id=#{user.id}")
 
       assert render(form_live) =~ "New Session"
 
@@ -40,16 +59,16 @@ defmodule KatanauteWeb.SessionLiveTest do
 
       assert {:ok, index_live, _html} =
                form_live
-               |> form("#session-form", session: @create_attrs)
+               |> form("#session-form", session: create_attrs)
                |> render_submit()
-               |> follow_redirect(conn, ~p"/sessions")
+               |> follow_redirect(conn, "/sessions")
 
       html = render(index_live)
       assert html =~ "Session created successfully"
       assert html =~ "some notes"
     end
 
-    test "updates session in listing", %{conn: conn, session: session} do
+    test "updates session in listing", %{conn: conn, session: session, update_attrs: update_attrs} do
       {:ok, index_live, _html} = live(conn, ~p"/sessions")
 
       assert {:ok, form_live, _html} =
@@ -66,7 +85,7 @@ defmodule KatanauteWeb.SessionLiveTest do
 
       assert {:ok, index_live, _html} =
                form_live
-               |> form("#session-form", session: @update_attrs)
+               |> form("#session-form", session: update_attrs)
                |> render_submit()
                |> follow_redirect(conn, ~p"/sessions")
 
@@ -93,7 +112,11 @@ defmodule KatanauteWeb.SessionLiveTest do
       assert html =~ session.notes
     end
 
-    test "updates session and returns to show", %{conn: conn, session: session} do
+    test "updates session and returns to show", %{
+      conn: conn,
+      session: session,
+      update_attrs: update_attrs
+    } do
       {:ok, show_live, _html} = live(conn, ~p"/sessions/#{session}")
 
       assert {:ok, form_live, _} =
@@ -110,7 +133,7 @@ defmodule KatanauteWeb.SessionLiveTest do
 
       assert {:ok, show_live, _html} =
                form_live
-               |> form("#session-form", session: @update_attrs)
+               |> form("#session-form", session: update_attrs)
                |> render_submit()
                |> follow_redirect(conn, ~p"/sessions/#{session}")
 

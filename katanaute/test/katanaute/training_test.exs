@@ -12,16 +12,40 @@ defmodule Katanaute.TrainingTest do
 
     test "list_sessions/0 returns all sessions" do
       session = session_fixture()
-      assert Training.list_sessions() == [session]
+      sessions = Training.list_sessions()
+
+      assert length(sessions) == 1
+      [returned_session] = sessions
+      assert returned_session.id == session.id
+      assert returned_session.practiced_at == session.practiced_at
+      assert returned_session.in_course == session.in_course
+      assert returned_session.notes == session.notes
     end
 
     test "get_session!/1 returns the session with given id" do
       session = session_fixture()
-      assert Training.get_session!(session.id) == session
+      returned_session = Training.get_session!(session.id)
+
+      assert returned_session.id == session.id
+      assert returned_session.practiced_at == session.practiced_at
+      assert returned_session.in_course == session.in_course
+      assert returned_session.notes == session.notes
     end
 
     test "create_session/1 with valid data creates a session" do
-      valid_attrs = %{practiced_at: ~U[2025-09-19 00:35:00Z], in_course: true, notes: "some notes"}
+      import Katanaute.CurriculumFixtures
+      import Katanaute.AccountsFixtures
+
+      kata = kata_fixture()
+      user = user_fixture()
+
+      valid_attrs = %{
+        practiced_at: ~U[2025-09-19 00:35:00Z],
+        in_course: true,
+        notes: "some notes",
+        kata_id: kata.id,
+        user_id: user.id
+      }
 
       assert {:ok, %Session{} = session} = Training.create_session(valid_attrs)
       assert session.practiced_at == ~U[2025-09-19 00:35:00Z]
@@ -35,7 +59,12 @@ defmodule Katanaute.TrainingTest do
 
     test "update_session/2 with valid data updates the session" do
       session = session_fixture()
-      update_attrs = %{practiced_at: ~U[2025-09-20 00:35:00Z], in_course: false, notes: "some updated notes"}
+
+      update_attrs = %{
+        practiced_at: ~U[2025-09-20 00:35:00Z],
+        in_course: false,
+        notes: "some updated notes"
+      }
 
       assert {:ok, %Session{} = session} = Training.update_session(session, update_attrs)
       assert session.practiced_at == ~U[2025-09-20 00:35:00Z]
@@ -46,7 +75,12 @@ defmodule Katanaute.TrainingTest do
     test "update_session/2 with invalid data returns error changeset" do
       session = session_fixture()
       assert {:error, %Ecto.Changeset{}} = Training.update_session(session, @invalid_attrs)
-      assert session == Training.get_session!(session.id)
+
+      returned_session = Training.get_session!(session.id)
+      assert returned_session.id == session.id
+      assert returned_session.practiced_at == session.practiced_at
+      assert returned_session.in_course == session.in_course
+      assert returned_session.notes == session.notes
     end
 
     test "delete_session/1 deletes the session" do

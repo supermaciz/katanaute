@@ -35,4 +35,27 @@ defmodule KatanauteWeb.ConnCase do
     Katanaute.DataCase.setup_sandbox(tags)
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
+
+  @doc """
+  Set up an authenticated connection with a user and API token.
+  Returns {conn, user} tuple.
+  """
+  def with_api_auth(conn) do
+    user = Katanaute.AccountsFixtures.user_fixture()
+    token = Katanaute.AccountsFixtures.api_token_fixture(user)
+
+    auth_conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{token}")
+    {auth_conn, user}
+  end
+
+  @doc """
+  Set up an authenticated LiveView session with a logged-in user.
+  Returns a map with the user that can be used as context in live tests.
+  """
+  def login_user(_context) do
+    user = Katanaute.AccountsFixtures.user_fixture()
+    token = Katanaute.Accounts.generate_user_session_token(user)
+
+    %{user: user, user_token: token}
+  end
 end

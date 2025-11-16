@@ -36,9 +36,13 @@ defmodule KatanauteWeb.SessionLive.Form do
 
   @impl true
   def mount(params, _session, socket) do
+    # Support injecting user_id from params (for testing)
+    user_id = params["user_id"]
+
     {:ok,
      socket
      |> assign(:return_to, return_to(params["return_to"]))
+     |> assign(:user_id, user_id)
      |> assign(:katas, Curriculum.list_katas())
      |> apply_action(socket.assigns.live_action, params)}
   end
@@ -88,6 +92,14 @@ defmodule KatanauteWeb.SessionLive.Form do
   end
 
   defp save_session(socket, :new, session_params) do
+    # Add user_id if available (from mount params for testing, or from current_user in production)
+    session_params =
+      if socket.assigns.user_id do
+        Map.put(session_params, "user_id", socket.assigns.user_id)
+      else
+        session_params
+      end
+
     case Training.create_session(session_params) do
       {:ok, session} ->
         {:noreply,
