@@ -13,6 +13,8 @@ defmodule KatanauteWeb.SessionLiveTest do
     # Create unique katas for this test run
     kata = kata_fixture(%{name: "Test Kata #{System.unique_integer([:positive])}"})
 
+    conn = log_in_user(conn, user)
+
     create_attrs = %{
       practiced_at: "2025-09-19T00:35:00Z",
       in_course: true,
