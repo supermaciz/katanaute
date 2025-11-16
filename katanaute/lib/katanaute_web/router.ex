@@ -34,11 +34,19 @@ defmodule KatanauteWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+  end
 
-    live "/sessions", SessionLive.Index, :index
-    live "/sessions/new", SessionLive.Form, :new
-    live "/sessions/:id", SessionLive.Show, :show
-    live "/sessions/:id/edit", SessionLive.Form, :edit
+  # Authenticated LiveView routes
+  scope "/", KatanauteWeb do
+    pipe_through :browser
+
+    live_session :authenticated_sessions,
+      on_mount: [{KatanauteWeb.Plugs.WebAuth, :ensure_authenticated}] do
+      live "/sessions", SessionLive.Index, :index
+      live "/sessions/new", SessionLive.Form, :new
+      live "/sessions/:id", SessionLive.Show, :show
+      live "/sessions/:id/edit", SessionLive.Form, :edit
+    end
   end
 
   ## Authentication routes
