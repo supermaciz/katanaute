@@ -170,7 +170,8 @@ class APIClient:
         try:
             response = requests.post(url, headers=self._headers())
             response.raise_for_status()
-            return response.json()
+            result = response.json()
+            return result['data']
         except requests.exceptions.RequestException as e:
             raise KatanauteAPIError(f"Failed to start device flow: {e}")
 
