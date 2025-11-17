@@ -20,8 +20,9 @@ type DeviceCodeResponse struct {
 
 // DeviceTokenResponse represents the response when polling for token
 type DeviceTokenResponse struct {
-	Token string `json:"token"`
-	User  User   `json:"user"`
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
+	User        User   `json:"user"`
 }
 
 // User represents a user in the system
@@ -80,23 +81,24 @@ func PollForToken(baseURL, deviceCode string) (*DeviceTokenResponse, error) {
 		return nil, fmt.Errorf("failed to read response: %w", err)
 	}
 
-	// Handle pending authorization (HTTP 400 with "pending" message)
-	if resp.StatusCode == http.StatusBadRequest {
-		var errorResp struct {
-			Error string `json:"error"`
-		}
-		if err := json.Unmarshal(data, &errorResp); err == nil {
-			if errorResp.Error == "authorization_pending" || errorResp.Error == "pending" {
-				return nil, fmt.Errorf("authorization_pending")
-			}
-		}
-		return nil, fmt.Errorf("authorization failed: %s", string(data))
-	}
-
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusBadRequest {
 		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode, string(data))
 	}
 
+	// Check if response contains an error field (pending, denied, etc.)
+	// Backend returns HTTP 200 with error field when authorization is pending
+	var errorCheck struct {
+		Error            string `json:"error"`
+		ErrorDescription string `json:"error_description"`
+	}
+	if err := json.Unmarshal(data, &errorCheck); err == nil && errorCheck.Error != "" {
+		if errorCheck.Error == "authorization_pending" {
+			return nil, fmt.Errorf("authorization_pending")
+		}
+		return nil, fmt.Errorf("authorization failed: %s - %s", errorCheck.Error, errorCheck.ErrorDescription)
+	}
+
+	// Parse successful response
 	var response struct {
 		Data DeviceTokenResponse `json:"data"`
 	}
@@ -138,7 +140,7 @@ func AuthenticateWithDeviceFlow(baseURL string, onCodeReceived func(userCode, ve
 		}
 
 		// Success! Return the token
-		return tokenResp.Token, nil
+		return tokenResp.AccessToken, nil
 	}
 
 	return "", fmt.Errorf("device authorization timed out")
