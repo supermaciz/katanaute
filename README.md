@@ -6,8 +6,6 @@ A multi-client Uechi-Ryu Karate kata training tracker with Phoenix backend, Reac
 
 It's useless. I'm doing this for fun and to learn some stuff.
 
-But if you really want to track your kata practice sessions across multiple interfaces (web, terminal, and LiveView), this might be for you.
-
 ## Project Structure
 
 This is a monorepo with three integrated components:
