@@ -93,7 +93,7 @@ class LoginView(ctk.CTkFrame):
         self.api = api
 
         # Title
-        title = ctk.CTkLabel(self, text="PyKata Login", font=ctk.CTkFont(size=24, weight="bold"))
+        title = ctk.CTkLabel(self, text="PyKata Login", font=ctk.CTkFont(size=40, weight="bold"))
         title.pack(pady=(0, 30))
 
         # Tab view for different auth methods
@@ -117,18 +117,18 @@ class LoginView(ctk.CTkFrame):
         """Create email/password login tab."""
         tab = self.tabview.tab("Email/Password")
 
-        ctk.CTkLabel(tab, text="Login with email and password").pack(pady=10)
+        ctk.CTkLabel(tab, text="Login with email and password", font=ctk.CTkFont(size=16)).pack(pady=10)
 
-        self.email_entry = ctk.CTkEntry(tab, placeholder_text="Email", width=300)
+        self.email_entry = ctk.CTkEntry(tab, placeholder_text="Email", width=300, font=ctk.CTkFont(size=15))
         self.email_entry.pack(pady=10)
 
-        self.password_entry = ctk.CTkEntry(tab, placeholder_text="Password", width=300, show="*")
+        self.password_entry = ctk.CTkEntry(tab, placeholder_text="Password", width=300, show="*", font=ctk.CTkFont(size=15))
         self.password_entry.pack(pady=10)
 
-        self.login_button = ctk.CTkButton(tab, text="Login", command=self._handle_login, width=300)
+        self.login_button = ctk.CTkButton(tab, text="Login", command=self._handle_login, width=300, font=ctk.CTkFont(size=15))
         self.login_button.pack(pady=10)
 
-        self.login_status = ctk.CTkLabel(tab, text="", text_color="red")
+        self.login_status = ctk.CTkLabel(tab, text="", text_color="red", font=ctk.CTkFont(size=14))
         self.login_status.pack(pady=5)
 
     def _create_device_flow_tab(self):
@@ -138,24 +138,26 @@ class LoginView(ctk.CTkFrame):
         ctk.CTkLabel(
             tab,
             text="Authenticate using your browser\n(recommended for headless/remote systems)",
-            justify="center"
+            justify="center",
+            font=ctk.CTkFont(size=16)
         ).pack(pady=10)
 
         self.device_start_button = ctk.CTkButton(
             tab,
             text="Start Device Flow",
             command=self._handle_device_flow,
-            width=300
+            width=300,
+            font=ctk.CTkFont(size=15)
         )
         self.device_start_button.pack(pady=10)
 
-        self.device_status = ctk.CTkLabel(tab, text="", wraplength=400)
+        self.device_status = ctk.CTkLabel(tab, text="", wraplength=400, font=ctk.CTkFont(size=15))
         self.device_status.pack(pady=10)
 
         self.device_code_label = ctk.CTkLabel(
             tab,
             text="",
-            font=ctk.CTkFont(size=20, weight="bold"),
+            font=ctk.CTkFont(size=24, weight="bold"),
             text_color="green"
         )
         self.device_code_label.pack(pady=10)
@@ -164,21 +166,21 @@ class LoginView(ctk.CTkFrame):
         """Create registration tab."""
         tab = self.tabview.tab("Register")
 
-        ctk.CTkLabel(tab, text="Create a new account").pack(pady=10)
+        ctk.CTkLabel(tab, text="Create a new account", font=ctk.CTkFont(size=16)).pack(pady=10)
 
-        self.reg_email_entry = ctk.CTkEntry(tab, placeholder_text="Email", width=300)
+        self.reg_email_entry = ctk.CTkEntry(tab, placeholder_text="Email", width=300, font=ctk.CTkFont(size=15))
         self.reg_email_entry.pack(pady=10)
 
-        self.reg_password_entry = ctk.CTkEntry(tab, placeholder_text="Password", width=300, show="*")
+        self.reg_password_entry = ctk.CTkEntry(tab, placeholder_text="Password", width=300, show="*", font=ctk.CTkFont(size=15))
         self.reg_password_entry.pack(pady=10)
 
-        self.reg_confirm_entry = ctk.CTkEntry(tab, placeholder_text="Confirm Password", width=300, show="*")
+        self.reg_confirm_entry = ctk.CTkEntry(tab, placeholder_text="Confirm Password", width=300, show="*", font=ctk.CTkFont(size=15))
         self.reg_confirm_entry.pack(pady=10)
 
-        self.register_button = ctk.CTkButton(tab, text="Register", command=self._handle_register, width=300)
+        self.register_button = ctk.CTkButton(tab, text="Register", command=self._handle_register, width=300, font=ctk.CTkFont(size=15))
         self.register_button.pack(pady=10)
 
-        self.register_status = ctk.CTkLabel(tab, text="", text_color="red")
+        self.register_status = ctk.CTkLabel(tab, text="", text_color="red", font=ctk.CTkFont(size=14))
         self.register_status.pack(pady=5)
 
     def _handle_login(self):
@@ -305,19 +307,20 @@ class MainView(ctk.CTkFrame):
         ctk.CTkLabel(
             header,
             text=f"PyKata - Training Sessions",
-            font=ctk.CTkFont(size=20, weight="bold")
+            font=ctk.CTkFont(size=28, weight="bold")
         ).pack(side="left", padx=10)
 
-        ctk.CTkLabel(header, text=f"Logged in as: {user_email}").pack(side="left", padx=20)
+        ctk.CTkLabel(header, text=f"Logged in as: {user_email}", font=ctk.CTkFont(size=14)).pack(side="left", padx=20)
 
-        ctk.CTkButton(header, text="Logout", command=self._handle_logout, width=100).pack(side="right", padx=10)
+        ctk.CTkButton(header, text="Logout", command=self._handle_logout, width=100, font=ctk.CTkFont(size=13)).pack(side="right", padx=10)
         ctk.CTkButton(
             header,
             text="+ New Session",
             command=self.parent.show_create_session_view,
-            width=120
+            width=120,
+            font=ctk.CTkFont(size=13)
         ).pack(side="right", padx=5)
-        ctk.CTkButton(header, text="Refresh", command=self._load_sessions, width=100).pack(side="right", padx=5)
+        ctk.CTkButton(header, text="Refresh", command=self._load_sessions, width=100, font=ctk.CTkFont(size=13)).pack(side="right", padx=5)
 
         # Sessions list (scrollable)
         self.sessions_frame = ctk.CTkScrollableFrame(self, label_text="Training Sessions")
@@ -332,7 +335,7 @@ class MainView(ctk.CTkFrame):
         for widget in self.sessions_frame.winfo_children():
             widget.destroy()
 
-        loading_label = ctk.CTkLabel(self.sessions_frame, text="Loading sessions...")
+        loading_label = ctk.CTkLabel(self.sessions_frame, text="Loading sessions...", font=ctk.CTkFont(size=16))
         loading_label.pack(pady=20)
 
         def load_thread():
@@ -364,7 +367,7 @@ class MainView(ctk.CTkFrame):
             ctk.CTkLabel(
                 self.sessions_frame,
                 text="No training sessions yet.\nClick '+ New Session' to create one.",
-                font=ctk.CTkFont(size=14)
+                font=ctk.CTkFont(size=18)
             ).pack(pady=40)
             return
 
@@ -393,19 +396,19 @@ class MainView(ctk.CTkFrame):
         ctk.CTkLabel(
             top_frame,
             text=kata_name,
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=ctk.CTkFont(size=20, weight="bold")
         ).pack(side="left", padx=(0, 10))
 
         level_color = LEVEL_COLORS.get(kata_level, '#EAB308')
         level_badge = ctk.CTkLabel(
             top_frame,
             text=kata_level.upper(),
-            font=ctk.CTkFont(size=10, weight="bold"),
+            font=ctk.CTkFont(size=13, weight="bold"),
             text_color="white",
             fg_color=level_color,
             corner_radius=4,
-            width=70,
-            height=20
+            width=80,
+            height=28
         )
         level_badge.pack(side="left")
 
@@ -413,12 +416,12 @@ class MainView(ctk.CTkFrame):
             course_badge = ctk.CTkLabel(
                 top_frame,
                 text="IN COURSE",
-                font=ctk.CTkFont(size=10, weight="bold"),
+                font=ctk.CTkFont(size=13, weight="bold"),
                 text_color="white",
                 fg_color="#8B5CF6",
                 corner_radius=4,
-                width=80,
-                height=20
+                width=100,
+                height=28
             )
             course_badge.pack(side="left", padx=5)
 
@@ -432,7 +435,7 @@ class MainView(ctk.CTkFrame):
         ctk.CTkLabel(
             left_frame,
             text=date_str,
-            font=ctk.CTkFont(size=12),
+            font=ctk.CTkFont(size=14),
             text_color="gray"
         ).pack(anchor="w", pady=(5, 0))
 
@@ -442,7 +445,7 @@ class MainView(ctk.CTkFrame):
             ctk.CTkLabel(
                 left_frame,
                 text=notes_preview,
-                font=ctk.CTkFont(size=11),
+                font=ctk.CTkFont(size=13),
                 text_color="lightgray",
                 wraplength=500,
                 justify="left"
@@ -456,7 +459,8 @@ class MainView(ctk.CTkFrame):
             right_frame,
             text="View Details",
             command=lambda s=session: self.parent.show_session_detail_view(s),
-            width=100
+            width=110,
+            font=ctk.CTkFont(size=13)
         ).pack(pady=2)
 
         ctk.CTkButton(
@@ -465,7 +469,8 @@ class MainView(ctk.CTkFrame):
             command=lambda s=session: self._delete_session(s),
             fg_color="darkred",
             hover_color="red",
-            width=100
+            width=110,
+            font=ctk.CTkFont(size=13)
         ).pack(pady=2)
 
     def _delete_session(self, session: Dict[str, Any]):
@@ -482,7 +487,7 @@ class MainView(ctk.CTkFrame):
         ctk.CTkLabel(
             dialog,
             text=f"Delete session for {kata_name}?",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=18, weight="bold")
         ).pack(pady=20)
 
         button_frame = ctk.CTkFrame(dialog, fg_color="transparent")
@@ -500,14 +505,15 @@ class MainView(ctk.CTkFrame):
 
             threading.Thread(target=delete_thread, daemon=True).start()
 
-        ctk.CTkButton(button_frame, text="Cancel", command=dialog.destroy, width=100).pack(side="left", padx=10)
+        ctk.CTkButton(button_frame, text="Cancel", command=dialog.destroy, width=110, font=ctk.CTkFont(size=13)).pack(side="left", padx=10)
         ctk.CTkButton(
             button_frame,
             text="Delete",
             command=confirm,
             fg_color="darkred",
             hover_color="red",
-            width=100
+            width=110,
+            font=ctk.CTkFont(size=13)
         ).pack(side="left", padx=10)
 
     def _handle_logout(self):
@@ -532,14 +538,15 @@ class CreateSessionView(ctk.CTkFrame):
         ctk.CTkLabel(
             header,
             text="Create New Training Session",
-            font=ctk.CTkFont(size=20, weight="bold")
+            font=ctk.CTkFont(size=28, weight="bold")
         ).pack(side="left")
 
         ctk.CTkButton(
             header,
             text="← Back",
             command=self.parent.show_main_view,
-            width=100
+            width=100,
+            font=ctk.CTkFont(size=13)
         ).pack(side="right")
 
         # Form frame
@@ -547,14 +554,14 @@ class CreateSessionView(ctk.CTkFrame):
         form.pack(fill="both", expand=True, padx=40, pady=20)
 
         # Kata selection
-        ctk.CTkLabel(form, text="Kata:", font=ctk.CTkFont(size=14, weight="bold")).pack(anchor="w", pady=(10, 5))
+        ctk.CTkLabel(form, text="Kata:", font=ctk.CTkFont(size=18, weight="bold")).pack(anchor="w", pady=(10, 5))
         self.kata_var = ctk.StringVar(value="Select a kata...")
-        self.kata_menu = ctk.CTkOptionMenu(form, variable=self.kata_var, values=["Loading..."], width=400)
+        self.kata_menu = ctk.CTkOptionMenu(form, variable=self.kata_var, values=["Loading..."], width=400, font=ctk.CTkFont(size=14))
         self.kata_menu.pack(anchor="w", pady=(0, 15))
 
         # Date/Time
-        ctk.CTkLabel(form, text="Date & Time:", font=ctk.CTkFont(size=14, weight="bold")).pack(anchor="w", pady=(10, 5))
-        self.datetime_entry = ctk.CTkEntry(form, placeholder_text="YYYY-MM-DD HH:MM:SS", width=400)
+        ctk.CTkLabel(form, text="Date & Time:", font=ctk.CTkFont(size=18, weight="bold")).pack(anchor="w", pady=(10, 5))
+        self.datetime_entry = ctk.CTkEntry(form, placeholder_text="YYYY-MM-DD HH:MM:SS", width=400, font=ctk.CTkFont(size=14))
         self.datetime_entry.insert(0, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         self.datetime_entry.pack(anchor="w", pady=(0, 15))
 
@@ -564,13 +571,13 @@ class CreateSessionView(ctk.CTkFrame):
             form,
             text="Part of structured learning path (In Course)",
             variable=self.in_course_var,
-            font=ctk.CTkFont(size=14)
+            font=ctk.CTkFont(size=15)
         )
         self.in_course_checkbox.pack(anchor="w", pady=(10, 15))
 
         # Notes
-        ctk.CTkLabel(form, text="Notes (Markdown):", font=ctk.CTkFont(size=14, weight="bold")).pack(anchor="w", pady=(10, 5))
-        self.notes_text = ctk.CTkTextbox(form, width=400, height=200)
+        ctk.CTkLabel(form, text="Notes (Markdown):", font=ctk.CTkFont(size=18, weight="bold")).pack(anchor="w", pady=(10, 5))
+        self.notes_text = ctk.CTkTextbox(form, width=400, height=200, font=ctk.CTkFont(size=14))
         self.notes_text.pack(anchor="w", pady=(0, 15))
 
         # Buttons
@@ -581,7 +588,8 @@ class CreateSessionView(ctk.CTkFrame):
             button_frame,
             text="Create Session",
             command=self._handle_create,
-            width=150
+            width=160,
+            font=ctk.CTkFont(size=14)
         )
         self.create_button.pack(side="left", padx=5)
 
@@ -590,11 +598,12 @@ class CreateSessionView(ctk.CTkFrame):
             text="Cancel",
             command=self.parent.show_main_view,
             fg_color="gray",
-            width=100
+            width=110,
+            font=ctk.CTkFont(size=14)
         ).pack(side="left", padx=5)
 
         # Status label
-        self.status_label = ctk.CTkLabel(form, text="", text_color="red")
+        self.status_label = ctk.CTkLabel(form, text="", text_color="red", font=ctk.CTkFont(size=14))
         self.status_label.pack(pady=10)
 
         # Load katas
@@ -691,14 +700,15 @@ class SessionDetailView(ctk.CTkFrame):
         ctk.CTkLabel(
             header,
             text="Session Details",
-            font=ctk.CTkFont(size=20, weight="bold")
+            font=ctk.CTkFont(size=28, weight="bold")
         ).pack(side="left")
 
         ctk.CTkButton(
             header,
             text="← Back to List",
             command=self.parent.show_main_view,
-            width=120
+            width=120,
+            font=ctk.CTkFont(size=13)
         ).pack(side="right")
 
         # Content frame
@@ -728,31 +738,31 @@ class SessionDetailView(ctk.CTkFrame):
         ctk.CTkLabel(
             kata_frame,
             text=kata['name'],
-            font=ctk.CTkFont(size=24, weight="bold")
+            font=ctk.CTkFont(size=32, weight="bold")
         ).pack(side="left", padx=(0, 10))
 
         level_color = LEVEL_COLORS.get(kata['level'], '#EAB308')
         ctk.CTkLabel(
             kata_frame,
             text=kata['level'].upper(),
-            font=ctk.CTkFont(size=12, weight="bold"),
+            font=ctk.CTkFont(size=14, weight="bold"),
             text_color="white",
             fg_color=level_color,
             corner_radius=4,
-            width=80,
-            height=24
+            width=95,
+            height=30
         ).pack(side="left")
 
         if self.session.get('in_course'):
             ctk.CTkLabel(
                 kata_frame,
                 text="IN COURSE",
-                font=ctk.CTkFont(size=12, weight="bold"),
+                font=ctk.CTkFont(size=14, weight="bold"),
                 text_color="white",
                 fg_color="#8B5CF6",
                 corner_radius=4,
-                width=90,
-                height=24
+                width=110,
+                height=30
             ).pack(side="left", padx=5)
 
         # Date
@@ -765,7 +775,7 @@ class SessionDetailView(ctk.CTkFrame):
         ctk.CTkLabel(
             content,
             text=f"📅 {date_str}",
-            font=ctk.CTkFont(size=14),
+            font=ctk.CTkFont(size=16),
             text_color="lightgray"
         ).pack(anchor="w", pady=10)
 
@@ -774,13 +784,13 @@ class SessionDetailView(ctk.CTkFrame):
             ctk.CTkLabel(
                 content,
                 text="Notes:",
-                font=ctk.CTkFont(size=16, weight="bold")
+                font=ctk.CTkFont(size=20, weight="bold")
             ).pack(anchor="w", pady=(20, 10))
 
             notes_frame = ctk.CTkFrame(content)
             notes_frame.pack(fill="both", expand=True, pady=10)
 
-            notes_text = ctk.CTkTextbox(notes_frame, wrap="word", height=300)
+            notes_text = ctk.CTkTextbox(notes_frame, wrap="word", height=300, font=ctk.CTkFont(size=14))
             notes_text.pack(fill="both", expand=True, padx=10, pady=10)
             notes_text.insert("1.0", self.session['notes'])
             notes_text.configure(state="disabled")  # Read-only
@@ -788,7 +798,7 @@ class SessionDetailView(ctk.CTkFrame):
             ctk.CTkLabel(
                 content,
                 text="No notes for this session.",
-                font=ctk.CTkFont(size=14),
+                font=ctk.CTkFont(size=16),
                 text_color="gray"
             ).pack(anchor="w", pady=20)
 
