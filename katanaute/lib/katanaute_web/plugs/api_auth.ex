@@ -13,13 +13,21 @@ defmodule KatanauteWeb.Plugs.ApiAuth do
 
   def init(opts), do: opts
 
-  def call(conn, _opts) do
-    case get_req_header(conn, "authorization") do
-      ["Bearer " <> token] ->
-        authenticate_user(conn, token)
+  def call(conn, opts) do
+    conn =
+      case get_req_header(conn, "authorization") do
+        ["Bearer " <> token] ->
+          authenticate_user(conn, token)
 
-      _ ->
-        conn
+        _ ->
+          conn
+      end
+
+    # If :require_authenticated_user option is passed, enforce authentication
+    if opts == :require_authenticated_user do
+      require_authenticated_user(conn, opts)
+    else
+      conn
     end
   end
 
