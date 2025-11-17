@@ -93,6 +93,10 @@ defmodule KatanauteWeb.DeviceController do
     end
   end
 
+  def approve(conn, %{"device" => %{"device_code_id" => device_code_id}}) do
+    approve(conn, %{"device_code_id" => device_code_id})
+  end
+
   @doc """
   POST /device/deny
   Deny the device authorization.
@@ -112,5 +116,9 @@ defmodule KatanauteWeb.DeviceController do
         |> put_flash(:error, "Failed to deny device")
         |> render(:approve, device_code: device_code)
     end
+  end
+
+  def deny(conn, %{"device" => %{"device_code_id" => device_code_id}}) do
+    deny(conn, %{"device_code_id" => device_code_id})
   end
 end
