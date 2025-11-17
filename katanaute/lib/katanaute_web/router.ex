@@ -20,6 +20,10 @@ defmodule KatanauteWeb.Router do
   end
 
   # Pipelines for web authentication
+  pipeline :fetch_current_user do
+    plug KatanauteWeb.Plugs.WebAuth, :fetch_current_user
+  end
+
   pipeline :redirect_if_authenticated do
     plug KatanauteWeb.Plugs.WebAuth, :fetch_current_user
     plug KatanauteWeb.Plugs.WebAuth, :redirect_if_user_is_authenticated
@@ -60,11 +64,11 @@ defmodule KatanauteWeb.Router do
   end
 
   scope "/", KatanauteWeb do
-    pipe_through :browser
+    pipe_through [:browser, :fetch_current_user]
 
     delete "/users/log_out", UserSessionController, :delete
 
-    # Device authorization flow (publicly accessible to enter code)
+    # Device authorization flow (publicly accessible to enter code, but checks if user is logged in)
     get "/device", DeviceController, :new
     post "/device", DeviceController, :verify
   end

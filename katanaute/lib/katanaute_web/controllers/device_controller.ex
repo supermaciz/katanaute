@@ -51,11 +51,23 @@ defmodule KatanauteWeb.DeviceController do
   def authorize(conn, _params) do
     device_code_id = get_session(conn, :device_code_id)
 
-    if device_code_id do
-      device_code = Katanaute.Repo.get(Katanaute.Accounts.DeviceCode, device_code_id)
-      render(conn, :approve, device_code: device_code)
-    else
-      redirect(conn, to: ~p"/device")
+    case device_code_id do
+      nil ->
+        conn
+        |> put_flash(:error, "No device code found. Please enter the code again.")
+        |> redirect(to: ~p"/device")
+
+      id ->
+        case Katanaute.Repo.get(Katanaute.Accounts.DeviceCode, id) do
+          nil ->
+            conn
+            |> delete_session(:device_code_id)
+            |> put_flash(:error, "Device code has expired. Please try again.")
+            |> redirect(to: ~p"/device")
+
+          device_code ->
+            render(conn, :approve, device_code: device_code)
+        end
     end
   end
 
