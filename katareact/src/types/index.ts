@@ -37,3 +37,26 @@ export interface SessionInput {
 
 // Kata map for quick lookups
 export type KataMap = Record<number, Kata>
+
+// User entity
+export interface User {
+  id: number
+  email: string
+  confirmed_at: string | null
+}
+
+// Auth types
+export interface LoginCredentials {
+  email: string
+  password: string
+}
+
+export interface RegisterCredentials {
+  email: string
+  password: string
+}
+
+export interface AuthResponse {
+  token: string
+  user: User
+}

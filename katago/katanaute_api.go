@@ -12,13 +12,41 @@ type Data[T Session | Kata] struct {
 	Data []*T `json:"data"`
 }
 
+// createAuthRequest creates an HTTP request with authentication headers
+func createAuthRequest(method, url, token string, body io.Reader) (*http.Request, error) {
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		return nil, err
+	}
+
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+
+	return req, nil
+}
+
 // FetchSessions returns all training sessions
 func FetchSessions(config *Config) ([]*Session, error) {
-	resp, err := http.Get(config.katanauteBaseURL + "/sessions")
+	req, err := createAuthRequest("GET", config.katanauteBaseURL+"/sessions", config.apiToken, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusUnauthorized {
+		return nil, fmt.Errorf("unauthorized: please login first")
+	}
+
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
@@ -38,11 +66,21 @@ func CreateSession(config *Config, session *SessionInput) error {
 		return fmt.Errorf("failed to marshal session: %w", err)
 	}
 
-	resp, err := http.Post(config.katanauteBaseURL+"/sessions", "application/json", bytes.NewBuffer(jsonData))
+	req, err := createAuthRequest("POST", config.katanauteBaseURL+"/sessions", config.apiToken, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to post session: %w", err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusUnauthorized {
+		return fmt.Errorf("unauthorized: please login first")
+	}
 
 	if resp.StatusCode != http.StatusCreated {
 		body, _ := io.ReadAll(resp.Body)
@@ -53,17 +91,28 @@ func CreateSession(config *Config, session *SessionInput) error {
 }
 
 func FetchKatas(config *Config) ([]*Kata, error) {
-	var katas Data[Kata]
+	req, err := createAuthRequest("GET", config.katanauteBaseURL+"/katas", config.apiToken, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
 
-	resp, err := http.Get(config.katanauteBaseURL + "/katas")
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get katas: %w", err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusUnauthorized {
+		return nil, fmt.Errorf("unauthorized: please login first")
+	}
+
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
+
+	var katas Data[Kata]
 	err = json.Unmarshal(data, &katas)
 	if err != nil {
 		fmt.Println("Debug: ", string(data))
