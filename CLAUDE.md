@@ -1,6 +1,6 @@
 # Katanaute - Kata Training Tracker
 
-A multi-client (Uechi-Ryu) Karate kata training tracker application with a Phoenix backend, React web frontend, and Go terminal UI client.
+A multi-client (Uechi-Ryu) Karate kata training tracker application with a Phoenix backend, React web frontend, Go terminal UI client, and Python GUI client.
 
 > **Note**: This file contains comprehensive development guidelines for the entire monorepo. For quick-start instructions, see [README.md](./README.md). For component-specific guidelines, see the CLAUDE.md files in each subdirectory.
 
@@ -16,6 +16,9 @@ cd katareact && npm install && npm run dev
 
 # Go TUI
 cd katago && go build && ./katago
+
+# Python GUI
+cd pykata && pip install -r requirements.txt && python pykata.py
 ```
 
 **Run Tests**
@@ -23,12 +26,14 @@ cd katago && go build && ./katago
 # Backend: mix test (in katanaute/)
 # React: npm test (in katareact/)
 # Go: Not yet implemented
+# Python: Not yet implemented
 ```
 
 **Component Documentation**
 - Phoenix: [katanaute/CLAUDE.md](./katanaute/CLAUDE.md)
 - React: [katareact/CLAUDE.md](./katareact/CLAUDE.md)
 - Go TUI: [katago/CLAUDE.md](./katago/CLAUDE.md)
+- Python GUI: [pykata/CLAUDE.md](./pykata/CLAUDE.md)
 
 ## Table of Contents
 
@@ -56,7 +61,7 @@ cd katago && go build && ./katago
 
 ## Repository Structure
 
-This is a monorepo containing three main components:
+This is a monorepo containing four client applications and one backend:
 
 ```
 katanaute/
@@ -68,6 +73,9 @@ katanaute/
 ├── katago/             # Terminal UI client (Go + Bubble Tea)
 │   ├── CLAUDE.md       # Go TUI development guidelines
 │   └── README.md       # Go TUI documentation
+├── pykata/             # Python GUI client (CustomTkinter)
+│   ├── CLAUDE.md       # Python GUI development guidelines
+│   └── README.md       # Python GUI documentation
 └── CLAUDE.md           # This file - overall project guidelines
 ```
 
@@ -106,6 +114,19 @@ katanaute/
   - Keyboard navigation (arrow keys, j/k, 'a' to add, Ctrl+C to quit)
   - Markdown rendering for session notes
   - API integration with Phoenix backend
+
+### GUI Client: PyKata (pykata/)
+- **Framework**: CustomTkinter (modern Tkinter wrapper)
+- **Language**: Python 3.8+
+- **Purpose**: Cross-platform desktop GUI for managing training sessions
+- **Key Features**:
+  - Modern, clean desktop interface with dark theme
+  - Multiple authentication methods (email/password, device flow, registration)
+  - View, create, and delete training sessions
+  - Session detail view with Markdown notes
+  - Color-coded kata level badges
+  - Token persistence for seamless re-authentication
+  - Responsive scrollable layouts
 
 ## Data Model
 
@@ -364,6 +385,15 @@ When working on a specific component, **ALWAYS** refer to its CLAUDE.md file:
   - Go-specific coding conventions
   - Debugging with DEBUG mode
 
+- **Python GUI**: See `pykata/CLAUDE.md` for:
+  - CustomTkinter widget composition and layouts
+  - Multi-view GUI architecture
+  - Threading for background API calls
+  - Device flow and token-based authentication
+  - API client patterns and error handling
+  - Python-specific coding conventions (PEP 8)
+  - Type hints and docstring conventions
+
 ## Commit Conventions
 
 Use **conventional commits** with appropriate scope:
@@ -389,6 +419,14 @@ style(react): improve responsive layout
 feat(katago): implement session detail view
 fix(katago): handle API connection errors
 docs(katago): update usage instructions
+```
+
+### Python GUI
+```
+feat(pykata): add session editing functionality
+fix(pykata): handle API connection errors gracefully
+test(pykata): add unit tests for API client
+docs(pykata): update installation instructions
 ```
 
 ### Repository-wide
@@ -417,6 +455,13 @@ ci: add GitHub Actions workflow
 - **Override**: Set `KATANAUTE_API_URL` environment variable
 - **Debug Mode**: Set `DEBUG=1` to enable logging to `debug.log`
 
+### Python GUI Configuration
+- **API Base URL**: `http://localhost:4000/api` (default in APIClient)
+- **Override**: Set `KATANAUTE_API_URL` environment variable
+- **Token Storage**: `~/.pykata_token` (file-based, permissions 0600)
+- **Theme**: Dark mode by default (configurable in `pykata.py`)
+- **Virtual Environment**: Recommended to use `venv` for dependency isolation
+
 ## Testing Strategy
 
 ### Backend Testing
@@ -435,6 +480,12 @@ ci: add GitHub Actions workflow
 - **Status**: Not yet implemented (see katago/CLAUDE.md TODO)
 - **Planned Framework**: Go's built-in `testing` package
 - **Coverage Goals**: API client tests, Bubble Tea Update logic tests
+
+### Python GUI Testing
+- **Status**: Not yet implemented (see pykata/CLAUDE.md TODO)
+- **Planned Framework**: pytest + unittest.mock
+- **Coverage Goals**: API client tests, authentication flows, error handling
+- **Manual Testing**: Comprehensive manual testing checklist available in pykata/CLAUDE.md
 
 ## Common Development Tasks
 
@@ -486,9 +537,10 @@ mix ecto.migrate
 
 ### Why Multiple Clients?
 - **React**: Modern web interface for full-featured management
-- **Go TUI**: Quick terminal access for developers
+- **Go TUI**: Quick terminal access for developers in the terminal
+- **PyKata (Python GUI)**: Cross-platform desktop application with native-like experience
 - **Phoenix LiveView**: Built-in real-time web option
-- All share the same backend API
+- All share the same backend API, demonstrating API flexibility and client diversity
 
 ### Kata Level System
 Based on martial arts belt progression, providing:
@@ -514,6 +566,11 @@ VITE_API_URL=http://localhost:4000/api    # Backend API URL
 ```bash
 KATANAUTE_API_URL=http://localhost:4000/api    # Backend API URL
 DEBUG=1                                         # Enable debug logging to debug.log
+```
+
+### Python GUI (PyKata)
+```bash
+KATANAUTE_API_URL=http://localhost:4000/api    # Backend API URL
 ```
 
 ## Security Considerations
@@ -551,6 +608,13 @@ Currently development-focused. For production:
 - Distribute to users
 - Users configure `KATANAUTE_API_URL`
 
+**Python GUI (PyKata)**
+- Install dependencies: `pip install -r requirements.txt`
+- Run directly: `python pykata.py`
+- Or build standalone executable: `pyinstaller --onefile --windowed --name PyKata pykata.py`
+- Distribute executable or source with requirements.txt
+- Users configure `KATANAUTE_API_URL` if needed
+
 ## Git Workflow
 
 1. **Branch Naming**: Use descriptive names (e.g., `feature/session-filtering`, `fix/kata-validation`)
@@ -579,6 +643,15 @@ Currently development-focused. For production:
 - Enable debug mode (`DEBUG=1 ./katago`) and check `debug.log` for errors
 - Verify network connectivity to backend
 
+### PyKata won't connect or shows errors
+- Verify backend is running on port 4000
+- Check API URL configuration with `KATANAUTE_API_URL` env var
+- Ensure Python dependencies are installed: `pip install -r requirements.txt`
+- Check token file permissions: `ls -la ~/.pykata_token`
+- Delete token and re-authenticate if having auth issues: `rm ~/.pykata_token`
+- Verify virtual environment is activated if using one
+- Check for Python version compatibility (requires Python 3.8+)
+
 ## Contributing
 
 When making changes:
@@ -603,32 +676,35 @@ When making changes:
 
 **Current Features**
 - ✅ User authentication with email/password
-- ✅ Device flow authentication for CLI clients
+- ✅ Device flow authentication for CLI/GUI clients
 - ✅ Bearer token API authentication
 - ✅ Phoenix backend with authenticated REST API
 - ✅ Phoenix LiveView web UI with session authentication
 - ✅ React SPA with full session management and auth
 - ✅ Go TUI with device flow authentication
+- ✅ Python GUI (PyKata) with multiple auth methods (email/password, device flow, registration)
 - ✅ Comprehensive test coverage (Phoenix, React)
 - ✅ Color-coded kata level system
 - ✅ Markdown notes support
 - ✅ Session sorting by date
 - ✅ Split-view layout in Go TUI
+- ✅ Modern desktop GUI with CustomTkinter
 
 **Known Limitations**
-- Session editing limited to LiveView (not in React or Go TUI)
-- Session deletion available in LiveView and React only
+- Session editing limited to LiveView (not in React, Go TUI, or PyKata)
+- Session deletion available in LiveView, React, and PyKata only
 - SQLite database (not suitable for production scale)
-- No tests for Go TUI
+- No tests for Go TUI or PyKata
 - No email confirmation flow (confirmed_at field exists but not enforced)
 
 **Future Enhancements** (See component TODOs)
-- Session editing in React frontend and Go TUI
+- Session editing in React frontend, Go TUI, and PyKata
 - Session deletion in Go TUI
-- Unit tests for Go TUI
+- Unit tests for Go TUI and PyKata
 - Email confirmation and password reset flows
 - Multi-factor authentication
-- Session filtering and search
-- Statistics and progress tracking
+- Session filtering and search (all clients)
+- Statistics and progress tracking (all clients)
 - PostgreSQL support for production
-- Error recovery UI in Go TUI
+- Error recovery UI in Go TUI and PyKata
+- Offline mode for PyKata with sync
