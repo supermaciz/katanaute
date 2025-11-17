@@ -2,20 +2,20 @@
   <div class="text-center">
     <.header>
       Log in to account
-    <:subtitle>
-      Don't have an account?
-      <.link navigate={~p"/users/register"} class="font-semibold text-brand hover:underline">
-        Sign up
-      </.link>
-      for an account now.
-    </:subtitle>
+      <:subtitle>
+        Don't have an account?
+        <.link navigate={~p"/users/register"} class="font-semibold text-brand hover:underline">
+          Sign up
+        </.link>
+        for an account now.
+      </:subtitle>
     </.header>
   </div>
 
   <.form :let={f} for={%{}} as={:user} action={~p"/users/log_in"}>
     <%= if @error_message do %>
       <div class="alert alert-danger">
-        <p><%= @error_message %></p>
+        <p>{@error_message}</p>
       </div>
     <% end %>
 
