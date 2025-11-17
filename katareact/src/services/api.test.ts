@@ -2,13 +2,21 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { api } from './api'
 
 describe('API Client', () => {
+  const seedToken = () => localStorage.setItem('katanaute_token', 'test-token')
+  const authHeaders = {
+    'Content-Type': 'application/json',
+    Authorization: 'Bearer test-token',
+  }
+
   beforeEach(() => {
     global.fetch = vi.fn() as any
+    localStorage.clear()
   })
 
   describe('getSessions', () => {
     it('fetches sessions from the API', async () => {
       const mockData = { data: [{ id: 1, kata_id: 1 }] }
+      seedToken()
       ;(global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => mockData,
@@ -16,7 +24,9 @@ describe('API Client', () => {
 
       const result = await api.getSessions()
 
-      expect(fetch).toHaveBeenCalledWith('/api/sessions')
+      expect(fetch).toHaveBeenCalledWith('/api/sessions', {
+        headers: authHeaders,
+      })
       expect(result).toEqual(mockData)
     })
 
@@ -34,6 +44,7 @@ describe('API Client', () => {
   describe('getSession', () => {
     it('fetches a single session by id', async () => {
       const mockData = { data: { id: 1, kata_id: 1 } }
+      seedToken()
       ;(global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => mockData,
@@ -41,7 +52,9 @@ describe('API Client', () => {
 
       const result = await api.getSession(1)
 
-      expect(fetch).toHaveBeenCalledWith('/api/sessions/1')
+      expect(fetch).toHaveBeenCalledWith('/api/sessions/1', {
+        headers: authHeaders,
+      })
       expect(result).toEqual(mockData)
     })
   })
@@ -56,6 +69,7 @@ describe('API Client', () => {
       }
       const mockResponse = { data: { id: 1, ...sessionData } }
 
+      seedToken()
       ;(global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
@@ -65,7 +79,7 @@ describe('API Client', () => {
 
       expect(fetch).toHaveBeenCalledWith('/api/sessions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
         body: JSON.stringify({ session: sessionData }),
       })
       expect(result).toEqual(mockResponse)
@@ -77,6 +91,7 @@ describe('API Client', () => {
       const sessionData = { notes: 'Updated notes' }
       const mockResponse = { data: { id: 1, ...sessionData } }
 
+      seedToken()
       ;(global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
@@ -86,7 +101,7 @@ describe('API Client', () => {
 
       expect(fetch).toHaveBeenCalledWith('/api/sessions/1', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
         body: JSON.stringify({ session: sessionData }),
       })
       expect(result).toEqual(mockResponse)
@@ -95,6 +110,7 @@ describe('API Client', () => {
 
   describe('deleteSession', () => {
     it('deletes a session', async () => {
+      seedToken()
       ;(global.fetch as any).mockResolvedValueOnce({
         ok: true,
         status: 204,
@@ -104,6 +120,7 @@ describe('API Client', () => {
 
       expect(fetch).toHaveBeenCalledWith('/api/sessions/1', {
         method: 'DELETE',
+        headers: authHeaders,
       })
       expect(result).toBeNull()
     })
@@ -121,6 +138,7 @@ describe('API Client', () => {
   describe('getKatas', () => {
     it('fetches all katas', async () => {
       const mockData = { data: [{ id: 1, name: 'FizzBuzz', level: 'yellow' }] }
+      seedToken()
       ;(global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => mockData,
@@ -128,7 +146,9 @@ describe('API Client', () => {
 
       const result = await api.getKatas()
 
-      expect(fetch).toHaveBeenCalledWith('/api/katas')
+      expect(fetch).toHaveBeenCalledWith('/api/katas', {
+        headers: authHeaders,
+      })
       expect(result).toEqual(mockData)
     })
   })
@@ -136,6 +156,7 @@ describe('API Client', () => {
   describe('getKata', () => {
     it('fetches a single kata by id', async () => {
       const mockData = { data: { id: 1, name: 'FizzBuzz', level: 'yellow' } }
+      seedToken()
       ;(global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => mockData,
@@ -143,7 +164,9 @@ describe('API Client', () => {
 
       const result = await api.getKata(1)
 
-      expect(fetch).toHaveBeenCalledWith('/api/katas/1')
+      expect(fetch).toHaveBeenCalledWith('/api/katas/1', {
+        headers: authHeaders,
+      })
       expect(result).toEqual(mockData)
     })
   })
