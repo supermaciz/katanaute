@@ -175,6 +175,37 @@ lipgloss.JoinVertical(lipgloss.Left, topView, bottomView)
 - **Always** wrap API calls in commands that return messages
 - Use `io.ReadAll()` to read response bodies
 - Use `json.Marshal()` and `json.Unmarshal()` for JSON handling
+- **Always** include the Bearer token in the `Authorization` header for authenticated endpoints
+
+### Authentication guidelines
+
+This application uses **device flow authentication** (OAuth2-style) for secure headless authentication:
+
+**Device Flow Process:**
+1. Request device code: `POST /api/auth/device/code`
+   - Receives `device_code` (secret) and `user_code` (human-readable)
+   - Receives `verification_uri` for user to visit
+2. Display user code and verification URL to user in TUI
+3. Poll for authorization: `POST /api/auth/device/token` with `device_code`
+   - Poll every 5 seconds (as indicated by API response `interval`)
+   - Returns `authorization_pending` while waiting
+   - Returns access token when user approves in browser
+   - Returns `access_denied` if user denies
+4. Store access token and use for all subsequent API requests
+5. Add token to requests: `Authorization: Bearer <token>` header
+
+**Token Management:**
+- Tokens are stored persistently (implementation-specific)
+- Tokens are included in all API requests to authenticated endpoints
+- Sessions endpoint requires authentication: `GET/POST/PUT/DELETE /api/sessions`
+- Katas endpoint is public: `GET /api/katas`
+- Handle `401 Unauthorized` responses by re-authenticating
+
+**Authentication State:**
+- Track authentication state in Model struct
+- Show authentication flow in UI before main content
+- Handle authentication errors gracefully
+- Allow re-authentication if token expires or is invalid
 
 #### API client pattern
 
@@ -335,6 +366,8 @@ func fetchDataCmd(config *Config) tea.Msg {
 
 ### Current features
 
+- ✅ Device flow authentication with OAuth2-style flow
+- ✅ Bearer token API authentication
 - ✅ View list of training sessions
 - ✅ Display session details with rendered Markdown notes
 - ✅ Session creation with form UI
@@ -349,6 +382,7 @@ func fetchDataCmd(config *Config) tea.Msg {
 - No error recovery UI (errors cause quit)
 - No offline mode or caching
 - No configuration file (only environment variables)
+- Token persistence implementation varies (check current implementation)
 
 ### TODO
 

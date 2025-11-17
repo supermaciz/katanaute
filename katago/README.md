@@ -8,9 +8,10 @@ Katago is a Go-based CLI application that provides an interactive terminal inter
 
 ## Features
 
+- **Device Flow Authentication**: Secure OAuth2-style device flow for headless authentication
 - **Interactive TUI**: Browse kata training sessions using an elegant terminal interface built with Bubble Tea
-- **Session Management**: View session details including kata name, practice date, and notes
-- **API Integration**: Seamlessly connects to the Katanaute backend API
+- **Session Management**: View and create sessions with kata details, practice dates, and notes
+- **API Integration**: Seamlessly connects to the Katanaute backend API with Bearer token authentication
 
 ## Prerequisites
 
@@ -31,8 +32,15 @@ Start the Katanaute backend server, then run:
 ./katago
 ```
 
-The TUI will display a list of your kata training sessions. Use:
+On first run, you'll need to authenticate using the device flow:
+1. The app will display a user code and verification URL
+2. Visit the URL in your browser and log in
+3. Enter the user code to authorize the device
+4. The app will automatically continue once authorized
+
+After authentication, the TUI will display your kata training sessions. Use:
 - Arrow keys or `j`/`k` to navigate
+- `a` to add a new session
 - `Ctrl+C` to quit
 
 ## Configuration

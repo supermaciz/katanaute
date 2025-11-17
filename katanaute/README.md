@@ -1,20 +1,47 @@
-# Katanaute
+# Katanaute - Phoenix Backend
 
-A simple kata tracker ~~to learn LiveView~~.
+Backend server for the Katanaute kata training tracker. Provides REST API and LiveView UI with user authentication.
 
-To start your Phoenix server:
+## Quick Start
 
-* Run `mix setup` to install and setup dependencies
-* Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
+```bash
+mix setup              # Install deps, create DB, run migrations
+mix phx.server         # Start server on http://localhost:4000
+```
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+Visit `http://localhost:4000` to access the LiveView UI.
 
-Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
+## Features
 
-## Learn more
+- **Authentication**: Email/password login, device flow for CLI clients
+- **REST API**: JSON API with Bearer token authentication (`/api/*`)
+- **LiveView UI**: Real-time web interface for session management
+- **Database**: SQLite with Ecto (migrations in `priv/repo/migrations/`)
 
-* Official website: https://www.phoenixframework.org/
-* Guides: https://hexdocs.pm/phoenix/overview.html
-* Docs: https://hexdocs.pm/phoenix
-* Forum: https://elixirforum.com/c/phoenix-forum
-* Source: https://github.com/phoenixframework/phoenix
+## API Endpoints
+
+**Auth** (public):
+- `POST /api/auth/register` - Create account
+- `POST /api/auth/token` - Login
+- `POST /api/auth/device/code` - Device flow start
+- `POST /api/auth/device/token` - Device flow poll
+
+**Sessions** (requires auth):
+- `GET/POST /api/sessions` - List/create sessions
+- `GET/PUT/DELETE /api/sessions/:id` - Manage session
+
+**Katas** (public):
+- `GET /api/katas` - List katas
+
+## Development
+
+```bash
+mix test               # Run tests
+mix precommit          # Format, compile, test (run before commit)
+mix ecto.reset         # Reset database
+iex -S mix phx.server  # Start with interactive shell
+```
+
+## Documentation
+
+See [CLAUDE.md](./CLAUDE.md) for comprehensive Phoenix development guidelines.

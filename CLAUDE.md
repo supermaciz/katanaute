@@ -36,6 +36,7 @@ cd katago && go build && ./katago
 - [Architecture Overview](#architecture-overview)
 - [Data Model](#data-model)
 - [API Endpoints](#api-endpoints)
+- [Authentication System](#authentication-system)
 - [Development Workflows](#development-workflows)
 - [Commit Conventions](#commit-conventions)
 - [Configuration](#configuration)
@@ -148,16 +149,143 @@ end
 
 All API endpoints are under `/api` and return JSON with format: `{ data: [...] }`
 
-### Sessions
+### Authentication Endpoints (Public)
+
+**User Registration and Login**
+- `POST /api/auth/register` - Register a new user
+  - Body: `{ email, password }`
+  - Returns: `{ data: { access_token, token_type: "Bearer", user: { id, email } } }`
+- `POST /api/auth/token` - Login with email/password
+  - Body: `{ email, password }`
+  - Returns: `{ data: { access_token, token_type: "Bearer", user: { id, email } } }`
+- `DELETE /api/auth/token` - Logout (revoke current token)
+  - Headers: `Authorization: Bearer <token>`
+  - Returns: 204 No Content
+
+**Device Flow (for headless/CLI clients)**
+- `POST /api/auth/device/code` - Initiate device authorization flow
+  - Returns: `{ device_code, user_code, verification_uri, verification_uri_complete, expires_in, interval }`
+- `POST /api/auth/device/token` - Poll for authorization completion
+  - Body: `{ device_code }`
+  - Returns: Token when approved, or `authorization_pending`/`access_denied` errors
+
+**Current User**
+- `GET /api/auth/me` - Get current authenticated user info (requires auth)
+  - Headers: `Authorization: Bearer <token>`
+  - Returns: `{ data: { id, email, confirmed_at } }`
+
+### Sessions (Requires Authentication)
 - `GET /api/sessions` - List all sessions (includes preloaded kata data)
 - `POST /api/sessions` - Create new session
 - `GET /api/sessions/:id` - Get session details
 - `PUT /api/sessions/:id` - Update session
 - `DELETE /api/sessions/:id` - Delete session
 
-### Katas
+**Authentication**: All session endpoints require a valid Bearer token in the `Authorization` header.
+
+### Katas (Public Access)
 - `GET /api/katas` - List all available katas
 - `GET /api/katas/:id` - Get kata details
+
+**Note**: Kata endpoints are publicly accessible to allow browsing the curriculum before registration.
+
+## Authentication System
+
+The application implements a comprehensive authentication system with support for both web and headless clients.
+
+### Authentication Methods
+
+**1. Web Authentication (Session-based)**
+- Used by Phoenix LiveView UI
+- Traditional email/password login
+- Session cookies for persistence
+- Routes: `/users/register`, `/users/log_in`, `/users/log_out`
+
+**2. API Authentication (Token-based)**
+- Used by React frontend and Go TUI
+- Bearer tokens in `Authorization` header
+- Tokens stored in `user_tokens` table with context "api"
+- Register/Login returns access token
+
+**3. Device Flow Authentication**
+- OAuth2-style device authorization flow
+- Designed for headless/CLI clients (Go TUI)
+- User approves device via web interface
+- No password exposure in terminal
+
+### Device Flow Process
+
+The device flow allows CLI applications to authenticate without exposing passwords in the terminal:
+
+1. **Client initiates flow**: `POST /api/auth/device/code`
+   - Server generates device_code (secret) and user_code (human-readable, e.g., "ABCD-EFGH")
+   - Returns verification URI and codes
+   - Device code expires in 15 minutes
+
+2. **Client displays instructions**: Show user_code and verification_uri to user
+   - User visits verification URI in browser
+   - User logs in (if not already logged in)
+   - User enters user_code or clicks pre-filled link
+
+3. **User authorizes device**: Web interface at `/device/authorize`
+   - Shows device code request details
+   - User approves or denies the request
+   - Server updates device_code status in database
+
+4. **Client polls for completion**: `POST /api/auth/device/token` with device_code
+   - Poll every 5 seconds (as indicated by `interval`)
+   - Returns `authorization_pending` while waiting
+   - Returns access token when approved
+   - Returns `access_denied` if user denies
+
+5. **Client uses token**: Store token and include in subsequent API requests
+   - Header: `Authorization: Bearer <token>`
+   - Token persists until revoked or deleted
+
+### User Model
+
+Users are managed by the `Katanaute.Accounts` context:
+
+```elixir
+schema "users" do
+  field :email, :string
+  field :password, :string, virtual: true
+  field :hashed_password, :string
+  field :confirmed_at, :naive_datetime
+  has_many :sessions, Session
+  timestamps()
+end
+```
+
+### Token Management
+
+Tokens are stored in the `user_tokens` table:
+- **Context**: "api" for API tokens, "session" for web sessions
+- **Hashed**: Token values are hashed before storage
+- **Expiration**: Tokens can be explicitly revoked via `DELETE /api/auth/token`
+- **Generation**: Uses Phoenix.Token with 32-byte random values
+
+### Authentication Plugs
+
+**`KatanauteWeb.Plugs.ApiAuth`**
+- Extracts Bearer token from Authorization header
+- Validates token and loads user into `conn.assigns.current_user`
+- Options: `:require_authenticated_user` fails request if not authenticated
+- Used in API pipeline
+
+**`KatanauteWeb.Plugs.WebAuth`**
+- Session-based authentication for browser requests
+- Functions: `:fetch_current_user`, `:require_authenticated_user`, `:redirect_if_user_is_authenticated`
+- Used in browser pipeline and LiveView
+
+### Security Considerations
+
+- **Password Hashing**: Uses Bcrypt via `Bcrypt.hash_pwd_salt/1`
+- **Token Security**: Tokens are hashed before database storage
+- **CSRF Protection**: Enabled for browser requests, disabled for API
+- **Validation**: Email uniqueness enforced, password minimum length
+- **SQL Injection**: Prevented via Ecto parameterized queries
+- **XSS**: React and LiveView escape output by default
 
 ## Development Workflows
 
@@ -474,10 +602,13 @@ When making changes:
 ## Project Status
 
 **Current Features**
-- ✅ Phoenix backend with REST API
-- ✅ Phoenix LiveView web UI
-- ✅ React SPA with full session management
-- ✅ Go TUI for session viewing and creation
+- ✅ User authentication with email/password
+- ✅ Device flow authentication for CLI clients
+- ✅ Bearer token API authentication
+- ✅ Phoenix backend with authenticated REST API
+- ✅ Phoenix LiveView web UI with session authentication
+- ✅ React SPA with full session management and auth
+- ✅ Go TUI with device flow authentication
 - ✅ Comprehensive test coverage (Phoenix, React)
 - ✅ Color-coded kata level system
 - ✅ Markdown notes support
@@ -485,18 +616,18 @@ When making changes:
 - ✅ Split-view layout in Go TUI
 
 **Known Limitations**
-- No session editing in Go TUI (only create and view)
-- No session deletion in Go TUI
+- Session editing limited to LiveView (not in React or Go TUI)
+- Session deletion available in LiveView and React only
 - SQLite database (not suitable for production scale)
-- No user authentication/authorization
-- No session editing in React (only create/delete)
 - No tests for Go TUI
+- No email confirmation flow (confirmed_at field exists but not enforced)
 
 **Future Enhancements** (See component TODOs)
-- Session editing in React frontend
-- Session editing and deletion in Go TUI
+- Session editing in React frontend and Go TUI
+- Session deletion in Go TUI
 - Unit tests for Go TUI
-- User authentication
+- Email confirmation and password reset flows
+- Multi-factor authentication
 - Session filtering and search
 - Statistics and progress tracking
 - PostgreSQL support for production
