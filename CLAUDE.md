@@ -1,6 +1,6 @@
 # Katanaute - Kata Training Tracker
 
-A multi-client (Uechi-Ryu) Karate kata training tracker application with a Phoenix backend, React web frontend, and Go terminal UI client.
+A multi-client (Uechi-Ryu) Karate kata training tracker application with a Phoenix backend, React web frontend, Go terminal UI client, and GTK4 desktop GUI client.
 
 > **Note**: This file contains comprehensive development guidelines for the entire monorepo. For quick-start instructions, see [README.md](./README.md). For component-specific guidelines, see the CLAUDE.md files in each subdirectory.
 
@@ -16,6 +16,9 @@ cd katareact && npm install && npm run dev
 
 # Go TUI
 cd katago && go build && ./katago
+
+# GTK4 GUI (Rust)
+cd gtkata && cargo run
 ```
 
 **Run Tests**
@@ -23,12 +26,14 @@ cd katago && go build && ./katago
 # Backend: mix test (in katanaute/)
 # React: npm test (in katareact/)
 # Go: Not yet implemented
+# GTKata (Rust): Not yet implemented
 ```
 
 **Component Documentation**
 - Phoenix: [katanaute/CLAUDE.md](./katanaute/CLAUDE.md)
 - React: [katareact/CLAUDE.md](./katareact/CLAUDE.md)
 - Go TUI: [katago/CLAUDE.md](./katago/CLAUDE.md)
+- GTK4 GUI: [gtkata/CLAUDE.md](./gtkata/CLAUDE.md)
 
 ## Table of Contents
 
@@ -56,7 +61,7 @@ cd katago && go build && ./katago
 
 ## Repository Structure
 
-This is a monorepo containing three main components:
+This is a monorepo containing four main components:
 
 ```
 katanaute/
@@ -68,6 +73,9 @@ katanaute/
 ├── katago/             # Terminal UI client (Go + Bubble Tea)
 │   ├── CLAUDE.md       # Go TUI development guidelines
 │   └── README.md       # Go TUI documentation
+├── gtkata/             # Desktop GUI client (Rust + GTK4)
+│   ├── CLAUDE.md       # GTKata development guidelines
+│   └── README.md       # GTKata documentation
 └── CLAUDE.md           # This file - overall project guidelines
 ```
 
@@ -106,6 +114,19 @@ katanaute/
   - Keyboard navigation (arrow keys, j/k, 'a' to add, Ctrl+C to quit)
   - Markdown rendering for session notes
   - API integration with Phoenix backend
+
+### Desktop GUI Client: GTKata (gtkata/)
+- **Framework**: GTK4 (gtk-rs bindings)
+- **Language**: Rust (edition 2021)
+- **Styling**: Adwaita (GNOME design system)
+- **Purpose**: Native desktop GUI for managing training sessions
+- **Key Features**:
+  - Modern GTK4 native desktop interface
+  - Email/password and device flow authentication
+  - Secure token storage via system keyring
+  - Session creation with Markdown notes
+  - Color-coded kata level badges
+  - Native system integration
 
 ## Data Model
 
@@ -337,6 +358,15 @@ go fmt ./...               # Format code
 DEBUG=1 ./katago          # Run with debug logging to debug.log
 ```
 
+#### GTKata (Rust GUI)
+```bash
+cargo build                 # Compile binary
+cargo run                   # Build and run
+cargo fmt                   # Format code
+cargo clippy                # Run linter
+RUST_LOG=debug cargo run    # Run with debug logging
+```
+
 ### Component-Specific Guidelines
 
 When working on a specific component, **ALWAYS** refer to its CLAUDE.md file:
@@ -363,6 +393,15 @@ When working on a specific component, **ALWAYS** refer to its CLAUDE.md file:
   - Markdown rendering with Glamour
   - Go-specific coding conventions
   - Debugging with DEBUG mode
+
+- **GTKata (Rust GUI)**: See `gtkata/CLAUDE.md` for:
+  - GTK4 widget patterns and ownership
+  - Thread-safe UI updates with glib
+  - Signal handlers and closures
+  - API integration patterns
+  - Secure token storage with keyring
+  - Adwaita styling conventions
+  - Rust-specific coding patterns
 
 ## Commit Conventions
 
@@ -391,6 +430,14 @@ fix(katago): handle API connection errors
 docs(katago): update usage instructions
 ```
 
+### GTKata (Rust GUI)
+```
+feat(gtkata): add session editing dialog
+fix(gtkata): handle authentication errors gracefully
+test(gtkata): add unit tests for API client
+style(gtkata): improve layout responsiveness
+```
+
 ### Repository-wide
 ```
 chore: update dependencies across all projects
@@ -417,6 +464,12 @@ ci: add GitHub Actions workflow
 - **Override**: Set `KATANAUTE_API_URL` environment variable
 - **Debug Mode**: Set `DEBUG=1` to enable logging to `debug.log`
 
+### GTKata Configuration
+- **API Base URL**: `http://localhost:4000/api` (default)
+- **Override**: Set `KATANAUTE_API_URL` environment variable
+- **Token Storage**: System keyring (Keychain on macOS, Secret Service on Linux, Credential Manager on Windows)
+- **Debug Mode**: Set `RUST_LOG=debug` for detailed logging
+
 ## Testing Strategy
 
 ### Backend Testing
@@ -435,6 +488,11 @@ ci: add GitHub Actions workflow
 - **Status**: Not yet implemented (see katago/CLAUDE.md TODO)
 - **Planned Framework**: Go's built-in `testing` package
 - **Coverage Goals**: API client tests, Bubble Tea Update logic tests
+
+### GTKata Testing
+- **Status**: Not yet implemented (see gtkata/CLAUDE.md TODO)
+- **Planned Framework**: Rust's built-in `cargo test` with `mockito` for HTTP mocking
+- **Coverage Goals**: API client tests, data model serialization tests
 
 ## Common Development Tasks
 
@@ -456,6 +514,7 @@ mix ecto.migrate
 3. Add JSON view: `katanaute/lib/katanaute_web/controllers/*_json.ex`
 4. Update React API client: `katareact/src/services/api.js`
 5. Update Go API client: `katago/katanaute_api.go`
+6. Update Rust API client: `gtkata/src/api.rs` and models in `gtkata/src/models.rs`
 
 ### Debugging
 
@@ -476,6 +535,14 @@ mix ecto.migrate
 - Verify backend API is running and accessible
 - Check network requests with debug logs
 
+**GTKata (Rust)**
+- Set `RUST_BACKTRACE=1` for detailed error traces
+- Use `RUST_LOG=debug` for detailed logging output
+- Use GTK Inspector: `GTK_DEBUG=interactive cargo run`
+- Use `eprintln!()` for debug output (goes to stderr, doesn't interfere with GTK)
+- Check reqwest logs: `RUST_LOG=reqwest=debug cargo run`
+- Verify system keyring is available and accessible
+
 ## Key Technical Decisions
 
 ### Why SQLite?
@@ -487,8 +554,9 @@ mix ecto.migrate
 ### Why Multiple Clients?
 - **React**: Modern web interface for full-featured management
 - **Go TUI**: Quick terminal access for developers
+- **GTKata**: Native desktop GUI with system integration
 - **Phoenix LiveView**: Built-in real-time web option
-- All share the same backend API
+- All share the same backend API, providing flexibility for different use cases
 
 ### Kata Level System
 Based on martial arts belt progression, providing:
@@ -514,6 +582,14 @@ VITE_API_URL=http://localhost:4000/api    # Backend API URL
 ```bash
 KATANAUTE_API_URL=http://localhost:4000/api    # Backend API URL
 DEBUG=1                                         # Enable debug logging to debug.log
+```
+
+### GTKata (Rust)
+```bash
+KATANAUTE_API_URL=http://localhost:4000/api    # Backend API URL
+RUST_LOG=debug                                  # Enable debug logging
+RUST_BACKTRACE=1                                # Enable detailed error traces
+GTK_DEBUG=interactive                           # Enable GTK Inspector
 ```
 
 ## Security Considerations
@@ -551,6 +627,12 @@ Currently development-focused. For production:
 - Distribute to users
 - Users configure `KATANAUTE_API_URL`
 
+**GTKata (Rust)**
+- Build release binary: `cargo build --release`
+- Package as AppImage (Linux), .app bundle (macOS), or installer (Windows)
+- Distribute binary to users
+- Users configure `KATANAUTE_API_URL` or use default
+
 ## Git Workflow
 
 1. **Branch Naming**: Use descriptive names (e.g., `feature/session-filtering`, `fix/kata-validation`)
@@ -579,6 +661,14 @@ Currently development-focused. For production:
 - Enable debug mode (`DEBUG=1 ./katago`) and check `debug.log` for errors
 - Verify network connectivity to backend
 
+### GTKata issues
+- **"Failed to connect to API"**: Ensure backend running on localhost:4000, check `KATANAUTE_API_URL`
+- **GTK4 not found** (Linux): Install GTK4 dev libraries (`libgtk-4-dev` on Debian/Ubuntu)
+- **Blank window or crashes**: Verify GTK4 is properly installed
+- **Authentication fails**: Check credentials, try device flow instead
+- **Keyring errors**: Verify system keyring service is running (Secret Service on Linux)
+- **Build errors**: Ensure Rust 1.70+, install system dependencies (see gtkata/README.md)
+
 ## Contributing
 
 When making changes:
@@ -598,37 +688,46 @@ When making changes:
 - **Vite**: https://vitejs.dev/
 - **Bubble Tea**: https://github.com/charmbracelet/bubbletea
 - **Tailwind CSS**: https://tailwindcss.com/
+- **GTK4**: https://docs.gtk.org/gtk4/
+- **gtk-rs**: https://gtk-rs.org/gtk4-rs/stable/latest/book/
+- **Rust**: https://doc.rust-lang.org/book/
 
 ## Project Status
 
 **Current Features**
 - ✅ User authentication with email/password
-- ✅ Device flow authentication for CLI clients
+- ✅ Device flow authentication for CLI/GUI clients
 - ✅ Bearer token API authentication
 - ✅ Phoenix backend with authenticated REST API
 - ✅ Phoenix LiveView web UI with session authentication
 - ✅ React SPA with full session management and auth
 - ✅ Go TUI with device flow authentication
+- ✅ GTKata (Rust) desktop GUI with email/password and device flow auth
+- ✅ Secure token storage in system keyring (GTKata)
 - ✅ Comprehensive test coverage (Phoenix, React)
 - ✅ Color-coded kata level system
 - ✅ Markdown notes support
 - ✅ Session sorting by date
 - ✅ Split-view layout in Go TUI
+- ✅ Native GTK4 desktop interface
 
 **Known Limitations**
-- Session editing limited to LiveView (not in React or Go TUI)
+- Session editing limited to LiveView (not in React, Go TUI, or GTKata)
 - Session deletion available in LiveView and React only
 - SQLite database (not suitable for production scale)
-- No tests for Go TUI
+- No tests for Go TUI or GTKata
 - No email confirmation flow (confirmed_at field exists but not enforced)
+- GTKata session list view is basic (no refresh after create)
 
 **Future Enhancements** (See component TODOs)
-- Session editing in React frontend and Go TUI
-- Session deletion in Go TUI
-- Unit tests for Go TUI
+- Session editing in React frontend, Go TUI, and GTKata
+- Session deletion in Go TUI and GTKata
+- Unit tests for Go TUI and GTKata
+- Improve GTKata session list (automatic refresh, better layout)
 - Email confirmation and password reset flows
 - Multi-factor authentication
 - Session filtering and search
 - Statistics and progress tracking
 - PostgreSQL support for production
+- GTKata packaging for major platforms (AppImage, .deb, .rpm, .dmg, .exe)
 - Error recovery UI in Go TUI

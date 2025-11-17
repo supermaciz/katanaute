@@ -1,0 +1,22 @@
+# Rust build artifacts
+/target/
+**/*.rs.bk
+*.pdb
+
+# Cargo.lock (keep for binary crates, ignore for library crates)
+# We keep it since gtkata is a binary application
+# Cargo.lock
+
+# Debug logs
+debug.log
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# System files
+Thumbs.db
