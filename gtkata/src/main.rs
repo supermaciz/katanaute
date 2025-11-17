@@ -7,6 +7,7 @@ mod session_dialog;
 
 use gtk::prelude::*;
 use gtk::{glib, Application};
+use libadwaita as adw;
 
 use auth_window::{AuthMessage, AuthWindow};
 use config::Config;
@@ -24,7 +25,7 @@ fn main() -> glib::ExitCode {
 
 fn build_ui(app: &Application) {
     // Load Adwaita styles
-    adwaita::init().expect("Failed to initialize Adwaita");
+    adw::init().expect("Failed to initialize Adwaita");
 
     // Check for saved token
     if let Ok(Some(token)) = Config::load_token() {
