@@ -1,6 +1,6 @@
 # Katanaute - Kata Training Tracker
 
-A multi-client (Uechi-Ryu) Karate kata training tracker application with a Phoenix backend, React web frontend, and Go terminal UI client.
+A multi-client (Uechi-Ryu) Karate kata training tracker application with a Phoenix backend, React web frontend, Rust GUI client, and Go terminal UI client.
 
 > **Note**: This file contains comprehensive development guidelines for the entire monorepo. For quick-start instructions, see [README.md](./README.md). For component-specific guidelines, see the CLAUDE.md files in each subdirectory.
 
@@ -14,6 +14,9 @@ cd katanaute && mix setup && mix phx.server
 # React Frontend
 cd katareact && npm install && npm run dev
 
+# Rust GUI
+cd katarouille && cargo build && cargo run
+
 # Go TUI
 cd katago && go build && ./katago
 ```
@@ -22,12 +25,14 @@ cd katago && go build && ./katago
 ```bash
 # Backend: mix test (in katanaute/)
 # React: npm test (in katareact/)
+# Rust GUI: Not yet implemented
 # Go: Not yet implemented
 ```
 
 **Component Documentation**
 - Phoenix: [katanaute/CLAUDE.md](./katanaute/CLAUDE.md)
 - React: [katareact/CLAUDE.md](./katareact/CLAUDE.md)
+- Rust GUI: [katarouille/CLAUDE.md](./katarouille/CLAUDE.md)
 - Go TUI: [katago/CLAUDE.md](./katago/CLAUDE.md)
 
 ## Table of Contents
@@ -56,7 +61,7 @@ cd katago && go build && ./katago
 
 ## Repository Structure
 
-This is a monorepo containing three main components:
+This is a monorepo containing four main components:
 
 ```
 katanaute/
@@ -65,6 +70,9 @@ katanaute/
 │   └── AGENTS.md       # Additional Phoenix guidelines
 ├── katareact/          # React frontend (React 18 + Vite)
 │   └── CLAUDE.md       # React-specific development guidelines
+├── katarouille/        # GUI client (Rust + Iced)
+│   ├── CLAUDE.md       # Rust GUI development guidelines
+│   └── README.md       # Rust GUI documentation
 ├── katago/             # Terminal UI client (Go + Bubble Tea)
 │   ├── CLAUDE.md       # Go TUI development guidelines
 │   └── README.md       # Go TUI documentation
@@ -95,6 +103,19 @@ katanaute/
   - Color-coded kata level badges
   - Responsive design
   - Full TypeScript type safety
+
+### GUI Client: Rust (katarouille/)
+- **Framework**: Iced (Elm Architecture GUI framework)
+- **Language**: Rust 2021 edition
+- **Purpose**: Native cross-platform GUI application for session management
+- **Key Features**:
+  - Device flow authentication with OAuth2-style flow
+  - Native GUI with dark theme
+  - View and create training sessions
+  - Color-coded kata level badges
+  - Token persistence in XDG-compliant config directory
+  - Offline-capable (once authenticated)
+  - Cross-platform (Linux, macOS, Windows)
 
 ### CLI Client: Go TUI (katago/)
 - **Framework**: Bubble Tea (terminal UI framework)
@@ -384,6 +405,14 @@ test(react): add comprehensive test suite
 style(react): improve responsive layout
 ```
 
+### Rust GUI
+```
+feat(katarouille): implement session editing
+fix(katarouille): handle authentication errors
+test(katarouille): add API client tests
+docs(katarouille): update installation guide
+```
+
 ### Go TUI
 ```
 feat(katago): implement session detail view
@@ -486,6 +515,7 @@ mix ecto.migrate
 
 ### Why Multiple Clients?
 - **React**: Modern web interface for full-featured management
+- **Katarouille (Rust GUI)**: Native cross-platform desktop application with offline capability
 - **Go TUI**: Quick terminal access for developers
 - **Phoenix LiveView**: Built-in real-time web option
 - All share the same backend API
@@ -508,6 +538,11 @@ PORT=4000                   # Server port
 ### Frontend (React)
 ```bash
 VITE_API_URL=http://localhost:4000/api    # Backend API URL
+```
+
+### Rust GUI (Katarouille)
+```bash
+KATANAUTE_API_URL=http://localhost:4000/api    # Backend API URL
 ```
 
 ### Go TUI
@@ -545,6 +580,12 @@ Currently development-focused. For production:
 - Run `npm run build`
 - Serve `dist/` directory via Nginx/CDN
 - Update `VITE_API_URL` to production backend
+
+**Rust GUI (Katarouille)**
+- Build release binary: `cargo build --release`
+- Binary located at `target/release/katarouille`
+- Distribute to users for their platform
+- Users configure `KATANAUTE_API_URL`
 
 **Go TUI**
 - Build binary: `go build`
@@ -603,32 +644,35 @@ When making changes:
 
 **Current Features**
 - ✅ User authentication with email/password
-- ✅ Device flow authentication for CLI clients
+- ✅ Device flow authentication for CLI/GUI clients
 - ✅ Bearer token API authentication
 - ✅ Phoenix backend with authenticated REST API
 - ✅ Phoenix LiveView web UI with session authentication
 - ✅ React SPA with full session management and auth
+- ✅ Rust GUI (Katarouille) with device flow authentication
 - ✅ Go TUI with device flow authentication
 - ✅ Comprehensive test coverage (Phoenix, React)
 - ✅ Color-coded kata level system
 - ✅ Markdown notes support
 - ✅ Session sorting by date
 - ✅ Split-view layout in Go TUI
+- ✅ Native cross-platform GUI (Katarouille)
 
 **Known Limitations**
-- Session editing limited to LiveView (not in React or Go TUI)
+- Session editing limited to LiveView (not in React, Katarouille, or Go TUI)
 - Session deletion available in LiveView and React only
 - SQLite database (not suitable for production scale)
-- No tests for Go TUI
+- No tests for Rust GUI or Go TUI
 - No email confirmation flow (confirmed_at field exists but not enforced)
 
 **Future Enhancements** (See component TODOs)
-- Session editing in React frontend and Go TUI
-- Session deletion in Go TUI
-- Unit tests for Go TUI
+- Session editing in React frontend, Katarouille, and Go TUI
+- Session deletion in Katarouille and Go TUI
+- Unit tests for Rust GUI and Go TUI
 - Email confirmation and password reset flows
 - Multi-factor authentication
 - Session filtering and search
 - Statistics and progress tracking
 - PostgreSQL support for production
-- Error recovery UI in Go TUI
+- Error recovery UI in Katarouille and Go TUI
+- Markdown rendering in Katarouille
