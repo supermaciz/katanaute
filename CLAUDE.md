@@ -2,6 +2,57 @@
 
 A multi-client (Uechi-Ryu) Karate kata training tracker application with a Phoenix backend, React web frontend, and Go terminal UI client.
 
+> **Note**: This file contains comprehensive development guidelines for the entire monorepo. For quick-start instructions, see [README.md](./README.md). For component-specific guidelines, see the CLAUDE.md files in each subdirectory.
+
+## Quick Reference
+
+**Start Development**
+```bash
+# Backend
+cd katanaute && mix setup && mix phx.server
+
+# React Frontend
+cd katareact && npm install && npm run dev
+
+# Go TUI
+cd katago && go build && ./katago
+```
+
+**Run Tests**
+```bash
+# Backend: mix test (in katanaute/)
+# React: npm test (in katareact/)
+# Go: Not yet implemented
+```
+
+**Component Documentation**
+- Phoenix: [katanaute/CLAUDE.md](./katanaute/CLAUDE.md)
+- React: [katareact/CLAUDE.md](./katareact/CLAUDE.md)
+- Go TUI: [katago/CLAUDE.md](./katago/CLAUDE.md)
+
+## Table of Contents
+
+- [Repository Structure](#repository-structure)
+- [Architecture Overview](#architecture-overview)
+- [Data Model](#data-model)
+- [API Endpoints](#api-endpoints)
+- [Development Workflows](#development-workflows)
+- [Commit Conventions](#commit-conventions)
+- [Configuration](#configuration)
+- [Testing Strategy](#testing-strategy)
+- [Common Development Tasks](#common-development-tasks)
+- [Debugging](#debugging)
+- [Key Technical Decisions](#key-technical-decisions)
+- [Environment Variables](#environment-variables)
+- [Security Considerations](#security-considerations)
+- [Performance Considerations](#performance-considerations)
+- [Deployment](#deployment-future)
+- [Git Workflow](#git-workflow)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [Resources](#resources)
+- [Project Status](#project-status)
+
 ## Repository Structure
 
 This is a monorepo containing three main components:
