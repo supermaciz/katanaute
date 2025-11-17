@@ -20,17 +20,37 @@ A modern desktop GUI client for the Katanaute Kata Training Tracker, built with 
 
 ## Prerequisites
 
-- Python 3.8 or higher
+- Python 3.14 or higher
+- [uv](https://docs.astral.sh/uv/) - Fast Python package installer and resolver
 - Katanaute backend running on `http://localhost:4000` (or configure custom URL)
 
 ## Installation
+
+### Option 1: Using uv (Recommended)
+
+1. **Install uv** (if not already installed):
+   ```bash
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
+
+2. **Navigate to the pykata directory**:
+   ```bash
+   cd pykata
+   ```
+
+3. **Install dependencies** (uv handles virtual environment automatically):
+   ```bash
+   uv sync
+   ```
+
+### Option 2: Using pip (Traditional)
 
 1. **Navigate to the pykata directory**:
    ```bash
    cd pykata
    ```
 
-2. **Create a virtual environment (recommended)**:
+2. **Create a virtual environment**:
    ```bash
    python3 -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
@@ -45,6 +65,12 @@ A modern desktop GUI client for the Katanaute Kata Training Tracker, built with 
 
 ### Starting PyKata
 
+**With uv:**
+```bash
+uv run pykata.py
+```
+
+**With pip/venv:**
 ```bash
 python pykata.py
 ```
@@ -181,6 +207,16 @@ pykata/
 
 ### Running from Source
 
+**With uv:**
+```bash
+# Install dependencies
+uv sync
+
+# Run application
+uv run pykata.py
+```
+
+**With pip:**
 ```bash
 # Install dependencies
 pip install -r requirements.txt
@@ -193,6 +229,12 @@ python pykata.py
 
 You can use PyInstaller to create a standalone executable:
 
+**With uv:**
+```bash
+uv run pyinstaller --onefile --windowed --name PyKata pykata.py
+```
+
+**With pip:**
 ```bash
 pip install pyinstaller
 pyinstaller --onefile --windowed --name PyKata pykata.py

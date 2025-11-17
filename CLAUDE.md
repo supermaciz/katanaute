@@ -17,7 +17,10 @@ cd katareact && npm install && npm run dev
 # Go TUI
 cd katago && go build && ./katago
 
-# Python GUI
+# Python GUI (with uv - recommended)
+cd pykata && uv sync && uv run pykata.py
+
+# Python GUI (with pip)
 cd pykata && pip install -r requirements.txt && python pykata.py
 ```
 
@@ -609,10 +612,10 @@ Currently development-focused. For production:
 - Users configure `KATANAUTE_API_URL`
 
 **Python GUI (PyKata)**
-- Install dependencies: `pip install -r requirements.txt`
-- Run directly: `python pykata.py`
-- Or build standalone executable: `pyinstaller --onefile --windowed --name PyKata pykata.py`
-- Distribute executable or source with requirements.txt
+- Install dependencies: `uv sync` (or `pip install -r requirements.txt`)
+- Run directly: `uv run pykata.py` (or `python pykata.py`)
+- Or build standalone executable: `uv run pyinstaller --onefile --windowed --name PyKata pykata.py`
+- Distribute executable or source with pyproject.toml/requirements.txt
 - Users configure `KATANAUTE_API_URL` if needed
 
 ## Git Workflow
@@ -646,11 +649,11 @@ Currently development-focused. For production:
 ### PyKata won't connect or shows errors
 - Verify backend is running on port 4000
 - Check API URL configuration with `KATANAUTE_API_URL` env var
-- Ensure Python dependencies are installed: `pip install -r requirements.txt`
+- Ensure Python dependencies are installed: `uv sync` (or `pip install -r requirements.txt`)
 - Check token file permissions: `ls -la ~/.pykata_token`
 - Delete token and re-authenticate if having auth issues: `rm ~/.pykata_token`
-- Verify virtual environment is activated if using one
-- Check for Python version compatibility (requires Python 3.8+)
+- Verify virtual environment is activated if using pip
+- Check for Python version compatibility (requires Python 3.14+)
 
 ## Contributing
 

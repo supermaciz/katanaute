@@ -51,7 +51,9 @@ PyKata is a desktop GUI client for the Katanaute Kata Training Tracker, built wi
 pykata/
 ├── pykata.py           # Main application and GUI views
 ├── api_client.py       # API client for backend communication
-├── requirements.txt    # Python dependencies
+├── pyproject.toml      # Python project configuration (uv/pip)
+├── uv.lock            # uv lock file (dependency resolution)
+├── requirements.txt    # Python dependencies (for pip compatibility)
 ├── .gitignore         # Git ignore patterns
 ├── README.md          # User documentation
 └── CLAUDE.md          # This file - development guidelines
@@ -82,6 +84,20 @@ pykata/
 
 ### Initial Setup
 
+**With uv (Recommended):**
+```bash
+# Navigate to pykata directory
+cd pykata
+
+# Install dependencies (uv handles virtual environment automatically)
+uv sync
+
+# Ensure backend is running
+cd ../katanaute
+mix phx.server
+```
+
+**With pip (Traditional):**
 ```bash
 # Navigate to pykata directory
 cd pykata
@@ -100,6 +116,13 @@ mix phx.server
 
 ### Running the Application
 
+**With uv:**
+```bash
+cd pykata
+uv run pykata.py
+```
+
+**With pip:**
 ```bash
 cd pykata
 source venv/bin/activate  # If not already activated
@@ -108,11 +131,10 @@ python pykata.py
 
 ### Development Workflow
 
-1. Activate virtual environment
-2. Make code changes
-3. Run application to test
-4. Use print statements or logging for debugging (see [Debugging](#debugging))
-5. Test with backend running
+1. Make code changes
+2. Run application to test (`uv run pykata.py` or `python pykata.py`)
+3. Use print statements or logging for debugging (see [Debugging](#debugging))
+4. Test with backend running
 
 ## Code Conventions
 
@@ -507,6 +529,19 @@ except KatanauteAPIError as e:
 
 ### Updating Dependencies
 
+**With uv:**
+```bash
+# Add a new dependency
+uv add package-name
+
+# Or manually edit pyproject.toml and sync
+uv sync
+
+# Update all dependencies
+uv lock --upgrade
+```
+
+**With pip:**
 ```bash
 # Update requirements.txt after adding new packages
 pip freeze > requirements.txt
