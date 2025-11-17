@@ -52,22 +52,12 @@ Use arrow keys or j/k to navigate, 'a' to add sessions, Ctrl+C to quit.
 
 ## Features
 
-### Session Tracking
-- Record kata practice sessions with date/time
-- Mark sessions as part of structured learning path (in_course flag)
-- Add Markdown-formatted notes to each session
-- Color-coded kata level badges (Yellow → Orange → Green → Blue → Brown → Shodan)
-
-### Multiple Interfaces
-- **React Web UI**: Full-featured session management with responsive design
-- **Phoenix LiveView**: Real-time web interface with server-rendered updates
-- **Go Terminal UI**: Quick session viewing and creation from the command line
-
-### Developer Features
-- RESTful JSON API for external integrations
-- Comprehensive test coverage (Phoenix and React)
-- SQLite database for simple setup
-- Hot reload in development for all components
+- **Session Tracking**: Record kata practice sessions with date/time, notes (Markdown), and course tracking
+- **User Authentication**: Secure login with email/password, plus device flow for terminal clients
+- **Multiple Interfaces**: Web UI (React + LiveView) and terminal client (Go)
+- **Color-Coded Levels**: Visual badges for kata progression (Yellow → Shodan)
+- **RESTful API**: JSON API with Bearer token authentication
+- **Developer-Friendly**: Comprehensive tests, hot reload, SQLite for easy setup
 
 ## Architecture
 
@@ -85,18 +75,21 @@ Use arrow keys or j/k to navigate, 'a' to add sessions, Ctrl+C to quit.
 
 ### API Endpoints
 
-All under `/api`, returning JSON with `{ data: [...] }` format:
+All under `/api`, returning JSON with `{ data: [...] }` format.
 
-**Sessions**
-- `GET /api/sessions` - List all sessions with kata data
-- `POST /api/sessions` - Create new session
-- `GET /api/sessions/:id` - Get session details
-- `PUT /api/sessions/:id` - Update session
-- `DELETE /api/sessions/:id` - Delete session
+**Authentication** (public):
+- `POST /api/auth/register` - Create account
+- `POST /api/auth/token` - Login (get Bearer token)
+- `POST /api/auth/device/code` - Start device flow
+- `POST /api/auth/device/token` - Poll device authorization
 
-**Katas**
+**Sessions** (requires auth):
+- `GET /api/sessions` - List all sessions
+- `POST /api/sessions` - Create session
+- `GET/PUT/DELETE /api/sessions/:id` - Manage session
+
+**Katas** (public):
 - `GET /api/katas` - List all katas
-- `GET /api/katas/:id` - Get kata details
 
 ## Configuration
 
@@ -181,26 +174,26 @@ Or use the API/LiveView to add them dynamically.
 ## Project Status
 
 **Current Features**
-- ✅ Phoenix backend with REST API
+- ✅ User authentication (email/password + device flow)
+- ✅ Phoenix backend with authenticated REST API
 - ✅ Phoenix LiveView web UI
 - ✅ React SPA with TypeScript
-- ✅ Go terminal UI with session viewing and creation
+- ✅ Go terminal UI with device flow auth
 - ✅ Comprehensive test coverage (Phoenix, React)
 - ✅ Markdown notes support
 - ✅ Color-coded kata level system
 
 **Known Limitations**
-- No session editing in React or Go TUI (only create/delete)
-- No user authentication
-- SQLite only (not production-ready for scale)
+- Session editing limited (available in LiveView only)
+- SQLite only (not production-ready for large scale)
 - No tests for Go TUI
 
 **Future Enhancements**
-- Session editing in all clients
-- User authentication and authorization
+- Session editing in React and Go TUI
 - Session filtering and search
 - Statistics and progress tracking
-- PostgreSQL support
+- PostgreSQL support for production
+- Multi-factor authentication
 
 ## Documentation
 

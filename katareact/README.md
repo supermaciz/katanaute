@@ -4,12 +4,13 @@ A modern React frontend for the Katanaute kata training tracker application.
 
 ## Features
 
+- User authentication with email/password login
 - View all practice sessions in a sortable table
 - Create new training sessions with Markdown notes
 - View detailed session information with rendered Markdown
 - Delete sessions
 - Responsive design with Tailwind CSS
-- Integration with Phoenix backend API
+- Bearer token authentication with Phoenix backend API
 
 ## Tech Stack
 
@@ -133,12 +134,23 @@ katareact/
 
 The frontend consumes the following Phoenix API endpoints:
 
+**Authentication** (public):
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/token` - Login with email/password
+- `DELETE /api/auth/token` - Logout
+- `GET /api/auth/me` - Get current user
+
+**Sessions** (requires auth):
 - `GET /api/sessions` - List all sessions
 - `POST /api/sessions` - Create a new session
 - `GET /api/sessions/:id` - Get session details
 - `DELETE /api/sessions/:id` - Delete a session
+
+**Katas** (public):
 - `GET /api/katas` - List all available katas
 - `GET /api/katas/:id` - Get kata details
+
+All authenticated requests include the Bearer token in the `Authorization` header.
 
 ## Features in Detail
 
