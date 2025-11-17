@@ -59,14 +59,14 @@ pub struct User {
     pub email: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthResponse {
     pub access_token: String,
     pub token_type: String,
     pub user: User,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiResponse<T> {
     pub data: T,
 }

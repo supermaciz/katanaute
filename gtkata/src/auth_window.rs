@@ -1,30 +1,38 @@
 use gtk::prelude::*;
 use gtk::{glib, Application, ApplicationWindow, Box, Button, Entry, Label, Orientation, Stack};
-use std::cell::RefCell;
-use std::rc::Rc;
 use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
 
 use crate::api::ApiClient;
-use crate::config::Config;
 use crate::models::AuthResponse;
 
 #[derive(Clone)]
 pub enum AuthMessage {
-    LoginSuccess(AuthResponse),
-    DeviceFlowSuccess(AuthResponse),
+    LoginSuccess(std::boxed::Box<AuthResponse>),
+    DeviceFlowSuccess(std::boxed::Box<AuthResponse>),
+    DeviceFlowInitiated {
+        user_code: String,
+        verification_uri: String,
+    },
     Error(String),
 }
 
+#[derive(Clone, Debug)]
+pub enum DeviceFlowUpdate {
+    Initiated { user_code: String, verification_uri: String },
+}
+
+#[derive(Clone)]
 pub struct AuthWindow {
     window: ApplicationWindow,
-    tx: glib::Sender<AuthMessage>,
+    tx: mpsc::Sender<AuthMessage>,
+    device_flow_tx: std::sync::Arc<std::sync::Mutex<Option<mpsc::Sender<DeviceFlowUpdate>>>>,
 }
 
 impl AuthWindow {
-    pub fn new(app: &Application) -> (Self, glib::Receiver<AuthMessage>) {
-        let (tx, rx) = glib::MainContext::channel(glib::Priority::DEFAULT);
+    pub fn new(app: &Application) -> (Self, mpsc::Receiver<AuthMessage>) {
+        let (tx, rx) = mpsc::channel();
 
         let window = ApplicationWindow::builder()
             .application(app)
@@ -33,17 +41,20 @@ impl AuthWindow {
             .default_height(500)
             .build();
 
+        let device_flow_tx = std::sync::Arc::new(std::sync::Mutex::new(None));
+
         let auth_window = AuthWindow {
             window: window.clone(),
             tx: tx.clone(),
+            device_flow_tx: device_flow_tx.clone(),
         };
 
-        auth_window.build_ui();
+        auth_window.build_ui(&device_flow_tx);
 
         (auth_window, rx)
     }
 
-    fn build_ui(&self) {
+    fn build_ui(&self, device_flow_tx: &std::sync::Arc<std::sync::Mutex<Option<mpsc::Sender<DeviceFlowUpdate>>>>) {
         let main_box = Box::new(Orientation::Vertical, 20);
         main_box.set_margin_top(40);
         main_box.set_margin_bottom(40);
@@ -69,7 +80,7 @@ impl AuthWindow {
         stack.add_titled(&login_page, Some("login"), "Email Login");
 
         // Device flow page
-        let device_page = self.build_device_flow_page();
+        let device_page = self.build_device_flow_page(device_flow_tx);
         stack.add_titled(&device_page, Some("device"), "Device Flow");
 
         // Stack switcher
@@ -149,17 +160,17 @@ impl AuthWindow {
 
             error_label.set_text("");
 
-            thread::spawn(move || {
-                let api = ApiClient::new(None);
-                match api.login(&email, &password) {
-                    Ok(auth_response) => {
-                        let _ = tx.send(AuthMessage::LoginSuccess(auth_response));
-                    }
-                    Err(e) => {
-                        let _ = tx.send(AuthMessage::Error(format!("Login failed: {}", e)));
-                    }
-                }
-            });
+             thread::spawn(move || {
+                 let api = ApiClient::new(None);
+                 match api.login(&email, &password) {
+                     Ok(auth_response) => {
+                         let _ = tx.send(AuthMessage::LoginSuccess(std::boxed::Box::new(auth_response)));
+                     }
+                     Err(e) => {
+                         let _ = tx.send(AuthMessage::Error(format!("Login failed: {}", e)));
+                     }
+                 }
+             });
         });
 
         // Register handler
@@ -180,17 +191,17 @@ impl AuthWindow {
 
             error_label.set_text("");
 
-            thread::spawn(move || {
-                let api = ApiClient::new(None);
-                match api.register(&email, &password) {
-                    Ok(auth_response) => {
-                        let _ = tx.send(AuthMessage::LoginSuccess(auth_response));
-                    }
-                    Err(e) => {
-                        let _ = tx.send(AuthMessage::Error(format!("Registration failed: {}", e)));
-                    }
-                }
-            });
+             thread::spawn(move || {
+                 let api = ApiClient::new(None);
+                  match api.register(&email, &password) {
+                      Ok(auth_response) => {
+                          let _ = tx.send(AuthMessage::LoginSuccess(std::boxed::Box::new(auth_response)));
+                      }
+                     Err(e) => {
+                         let _ = tx.send(AuthMessage::Error(format!("Registration failed: {}", e)));
+                     }
+                 }
+             });
         });
 
         // Allow Enter key to submit
@@ -202,7 +213,7 @@ impl AuthWindow {
         page
     }
 
-    fn build_device_flow_page(&self) -> Box {
+    fn build_device_flow_page(&self, device_flow_tx: &std::sync::Arc<std::sync::Mutex<Option<mpsc::Sender<DeviceFlowUpdate>>>>) -> Box {
         let page = Box::new(Orientation::Vertical, 12);
         page.set_valign(gtk::Align::Center);
 
@@ -250,8 +261,36 @@ impl AuthWindow {
         start_button.set_margin_top(20);
         page.append(&start_button);
 
+        // Set up device flow update listener
+        let (device_flow_tx_local, device_flow_rx) = mpsc::channel();
+        if let Ok(mut tx_opt) = device_flow_tx.lock() {
+            *tx_opt = Some(device_flow_tx_local.clone());
+        }
+
+        // Listen for device flow updates on the UI thread
+        let user_code_display_listener = user_code_display.clone();
+        let verification_label_listener = verification_label.clone();
+        let status_label_listener = status_label.clone();
+        
+        glib::idle_add_local(move || {
+            match device_flow_rx.try_recv() {
+                Ok(DeviceFlowUpdate::Initiated { user_code, verification_uri }) => {
+                    user_code_display_listener.set_text(&user_code);
+                    verification_label_listener.set_markup(&format!(
+                        "<a href=\"{}\" title=\"Click to open in browser\">Open in browser</a>",
+                        glib::markup_escape_text(&verification_uri)
+                    ));
+                    status_label_listener.set_text("Waiting for you to confirm on your device...");
+                }
+                Err(std::sync::mpsc::TryRecvError::Empty) => {},
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => return glib::ControlFlow::Break,
+            }
+            glib::ControlFlow::Continue
+        });
+
         // Device flow handler
         let tx = self.tx.clone();
+        let device_flow_tx_button = device_flow_tx.clone();
         let user_code_box_clone = user_code_box.clone();
         let user_code_display_clone = user_code_display.clone();
         let verification_label_clone = verification_label.clone();
@@ -261,6 +300,7 @@ impl AuthWindow {
 
         start_button.connect_clicked(move |_| {
             let tx = tx.clone();
+            let device_flow_tx = device_flow_tx_button.clone();
             let user_code_box = user_code_box_clone.clone();
             let user_code_display = user_code_display_clone.clone();
             let verification_label = verification_label_clone.clone();
@@ -271,14 +311,23 @@ impl AuthWindow {
             error_label.set_text("");
             start_button.set_sensitive(false);
 
-            thread::spawn(move || {
+            // Update UI immediately with waiting state
+            user_code_box.set_visible(true);
+            user_code_display.set_text("Connecting...");
+            verification_label.set_text("Please wait...");
+            status_label.set_text("Initiating device authorization...");
+
+            // Move the blocking device flow to a background thread
+            let tx_thread = tx.clone();
+            
+            std::thread::spawn(move || {
                 let api = ApiClient::new(None);
 
                 // Initiate device flow
                 let device_response = match api.initiate_device_flow() {
                     Ok(response) => response,
                     Err(e) => {
-                        let _ = tx.send(AuthMessage::Error(format!(
+                        let _ = tx_thread.send(AuthMessage::Error(format!(
                             "Failed to start device flow: {}",
                             e
                         )));
@@ -287,36 +336,34 @@ impl AuthWindow {
                 };
 
                 let device_code = device_response.device_code.clone();
+                let user_code = device_response.user_code.clone();
+                let verification_uri = device_response.verification_uri_complete.clone();
                 let interval = device_response.interval as u64;
 
-                // Update UI with user code
-                glib::idle_add_once({
-                    let user_code_box = user_code_box.clone();
-                    let user_code_display = user_code_display.clone();
-                    let verification_label = verification_label.clone();
-                    let status_label = status_label.clone();
-                    let user_code = device_response.user_code.clone();
-                    let verification_uri = device_response.verification_uri_complete.clone();
-
-                    move || {
-                        user_code_display.set_text(&user_code);
-                        verification_label.set_markup(&format!(
-                            "<a href=\"{}\">{}</a>",
-                            verification_uri, "Open in browser"
-                        ));
-                        status_label.set_text("Waiting for authorization...");
-                        user_code_box.set_visible(true);
+                // Send the initialized device flow info to the UI thread via the device flow channel
+                if let Ok(tx_opt) = device_flow_tx.lock() {
+                    if let Some(ref device_tx) = *tx_opt {
+                        let _ = device_tx.send(DeviceFlowUpdate::Initiated {
+                            user_code: user_code.clone(),
+                            verification_uri: verification_uri.clone(),
+                        });
                     }
+                }
+
+                // Also send to main message channel for main.rs to log
+                let _ = tx_thread.send(AuthMessage::DeviceFlowInitiated {
+                    user_code,
+                    verification_uri,
                 });
 
-                // Poll for completion
+                // Poll for completion in background
                 let max_attempts = device_response.expires_in / device_response.interval;
                 for _ in 0..max_attempts {
                     thread::sleep(Duration::from_secs(interval));
 
                     match api.poll_device_token(&device_code) {
                         Ok(Some(auth_response)) => {
-                            let _ = tx.send(AuthMessage::DeviceFlowSuccess(auth_response));
+                            let _ = tx_thread.send(AuthMessage::DeviceFlowSuccess(std::boxed::Box::new(auth_response)));
                             return;
                         }
                         Ok(None) => {
@@ -324,14 +371,14 @@ impl AuthWindow {
                             continue;
                         }
                         Err(e) => {
-                            let _ = tx.send(AuthMessage::Error(format!("Device flow error: {}", e)));
+                            let _ = tx_thread.send(AuthMessage::Error(format!("Device flow error: {}", e)));
                             return;
                         }
                     }
                 }
 
                 // Timeout
-                let _ = tx.send(AuthMessage::Error(
+                let _ = tx_thread.send(AuthMessage::Error(
                     "Device authorization timed out".to_string(),
                 ));
             });

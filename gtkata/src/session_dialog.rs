@@ -1,8 +1,8 @@
 use chrono::Utc;
 use gtk::prelude::*;
 use gtk::{
-    Box, Button, CheckButton, ComboBoxText, Dialog, Entry, Label, Orientation, ResponseType,
-    ScrolledWindow, TextView, Window,
+    Box, CheckButton, ComboBoxText, Dialog, Label, Orientation, ResponseType,
+    ScrolledWindow, TextView, ApplicationWindow,
 };
 
 use crate::models::{CreateSessionRequest, Kata};
@@ -16,7 +16,7 @@ pub struct SessionDialog {
 }
 
 impl SessionDialog {
-    pub fn new(parent: &Window, katas: Vec<Kata>) -> Self {
+    pub fn new(parent: &ApplicationWindow, katas: Vec<Kata>) -> Self {
         let dialog = Dialog::with_buttons(
             Some("New Training Session"),
             Some(parent),
@@ -114,9 +114,11 @@ impl SessionDialog {
 
     pub fn connect_response<F>(&self, f: F)
     where
-        F: Fn(&Dialog, ResponseType) + 'static,
+        F: Fn(ResponseType) + 'static,
     {
-        self.dialog.connect_response(f);
+        self.dialog.connect_response(move |_, response| {
+            f(response);
+        });
     }
 
     pub fn show(&self) {

@@ -48,36 +48,52 @@ fn build_ui(app: &Application) {
     let (auth_window, rx) = AuthWindow::new(app);
     auth_window.show();
 
-    // Handle auth messages
+    // Handle auth messages using glib's channel mechanism
     let app_clone = app.clone();
-    rx.attach(None, move |msg| {
-        match msg {
-            AuthMessage::LoginSuccess(auth_response) | AuthMessage::DeviceFlowSuccess(auth_response) => {
-                // Save token and user email
-                if let Err(e) = Config::save_token(&auth_response.access_token) {
-                    eprintln!("Failed to save token: {}", e);
-                }
-                if let Err(e) = Config::save_user_email(&auth_response.user.email) {
-                    eprintln!("Failed to save user email: {}", e);
-                }
+    let auth_window_clone = auth_window.clone();
+    
+    glib::idle_add_local(move || {
+        match rx.try_recv() {
+            Ok(msg) => {
+                match &msg {
+                    AuthMessage::LoginSuccess(auth_response) | AuthMessage::DeviceFlowSuccess(auth_response) => {
+                        // Save token and user email
+                        if let Err(e) = Config::save_token(&auth_response.access_token) {
+                            eprintln!("Failed to save token: {}", e);
+                        }
+                        if let Err(e) = Config::save_user_email(&auth_response.user.email) {
+                            eprintln!("Failed to save user email: {}", e);
+                        }
 
-                // Close auth window
-                auth_window.close();
+                        // Close auth window
+                        auth_window_clone.close();
 
-                // Show main window
-                let main_window = MainWindow::new(
-                    &app_clone,
-                    auth_response.access_token,
-                    auth_response.user,
-                );
-                main_window.show();
+                        // Show main window
+                        let main_window = MainWindow::new(
+                            &app_clone,
+                            auth_response.access_token.clone(),
+                            auth_response.user.clone(),
+                        );
+                        main_window.show();
+                    }
+                    AuthMessage::DeviceFlowInitiated { user_code, verification_uri: _ } => {
+                        // Update UI with device flow information
+                        // Note: The labels are updated in the background thread before this message
+                        eprintln!("Device flow initiated. User code: {}", user_code);
+                    }
+                    AuthMessage::Error(error_msg) => {
+                        eprintln!("Authentication error: {}", error_msg);
+                        // TODO: Show error in UI
+                    }
+                }
+                glib::ControlFlow::Continue
             }
-            AuthMessage::Error(error_msg) => {
-                eprintln!("Authentication error: {}", error_msg);
-                // TODO: Show error in UI
+            Err(std::sync::mpsc::TryRecvError::Empty) => {
+                glib::ControlFlow::Continue
+            }
+            Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+                glib::ControlFlow::Break
             }
         }
-
-        glib::ControlFlow::Continue
     });
 }

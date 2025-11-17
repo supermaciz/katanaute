@@ -4,8 +4,8 @@ use gtk::{
     SearchEntry, Separator,
 };
 use std::rc::Rc;
-use std::cell::RefCell;
 use std::thread;
+use std::sync::{Arc, Mutex};
 
 use crate::api::ApiClient;
 use crate::config::Config;
@@ -14,9 +14,9 @@ use crate::session_dialog::SessionDialog;
 
 pub struct MainWindow {
     window: ApplicationWindow,
-    api: Rc<RefCell<ApiClient>>,
-    sessions: Rc<RefCell<Vec<Session>>>,
-    katas: Rc<RefCell<Vec<Kata>>>,
+    api: Arc<Mutex<ApiClient>>,
+    sessions: Arc<Mutex<Vec<Session>>>,
+    katas: Arc<Mutex<Vec<Kata>>>,
 }
 
 impl MainWindow {
@@ -33,9 +33,9 @@ impl MainWindow {
 
         let main_window = MainWindow {
             window: window.clone(),
-            api: Rc::new(RefCell::new(api)),
-            sessions: Rc::new(RefCell::new(Vec::new())),
-            katas: Rc::new(RefCell::new(Vec::new())),
+            api: Arc::new(Mutex::new(api)),
+            sessions: Arc::new(Mutex::new(Vec::new())),
+            katas: Arc::new(Mutex::new(Vec::new())),
         };
 
         main_window.build_ui(&user);
@@ -96,7 +96,7 @@ impl MainWindow {
         let api = self.api.clone();
         let window = self.window.clone();
         logout_button.connect_clicked(move |_| {
-            let api = api.borrow();
+            let api = api.lock().unwrap();
             let _ = api.logout();
             let _ = Config::clear_all();
             window.close();
@@ -130,13 +130,12 @@ impl MainWindow {
         refresh_button.connect_clicked(move |_| {
             let api = api.clone();
             let sessions = sessions.clone();
-            let window = window.clone();
 
             thread::spawn(move || {
-                let api = api.borrow();
+                let api = api.lock().unwrap();
                 if let Ok(new_sessions) = api.get_sessions() {
                     glib::idle_add_once(move || {
-                        *sessions.borrow_mut() = new_sessions;
+                        *sessions.lock().unwrap() = new_sessions;
                         // TODO: Refresh the list view
                     });
                 }
@@ -155,34 +154,34 @@ impl MainWindow {
         let window = self.window.clone();
 
         add_button.connect_clicked(move |_| {
-            let katas = katas.borrow().clone();
+            let katas = katas.lock().unwrap().clone();
             if katas.is_empty() {
                 return;
             }
 
-            let dialog = SessionDialog::new(&window, katas);
+            let dialog = Rc::new(SessionDialog::new(&window, katas));
             let api = api.clone();
             let sessions = sessions.clone();
-            let window_clone = window.clone();
 
-            dialog.connect_response(move |dialog, response| {
+            let dialog_clone = dialog.clone();
+            dialog.connect_response(move |response| {
                 if response == gtk::ResponseType::Ok {
-                    if let Some(request) = dialog.get_session_data() {
+                    if let Some(request) = dialog_clone.get_session_data() {
                         let api = api.clone();
                         let sessions = sessions.clone();
 
                         thread::spawn(move || {
-                            let api = api.borrow();
+                            let api = api.lock().unwrap();
                             if let Ok(new_session) = api.create_session(request) {
                                 glib::idle_add_once(move || {
-                                    sessions.borrow_mut().push(new_session);
+                                    sessions.lock().unwrap().push(new_session);
                                     // TODO: Refresh the list view
                                 });
                             }
                         });
                     }
                 }
-                dialog.close();
+                dialog_clone.close();
             });
 
             dialog.show();
@@ -213,17 +212,17 @@ impl MainWindow {
         let katas = self.katas.clone();
 
         thread::spawn(move || {
-            let api_ref = api.borrow();
+            let api_ref = api.lock().unwrap();
 
             // Load katas
             if let Ok(kata_list) = api_ref.get_katas() {
-                *katas.borrow_mut() = kata_list;
+                *katas.lock().unwrap() = kata_list;
             }
 
             // Load sessions
             if let Ok(session_list) = api_ref.get_sessions() {
                 glib::idle_add_once(move || {
-                    *sessions.borrow_mut() = session_list;
+                    *sessions.lock().unwrap() = session_list;
                     // TODO: Populate the list view
                 });
             }
