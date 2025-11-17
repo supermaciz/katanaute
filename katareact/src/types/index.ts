@@ -42,7 +42,7 @@ export type KataMap = Record<number, Kata>
 export interface User {
   id: number
   email: string
-  confirmed_at: string | null
+  confirmed_at?: string | null
 }
 
 // Auth types
@@ -57,6 +57,7 @@ export interface RegisterCredentials {
 }
 
 export interface AuthResponse {
-  token: string
+  access_token: string
+  token_type: string
   user: User
 }
