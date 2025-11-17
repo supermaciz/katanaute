@@ -45,13 +45,18 @@ defmodule KatanauteWeb.Plugs.WebAuth do
   def log_in_user(conn, user, params \\ %{}) do
     token = Accounts.generate_user_session_token(user)
     user_return_to = get_session(conn, :user_return_to)
+    device_code_id = get_session(conn, :device_code_id)
 
     conn
     |> renew_session()
     |> put_token_in_session(token)
+    |> maybe_put_session(:device_code_id, device_code_id)
     |> maybe_write_remember_me_cookie(token, params)
     |> redirect(to: user_return_to || signed_in_path(conn))
   end
+
+  defp maybe_put_session(conn, _key, nil), do: conn
+  defp maybe_put_session(conn, key, value), do: put_session(conn, key, value)
 
   defp maybe_write_remember_me_cookie(conn, token, %{"remember_me" => "true"}) do
     put_resp_cookie(conn, @remember_me_cookie, token, @remember_me_options)
