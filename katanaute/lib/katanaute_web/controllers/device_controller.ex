@@ -35,6 +35,15 @@ defmodule KatanauteWeb.DeviceController do
     end
   end
 
+  def verify(conn, %{"device" => %{"user_code" => user_code}}) do
+    # Handle form submission with nested parameters
+    verify(conn, %{"user_code" => user_code})
+  end
+
+  def verify(conn, _params) do
+    render(conn, :new, user_code: "", error: "User code is required")
+  end
+
   @doc """
   GET /device/authorize
   Show the authorization page after login (from redirect).
