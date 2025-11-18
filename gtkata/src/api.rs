@@ -170,28 +170,46 @@ impl ApiClient {
             .json(&req)
             .send()?;
 
-        if response.status().is_success() {
-            let api_response: ApiResponse<AuthResponse> = response.json()?;
-            return Ok(Some(api_response.data));
-        }
+        let status = response.status();
+        let body_bytes = response.bytes()?;
 
-        // Check for pending/denied status
-        // Read the response body once and check for error response
-        match response.json::<serde_json::Value>() {
-            Ok(json) => {
-                if let Some(error_str) = json.get("error").and_then(|v| v.as_str()) {
-                    if error_str == "authorization_pending" {
-                        return Ok(None);
-                    }
-                    return Err(anyhow!("Device authorization error: {}", error_str));
-                }
-            }
-            Err(e) => {
-                eprintln!("Failed to parse device token response: {}", e);
+        if status.is_success() {
+            if let Ok(api_response) =
+                serde_json::from_slice::<ApiResponse<AuthResponse>>(&body_bytes)
+            {
+                return Ok(Some(api_response.data));
             }
         }
 
-        Err(anyhow!("Unexpected response from device token endpoint"))
+        let json: serde_json::Value = serde_json::from_slice(&body_bytes).map_err(|e| {
+            anyhow!(
+                "Failed to parse device token response: {} - body: {}",
+                e,
+                String::from_utf8_lossy(&body_bytes)
+            )
+        })?;
+
+        if let Some(error_str) = json.get("error").and_then(|v| v.as_str()) {
+            if error_str == "authorization_pending" {
+                return Ok(None);
+            }
+
+            let description = json
+                .get("error_description")
+                .and_then(|v| v.as_str())
+                .unwrap_or("No description provided");
+
+            return Err(anyhow!(
+                "Device authorization error: {} - {}",
+                error_str,
+                description
+            ));
+        }
+
+        Err(anyhow!(
+            "Unexpected response from device token endpoint: {}",
+            String::from_utf8_lossy(&body_bytes)
+        ))
     }
 
     // Session endpoints
