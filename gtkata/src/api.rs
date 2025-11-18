@@ -131,14 +131,26 @@ impl ApiClient {
         let response = self.client.post(&url).headers(self.headers()).send()?;
 
         if !response.status().is_success() {
+            let status = response.status();
+            let text = response.text().unwrap_or_default();
             return Err(anyhow!(
-                "Failed to initiate device flow: {}",
-                response.status()
+                "Failed to initiate device flow: {} - {}",
+                status,
+                text
             ));
         }
 
-        let api_response: ApiResponse<DeviceCodeResponse> = response.json()?;
-        Ok(api_response.data)
+        // Try to parse as successful response with data
+        match response.json::<ApiResponse<DeviceCodeResponse>>() {
+            Ok(api_response) => Ok(api_response.data),
+            Err(json_err) => {
+                // If JSON parsing fails, provide more detailed error
+                Err(anyhow!(
+                    "Error decoding response body: {} - Check if backend is running and API endpoint is correct",
+                    json_err
+                ))
+            }
+        }
     }
 
     pub fn poll_device_token(&self, device_code: &str) -> Result<Option<AuthResponse>> {

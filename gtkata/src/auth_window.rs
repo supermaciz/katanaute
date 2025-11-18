@@ -320,20 +320,27 @@ impl AuthWindow {
             // Move the blocking device flow to a background thread
             let tx_thread = tx.clone();
             
-            std::thread::spawn(move || {
-                let api = ApiClient::new(None);
+             std::thread::spawn(move || {
+                 let api = ApiClient::new(None);
 
-                // Initiate device flow
-                let device_response = match api.initiate_device_flow() {
-                    Ok(response) => response,
-                    Err(e) => {
-                        let _ = tx_thread.send(AuthMessage::Error(format!(
-                            "Failed to start device flow: {}",
-                            e
-                        )));
-                        return;
-                    }
-                };
+                 // Initiate device flow
+                 let device_response = match api.initiate_device_flow() {
+                     Ok(response) => response,
+                     Err(e) => {
+                         let error_msg = if e.to_string().contains("decoding response body") {
+                             format!(
+                                 "Authentication error: Failed to start device flow: error decoding response body. \
+                                 This usually means the backend API is not running or not accessible at http://localhost:4000/api. \
+                                 Details: {}",
+                                 e
+                             )
+                         } else {
+                             format!("Authentication error: Failed to start device flow: {}", e)
+                         };
+                         let _ = tx_thread.send(AuthMessage::Error(error_msg));
+                         return;
+                     }
+                 };
 
                 let device_code = device_response.device_code.clone();
                 let user_code = device_response.user_code.clone();
