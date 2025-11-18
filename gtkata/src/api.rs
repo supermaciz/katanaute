@@ -140,17 +140,21 @@ impl ApiClient {
             ));
         }
 
-        // Try to parse as successful response with data
-        match response.json::<ApiResponse<DeviceCodeResponse>>() {
-            Ok(api_response) => Ok(api_response.data),
+        // Try to parse the response directly
+        // reqwest's json() method reads the body automatically
+        let api_response: ApiResponse<DeviceCodeResponse> = match response.json() {
+            Ok(api_resp) => api_resp,
             Err(json_err) => {
-                // If JSON parsing fails, provide more detailed error
-                Err(anyhow!(
+                // If JSON parsing fails, provide detailed error
+                eprintln!("Failed to parse device code response: {}", json_err);
+                return Err(anyhow!(
                     "Error decoding response body: {} - Check if backend is running and API endpoint is correct",
                     json_err
-                ))
+                ));
             }
-        }
+        };
+        
+        Ok(api_response.data)
     }
 
     pub fn poll_device_token(&self, device_code: &str) -> Result<Option<AuthResponse>> {
@@ -172,11 +176,19 @@ impl ApiClient {
         }
 
         // Check for pending/denied status
-        if let Ok(error) = response.json::<DeviceTokenError>() {
-            if error.error == "authorization_pending" {
-                return Ok(None);
+        // Read the response body once and check for error response
+        match response.json::<serde_json::Value>() {
+            Ok(json) => {
+                if let Some(error_str) = json.get("error").and_then(|v| v.as_str()) {
+                    if error_str == "authorization_pending" {
+                        return Ok(None);
+                    }
+                    return Err(anyhow!("Device authorization error: {}", error_str));
+                }
             }
-            return Err(anyhow!("Device authorization error: {}", error.error));
+            Err(e) => {
+                eprintln!("Failed to parse device token response: {}", e);
+            }
         }
 
         Err(anyhow!("Unexpected response from device token endpoint"))

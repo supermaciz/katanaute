@@ -106,7 +106,4 @@ pub struct DeviceTokenRequest {
     pub device_code: String,
 }
 
-#[derive(Debug, Deserialize)]
-pub struct DeviceTokenError {
-    pub error: String,
-}
+
