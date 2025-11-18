@@ -137,7 +137,8 @@ impl ApiClient {
             ));
         }
 
-        Ok(response.json()?)
+        let api_response: ApiResponse<DeviceCodeResponse> = response.json()?;
+        Ok(api_response.data)
     }
 
     pub fn poll_device_token(&self, device_code: &str) -> Result<Option<AuthResponse>> {
