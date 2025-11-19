@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/supermaciz/katanaute/katagocore"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/supermaciz/katanaute/katagocore"
 )
 
 func main() {
