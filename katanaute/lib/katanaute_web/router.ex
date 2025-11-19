@@ -34,16 +34,13 @@ defmodule KatanauteWeb.Router do
     plug KatanauteWeb.Plugs.WebAuth, :require_authenticated_user
   end
 
-  scope "/", KatanauteWeb do
+  # Admin/LiveView routes (moved from root to /admin)
+  scope "/admin", KatanauteWeb do
     pipe_through :browser
 
     get "/", PageController, :home
-  end
 
-  # Authenticated LiveView routes
-  scope "/", KatanauteWeb do
-    pipe_through :browser
-
+    # Authenticated LiveView routes
     live_session :authenticated_sessions,
       on_mount: [{KatanauteWeb.Plugs.WebAuth, :ensure_authenticated}] do
       live "/sessions", SessionLive.Index, :index
@@ -53,8 +50,8 @@ defmodule KatanauteWeb.Router do
     end
   end
 
-  ## Authentication routes
-  scope "/", KatanauteWeb do
+  ## Authentication routes (admin scope)
+  scope "/admin", KatanauteWeb do
     pipe_through [:browser, :redirect_if_authenticated]
 
     get "/users/register", UserRegistrationController, :new
@@ -63,7 +60,7 @@ defmodule KatanauteWeb.Router do
     post "/users/log_in", UserSessionController, :create
   end
 
-  scope "/", KatanauteWeb do
+  scope "/admin", KatanauteWeb do
     pipe_through [:browser, :fetch_current_user]
 
     delete "/users/log_out", UserSessionController, :delete
@@ -73,7 +70,7 @@ defmodule KatanauteWeb.Router do
     post "/device", DeviceController, :verify
   end
 
-  scope "/", KatanauteWeb do
+  scope "/admin", KatanauteWeb do
     pipe_through [:browser, :require_authenticated]
 
     # Device authorization (requires authentication)
@@ -103,6 +100,13 @@ defmodule KatanauteWeb.Router do
 
     get "/auth/me", API.AuthController, :me
     resources "/sessions", SessionController, except: [:new, :edit]
+  end
+
+  # React SPA catch-all route (must be last, after API and admin routes)
+  scope "/", KatanauteWeb do
+    pipe_through :browser
+
+    get "/*path", PageController, :react
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

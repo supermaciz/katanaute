@@ -12,7 +12,7 @@ defmodule KatanauteWeb.SessionLive.Index do
       <.header>
         Listing Sessions
         <:actions>
-          <.button variant="primary" navigate={~p"/sessions/new"}>
+          <.button variant="primary" navigate={~p"/admin/sessions/new"}>
             <.icon name="hero-plus" /> New Session
           </.button>
         </:actions>
@@ -21,7 +21,7 @@ defmodule KatanauteWeb.SessionLive.Index do
       <.table
         id="sessions"
         rows={@streams.sessions}
-        row_click={fn {_id, session} -> JS.navigate(~p"/sessions/#{session}") end}
+        row_click={fn {_id, session} -> JS.navigate(~p"/admin/sessions/#{session}") end}
       >
         <:col :let={{_id, session}} label="Kata">{session.kata.name}</:col>
         <:col :let={{_id, session}} label="Level">
@@ -32,9 +32,9 @@ defmodule KatanauteWeb.SessionLive.Index do
         <:col :let={{_id, session}} label="Notes">{session.notes}</:col>
         <:action :let={{_id, session}}>
           <div class="sr-only">
-            <.link navigate={~p"/sessions/#{session}"}>Show</.link>
+            <.link navigate={~p"/admin/sessions/#{session}"}>Show</.link>
           </div>
-          <.link navigate={~p"/sessions/#{session}/edit"}>Edit</.link>
+          <.link navigate={~p"/admin/sessions/#{session}/edit"}>Edit</.link>
         </:action>
         <:action :let={{id, session}}>
           <.link

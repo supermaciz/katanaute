@@ -120,8 +120,8 @@ defmodule KatanauteWeb.SessionLive.Form do
     end
   end
 
-  defp return_path("index", _session), do: ~p"/sessions"
-  defp return_path("show", session), do: ~p"/sessions/#{session}"
+  defp return_path("index", _session), do: ~p"/admin/sessions"
+  defp return_path("show", session), do: ~p"/admin/sessions/#{session}"
 
   defp kata_options(katas) do
     Enum.map(katas, fn kata ->

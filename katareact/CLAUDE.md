@@ -1,4 +1,21 @@
-This is a React single-page application built with Vite and TypeScript.
+This is a React single-page application built with Vite and TypeScript, served by Phoenix in production.
+
+## Deployment Architecture
+
+This React app has two deployment modes:
+
+### Production (Served by Phoenix)
+- Built with `mix react.build` from `../katanaute/` directory
+- Deployed to `../katanaute/priv/static/react/`
+- Served by Phoenix at the root path `/`
+- Assets loaded from `/react/assets/` (configured via `base: '/react/'` in `vite.config.ts`)
+- Phoenix serves `index.html` for all non-API, non-admin routes (catch-all for React Router)
+
+### Development (Standalone Vite Server)
+- Run `npm run dev` for hot module replacement on port 3000
+- API proxy: `/api` → `http://localhost:4000`
+- Independent of Phoenix static serving
+- Full TypeScript type checking and Vite HMR
 
 ## Project guidelines
 
@@ -7,6 +24,7 @@ This is a React single-page application built with Vite and TypeScript.
 - Run `npm run typecheck` to verify TypeScript types
 - Use existing utility functions from `src/utils/` when available
 - All components should have corresponding test files
+- **For Phoenix deployment**: Use `mix react.build` from `../katanaute/` (not `npm run build` directly)
 
 ### React, Vite & TypeScript guidelines
 
@@ -17,8 +35,10 @@ This is a React single-page application built with Vite and TypeScript.
 - **Always** define proper TypeScript types for props, state, and function parameters
 - Use type imports with `import type` for type-only imports
 - Vite is the build tool - configuration is in `vite.config.ts`
-- API proxy is configured in Vite to forward `/api` requests to `http://localhost:4000`
+  - **IMPORTANT**: `base: '/react/'` is set for Phoenix static serving
+  - API proxy is configured in Vite to forward `/api` requests to `http://localhost:4000` (dev mode only)
 - TypeScript configuration is in `tsconfig.json` and `tsconfig.node.json`
+- Build outputs to `dist/` directory (copied to Phoenix by `mix react.build`)
 
 ### Testing guidelines
 

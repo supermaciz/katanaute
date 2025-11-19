@@ -1,9 +1,44 @@
-This is a web application written using the Phoenix web framework.
+This is a web application written using the Phoenix web framework that serves a React SPA and provides a LiveView admin interface.
+
+## Architecture Overview
+
+This Phoenix application has a **dual-UI architecture**:
+
+1. **React SPA** (served at `/`)
+   - Built with Vite from `../katareact/`
+   - Served from `priv/static/react/`
+   - Client-side routing with React Router
+   - Main user-facing interface
+
+2. **LiveView Admin** (served at `/admin`)
+   - Phoenix LiveView pages
+   - Admin interface for session management
+   - User registration and authentication
+   - Device authorization flow
+
+3. **REST API** (served at `/api`)
+   - JSON API with Bearer token authentication
+   - Used by React, Rust GUI, and Go TUI clients
+
+### Routing Structure
+
+- `/` → React SPA (catch-all route serves `priv/static/react/index.html`)
+- `/admin/*` → LiveView pages (sessions, users, device auth)
+- `/api/*` → JSON API endpoints
+
+### React Integration
+
+- **Build task**: `mix react.build` builds React and copies to `priv/static/react/`
+- **Static serving**: Phoenix `Plug.Static` serves from `priv/static/react/`
+- **Base path**: React assets use `/react/` prefix (configured in `vite.config.ts`)
+- **Catch-all**: `PageController.react/2` serves `index.html` for client-side routing
 
 ## Project guidelines
 
 - Use `mix precommit` alias when you are done with all changes and fix any pending issues
 - Use the already included and available `:req` (`Req`) library for HTTP requests, **avoid** `:httpoison`, `:tesla`, and `:httpc`. Req is included by default and is the preferred HTTP client for Phoenix apps
+- **React frontend**: Use `mix react.build` to build and deploy React changes
+- **LiveView routes**: All LiveView routes use `/admin` prefix to avoid conflicts with React Router
 
 ### Phoenix v1.8 guidelines
 

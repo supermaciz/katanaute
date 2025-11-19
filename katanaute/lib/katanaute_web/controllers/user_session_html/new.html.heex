@@ -4,7 +4,7 @@
       Log in to account
       <:subtitle>
         Don't have an account?
-        <.link navigate={~p"/users/register"} class="font-semibold text-brand hover:underline">
+        <.link navigate={~p"/admin/users/register"} class="font-semibold text-brand hover:underline">
           Sign up
         </.link>
         for an account now.
@@ -12,7 +12,7 @@
     </.header>
   </div>
 
-  <.form :let={f} for={%{}} as={:user} action={~p"/users/log_in"}>
+  <.form :let={f} for={%{}} as={:user} action={~p"/admin/users/log_in"}>
     <%= if @error_message do %>
       <div class="alert alert-danger">
         <p>{@error_message}</p>

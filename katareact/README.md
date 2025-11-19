@@ -1,6 +1,35 @@
 # Katanaute React Frontend
 
-A modern React frontend for the Katanaute kata training tracker application.
+A modern React SPA for the Katanaute kata training tracker, served by Phoenix in production and with standalone Vite dev server for development.
+
+## Deployment Modes
+
+### Production (Served by Phoenix)
+
+In production, this React app is built and served by the Phoenix backend:
+
+```bash
+# From the katanaute/ directory:
+cd ../katanaute
+mix react.build        # Build React and copy to priv/static/react/
+mix phx.server         # Serve at http://localhost:4000/
+```
+
+The React UI is accessible at the root path `/` while the LiveView admin is at `/admin`.
+
+### Development (Standalone Vite Server)
+
+For development with hot reload:
+
+```bash
+npm install            # Install dependencies
+npm run dev           # Start dev server on http://localhost:3000
+```
+
+The dev server includes:
+- Hot module replacement (HMR) for instant updates
+- API proxy to `http://localhost:4000`
+- Full TypeScript type checking
 
 ## Features
 
@@ -11,13 +40,14 @@ A modern React frontend for the Katanaute kata training tracker application.
 - Delete sessions
 - Responsive design with Tailwind CSS
 - Bearer token authentication with Phoenix backend API
+- Served by Phoenix at `/` in production
 
 ## Tech Stack
 
-- **React 18** - UI library
+- **React 18** - UI library with TypeScript
 - **Vite** - Build tool and dev server
 - **React Router** - Client-side routing
-- **Tailwind CSS** - Utility-first CSS framework
+- **Tailwind CSS v3** - Utility-first CSS framework
 - **React Markdown** - Markdown rendering for session notes
 - **Vitest** - Fast unit testing framework
 - **React Testing Library** - Component testing utilities
@@ -26,28 +56,6 @@ A modern React frontend for the Katanaute kata training tracker application.
 
 - Node.js 18+ or Bun
 - Backend Phoenix server running on http://localhost:4000
-
-## Installation
-
-```bash
-# Install dependencies
-npm install
-# or
-bun install
-```
-
-## Development
-
-```bash
-# Start the development server
-npm run dev
-# or
-bun run dev
-```
-
-The application will be available at http://localhost:3000
-
-The dev server is configured to proxy API requests to the Phoenix backend at http://localhost:4000.
 
 ## Testing
 
@@ -79,27 +87,53 @@ bun run test:coverage
 
 All tests use mocked API responses and follow React Testing Library best practices.
 
-## Building for Production
+## Building
+
+### For Phoenix Deployment
+
+Use the Mix task from the Phoenix directory:
 
 ```bash
-# Build for production
-npm run build
-# or
-bun run build
-
-# Preview production build
-npm run preview
-# or
-bun run preview
+cd ../katanaute
+mix react.build        # Builds and copies to priv/static/react/
 ```
 
-## Environment Variables
+This task:
+1. Runs `npm install` to ensure dependencies are current
+2. Runs `npm run build` (TypeScript compile + Vite build)
+3. Copies `dist/*` to `../katanaute/priv/static/react/`
 
-Create a `.env` file in the root directory to customize the API URL:
+### Local Build (for testing)
+
+```bash
+npm run build         # Build to dist/ directory
+npm run preview       # Preview production build locally
+```
+
+## Configuration
+
+### Vite Base Path
+
+The `base` configuration in `vite.config.ts` is set to `/react/` to match the Phoenix static path:
+
+```typescript
+export default defineConfig({
+  base: '/react/',  // Assets served from /react/assets/
+  // ...
+})
+```
+
+This ensures that in production, asset references point to `/react/assets/` where Phoenix serves them.
+
+### Environment Variables
+
+Optional `.env` file to customize the API URL:
 
 ```
 VITE_API_URL=http://localhost:4000/api
 ```
+
+In development, the Vite proxy handles `/api` requests automatically.
 
 ## Project Structure
 
@@ -176,9 +210,29 @@ All authenticated requests include the Bearer token in the `Authorization` heade
 ## Development Notes
 
 - The project uses ESLint for code quality
-- Tailwind CSS is configured for responsive design
-- API proxy is configured in Vite for development
+- Tailwind CSS v3 is configured for responsive design
+- API proxy is configured in Vite for development (`/api` → `http://localhost:4000`)
 - All datetime handling uses ISO 8601 format
+- Production build uses `/react/` base path to match Phoenix static serving
+- Client-side routing handled by React Router (Phoenix serves index.html for all non-API routes)
+
+## Architecture
+
+### Production Routing
+
+When served by Phoenix:
+1. Phoenix serves `index.html` from `priv/static/react/` for all non-API, non-admin routes
+2. React Router handles client-side navigation
+3. Assets are loaded from `/react/assets/` (served by Phoenix static plug)
+4. API calls go to `/api` (handled by Phoenix API routes)
+
+### Development Routing
+
+When using Vite dev server:
+1. Vite serves the app on port 3000
+2. API calls to `/api` are proxied to `http://localhost:4000`
+3. Hot module replacement provides instant feedback
+4. No Phoenix static serving involved
 
 ## License
 

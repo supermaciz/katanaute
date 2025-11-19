@@ -8,11 +8,14 @@ A multi-client (Uechi-Ryu) Karate kata training tracker application with a Phoen
 
 **Start Development**
 ```bash
-# Backend
-cd katanaute && mix setup && mix phx.server
+# Backend + React (served from Phoenix)
+cd katanaute && mix setup && mix react.build && mix phx.server
+# React is now accessible at http://localhost:4000/
+# LiveView admin UI at http://localhost:4000/admin
 
-# React Frontend
+# React Development (separate dev server with hot reload)
 cd katareact && npm install && npm run dev
+# Dev server at http://localhost:3000 with API proxy
 
 # Rust GUI
 cd katarouille && cargo build && cargo run
@@ -97,12 +100,15 @@ katanaute/
 - **Styling**: Tailwind CSS v3
 - **Testing**: Vitest + React Testing Library
 - **Purpose**: Modern web interface for managing training sessions
+- **Deployment**: Served by Phoenix at `/` (root path)
 - **Key Features**:
   - View and manage practice sessions
   - Create sessions with Markdown notes
   - Color-coded kata level badges
   - Responsive design
   - Full TypeScript type safety
+  - Built and served from Phoenix static directory
+  - LiveView admin UI accessible at `/admin`
 
 ### GUI Client: Rust (katarouille/)
 - **Framework**: Iced (Elm Architecture GUI framework)
@@ -316,17 +322,26 @@ Tokens are stored in the `user_tokens` table:
 ```bash
 cd katanaute
 mix setup                    # Install deps, create DB, run migrations, seed data
-mix phx.server              # Start server on http://localhost:4000
 ```
 
-**2. React Frontend Setup (katareact/)**
+**2. Build and Serve React from Phoenix**
+```bash
+cd katanaute
+mix react.build              # Build React and copy to priv/static/react/
+mix phx.server              # Start server on http://localhost:4000
+# React accessible at http://localhost:4000/
+# LiveView admin at http://localhost:4000/admin
+```
+
+**3. React Development (with hot reload)**
 ```bash
 cd katareact
 npm install                  # or: bun install
 npm run dev                 # Start dev server on http://localhost:3000
+# Independent dev server with Vite hot reload and API proxy
 ```
 
-**3. Go TUI Setup (katago/)**
+**4. Go TUI Setup (katago/)**
 ```bash
 cd katago
 go build
@@ -340,14 +355,16 @@ go build
 mix precommit               # Run before committing: compile, format, test
 mix test                    # Run test suite
 mix ecto.reset              # Drop DB, recreate, migrate, seed
+mix react.build            # Build React frontend and copy to static dir
 iex -S mix phx.server      # Start with interactive shell
 ```
 
 #### Frontend (React)
 ```bash
 npm test                    # Run tests in watch mode
-npm run build              # Production build
+npm run build              # Production build (outputs to dist/)
 npm run preview            # Preview production build
+# Note: For Phoenix deployment, use `mix react.build` from katanaute/
 ```
 
 #### Go TUI
@@ -434,8 +451,33 @@ ci: add GitHub Actions workflow
 - **Port**: 4000 (default)
 - **Config files**: `katanaute/config/{dev,test,prod}.exs`
 
+### Routing Structure
+The application has a dual-UI setup with clean route separation:
+
+- **`/` (root)**: React SPA (primary user interface)
+  - Served from `priv/static/react/index.html`
+  - Client-side routing handled by React Router
+  - Assets served from `/react/assets/`
+
+- **`/admin`**: LiveView admin interface
+  - `/admin/sessions` - Session management (LiveView)
+  - `/admin/users/register` - User registration
+  - `/admin/users/log_in` - User login
+  - `/admin/device` - Device authorization flow
+
+- **`/api`**: REST API endpoints
+  - `/api/auth/*` - Authentication endpoints
+  - `/api/katas` - Kata management
+  - `/api/sessions` - Session management (requires auth)
+
 ### Frontend Configuration
-- **API Proxy**: Vite proxies `/api` to `http://localhost:4000`
+- **Production**: Served by Phoenix from `priv/static/react/`
+  - Build with `mix react.build` from `katanaute/` directory
+  - Assets use `/react/` base path (configured in vite.config.ts)
+- **Development**: Independent Vite dev server on port 3000
+  - Hot reload enabled
+  - API proxy: `/api` → `http://localhost:4000`
+  - Run with `npm run dev` from `katareact/`
 - **Environment**: `.env` file for custom API URL (optional)
   ```
   VITE_API_URL=http://localhost:4000/api

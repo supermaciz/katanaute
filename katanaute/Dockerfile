@@ -1,3 +1,19 @@
+# Katanaute Dockerfile - Phoenix + React Build
+#
+# This Dockerfile builds both the Phoenix backend and React frontend.
+# It MUST be run from the monorepo root (not from inside katanaute/) so the
+# build context includes both katanaute/ and katareact/ directories.
+#
+# Build from monorepo root:
+#   docker build -f katanaute/Dockerfile -t katanaute .
+#
+# The build process:
+#   1. Installs Elixir, Node.js, and dependencies
+#   2. Compiles Phoenix application
+#   3. Runs `mix react.build` to build and deploy React frontend
+#   4. Compiles Phoenix assets
+#   5. Creates production release
+#
 # Find eligible builder and runner images on Docker Hub. We use Ubuntu/Debian
 # instead of Alpine to avoid DNS resolution issues in production.
 #
@@ -20,9 +36,11 @@ ARG RUNNER_IMAGE="docker.io/debian:${DEBIAN_VERSION}"
 
 FROM ${BUILDER_IMAGE} AS builder
 
-# install build dependencies
+# install build dependencies (including Node.js for React build)
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends build-essential git \
+  && apt-get install -y --no-install-recommends build-essential git curl \
+  && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+  && apt-get install -y nodejs \
   && rm -rf /var/lib/apt/lists/*
 
 # prepare build dir
@@ -50,10 +68,19 @@ RUN mix assets.setup
 
 COPY priv priv
 
+# Copy Mix task for React build
+COPY lib/mix lib/mix
+
 COPY lib lib
 
 # Compile the release
 RUN mix compile
+
+# Copy React source from parent directory context
+COPY ../katareact ../katareact
+
+# Build React frontend using the Mix task
+RUN mix react.build
 
 COPY assets assets
 

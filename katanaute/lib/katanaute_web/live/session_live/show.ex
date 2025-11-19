@@ -13,10 +13,10 @@ defmodule KatanauteWeb.SessionLive.Show do
         Session {@session.id}
         <:subtitle>This is a session record from your database.</:subtitle>
         <:actions>
-          <.button navigate={~p"/sessions"}>
+          <.button navigate={~p"/admin/sessions"}>
             <.icon name="hero-arrow-left" />
           </.button>
-          <.button variant="primary" navigate={~p"/sessions/#{@session}/edit?return_to=show"}>
+          <.button variant="primary" navigate={~p"/admin/sessions/#{@session}/edit?return_to=show"}>
             <.icon name="hero-pencil-square" /> Edit session
           </.button>
         </:actions>

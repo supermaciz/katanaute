@@ -28,9 +28,9 @@ defmodule KatanauteWeb.DeviceController do
           # User needs to log in first
           conn
           |> put_session(:device_code_id, device_code.id)
-          |> put_session(:user_return_to, ~p"/device/authorize")
+          |> put_session(:user_return_to, ~p"/admin/device/authorize")
           |> put_flash(:info, "Please log in to authorize this device")
-          |> redirect(to: ~p"/users/log_in")
+          |> redirect(to: ~p"/admin/users/log_in")
         end
     end
   end
@@ -55,7 +55,7 @@ defmodule KatanauteWeb.DeviceController do
       nil ->
         conn
         |> put_flash(:error, "No device code found. Please enter the code again.")
-        |> redirect(to: ~p"/device")
+        |> redirect(to: ~p"/admin/device")
 
       id ->
         case Katanaute.Repo.get(Katanaute.Accounts.DeviceCode, id) do
@@ -63,7 +63,7 @@ defmodule KatanauteWeb.DeviceController do
             conn
             |> delete_session(:device_code_id)
             |> put_flash(:error, "Device code has expired. Please try again.")
-            |> redirect(to: ~p"/device")
+            |> redirect(to: ~p"/admin/device")
 
           device_code ->
             render(conn, :approve, device_code: device_code)
@@ -109,7 +109,7 @@ defmodule KatanauteWeb.DeviceController do
         conn
         |> delete_session(:device_code_id)
         |> put_flash(:info, "Device authorization denied")
-        |> redirect(to: ~p"/")
+        |> redirect(to: ~p"/admin")
 
       {:error, _changeset} ->
         conn

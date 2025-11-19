@@ -1,0 +1,77 @@
+# Katanaute .dockerignore
+# Excludes unnecessary files from Docker build context for faster builds
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Elixir/Phoenix (katanaute/)
+katanaute/_build/
+katanaute/deps/
+katanaute/*.db
+katanaute/*.db-*
+katanaute/cover/
+katanaute/doc/
+katanaute/tmp/
+katanaute/priv/static/
+
+# React (katareact/)
+katareact/node_modules/
+katareact/dist/
+katareact/.vite/
+katareact/coverage/
+
+# Rust (katarouille/)
+katarouille/target/
+katarouille/Cargo.lock
+
+# Go (katago/)
+katago/katago
+katago/debug.log
+
+# IDEs and editors
+.idea/
+.vscode/
+.zed/
+.elixir_ls/
+.expert/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Documentation (except what's needed for the container)
+README.md
+CLAUDE.md
+katanaute/README.md
+katareact/README.md
+katarouille/README.md
+katago/README.md
+notes.md
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Test artifacts
+katanaute/test/
+katareact/src/test/
+katareact/*.test.*
+katareact/**/*.test.*
+
+# Development tools
+Makefile
+docker-compose.yml
+.env
+.env.*
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

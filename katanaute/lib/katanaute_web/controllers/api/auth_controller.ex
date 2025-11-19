@@ -101,7 +101,7 @@ defmodule KatanauteWeb.API.AuthController do
     case Accounts.create_device_code() do
       {:ok, device_code} ->
         # Build the verification URI
-        verification_uri = url(~p"/device")
+        verification_uri = url(~p"/admin/device")
 
         json(conn, %{
           data: %{
