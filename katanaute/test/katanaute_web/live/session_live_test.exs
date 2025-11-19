@@ -43,7 +43,7 @@ defmodule KatanauteWeb.SessionLiveTest do
     setup [:create_session]
 
     test "lists all sessions", %{conn: conn, session: session} do
-      {:ok, _index_live, html} = live(conn, ~p"/sessions")
+      {:ok, _index_live, html} = live(conn, ~p"/admin/sessions")
 
       assert html =~ "Listing Sessions"
       assert html =~ session.notes
@@ -51,7 +51,7 @@ defmodule KatanauteWeb.SessionLiveTest do
 
     test "saves new session", %{conn: conn, create_attrs: create_attrs, user: user} do
       # Load the form directly with the user_id parameter
-      {:ok, form_live, _html} = live(conn, "/sessions/new?user_id=#{user.id}")
+      {:ok, form_live, _html} = live(conn, "/admin/sessions/new?user_id=#{user.id}")
 
       assert render(form_live) =~ "New Session"
 
@@ -63,7 +63,7 @@ defmodule KatanauteWeb.SessionLiveTest do
                form_live
                |> form("#session-form", session: create_attrs)
                |> render_submit()
-               |> follow_redirect(conn, "/sessions")
+               |> follow_redirect(conn, "/admin/sessions")
 
       html = render(index_live)
       assert html =~ "Session created successfully"
@@ -71,13 +71,13 @@ defmodule KatanauteWeb.SessionLiveTest do
     end
 
     test "updates session in listing", %{conn: conn, session: session, update_attrs: update_attrs} do
-      {:ok, index_live, _html} = live(conn, ~p"/sessions")
+      {:ok, index_live, _html} = live(conn, ~p"/admin/sessions")
 
       assert {:ok, form_live, _html} =
                index_live
                |> element("#sessions-#{session.id} a", "Edit")
                |> render_click()
-               |> follow_redirect(conn, ~p"/sessions/#{session}/edit")
+               |> follow_redirect(conn, ~p"/admin/sessions/#{session}/edit")
 
       assert render(form_live) =~ "Edit Session"
 
@@ -89,7 +89,7 @@ defmodule KatanauteWeb.SessionLiveTest do
                form_live
                |> form("#session-form", session: update_attrs)
                |> render_submit()
-               |> follow_redirect(conn, ~p"/sessions")
+               |> follow_redirect(conn, ~p"/admin/sessions")
 
       html = render(index_live)
       assert html =~ "Session updated successfully"
@@ -97,7 +97,7 @@ defmodule KatanauteWeb.SessionLiveTest do
     end
 
     test "deletes session in listing", %{conn: conn, session: session} do
-      {:ok, index_live, _html} = live(conn, ~p"/sessions")
+      {:ok, index_live, _html} = live(conn, ~p"/admin/sessions")
 
       assert index_live |> element("#sessions-#{session.id} a", "Delete") |> render_click()
       refute has_element?(index_live, "#sessions-#{session.id}")
@@ -108,7 +108,7 @@ defmodule KatanauteWeb.SessionLiveTest do
     setup [:create_session]
 
     test "displays session", %{conn: conn, session: session} do
-      {:ok, _show_live, html} = live(conn, ~p"/sessions/#{session}")
+      {:ok, _show_live, html} = live(conn, ~p"/admin/sessions/#{session}")
 
       assert html =~ "Show Session"
       assert html =~ session.notes
@@ -119,13 +119,13 @@ defmodule KatanauteWeb.SessionLiveTest do
       session: session,
       update_attrs: update_attrs
     } do
-      {:ok, show_live, _html} = live(conn, ~p"/sessions/#{session}")
+      {:ok, show_live, _html} = live(conn, ~p"/admin/sessions/#{session}")
 
       assert {:ok, form_live, _} =
                show_live
                |> element("a", "Edit")
                |> render_click()
-               |> follow_redirect(conn, ~p"/sessions/#{session}/edit?return_to=show")
+               |> follow_redirect(conn, ~p"/admin/sessions/#{session}/edit?return_to=show")
 
       assert render(form_live) =~ "Edit Session"
 
@@ -137,7 +137,7 @@ defmodule KatanauteWeb.SessionLiveTest do
                form_live
                |> form("#session-form", session: update_attrs)
                |> render_submit()
-               |> follow_redirect(conn, ~p"/sessions/#{session}")
+               |> follow_redirect(conn, ~p"/admin/sessions/#{session}")
 
       html = render(show_live)
       assert html =~ "Session updated successfully"
