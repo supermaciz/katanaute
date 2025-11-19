@@ -12,9 +12,13 @@ use iced::{Alignment, Color, Element, Length, Task};
 use models::{Kata, Session, SessionInput};
 
 fn main() -> iced::Result {
-    iced::application("Katarouille - Kata Training Tracker", KatarouillePage::update, KatarouillePage::view)
-        .theme(|_| iced::Theme::Dark)
-        .run_with(KatarouillePage::new)
+    iced::application(
+        "Katarouille - Kata Training Tracker",
+        KatarouillePage::update,
+        KatarouillePage::view,
+    )
+    .theme(|_| iced::Theme::Dark)
+    .run_with(KatarouillePage::new)
 }
 
 #[derive(Debug)]
@@ -81,9 +85,7 @@ enum Message {
 impl KatarouillePage {
     fn new() -> (Self, Task<Message>) {
         let task = Task::perform(
-            async {
-                Config::load().map_err(|e| e.to_string())
-            },
+            async { Config::load().map_err(|e| e.to_string()) },
             Message::ConfigLoaded,
         );
 
@@ -104,7 +106,8 @@ impl KatarouillePage {
         match message {
             Message::ConfigLoaded(result) => match result {
                 Ok(config) => {
-                    self.api_client = ApiClient::new(config.base_url.clone(), config.api_token.clone());
+                    self.api_client =
+                        ApiClient::new(config.base_url.clone(), config.api_token.clone());
                     self.config = config;
                     self.update(Message::CheckAuthentication)
                 }
@@ -150,7 +153,11 @@ impl KatarouillePage {
 
                 let api_client = self.api_client.clone();
                 Task::perform(
-                    async move { initiate_device_flow(&api_client).await.map_err(|e| e.to_string()) },
+                    async move {
+                        initiate_device_flow(&api_client)
+                            .await
+                            .map_err(|e| e.to_string())
+                    },
                     Message::DeviceFlowInitiated,
                 )
             }
@@ -241,7 +248,11 @@ impl KatarouillePage {
             },
 
             Message::SelectSession(index) => {
-                if let AppState::SessionList { ref mut selected_session, .. } = self.state {
+                if let AppState::SessionList {
+                    ref mut selected_session,
+                    ..
+                } = self.state
+                {
                     *selected_session = Some(index);
                 }
                 Task::none()
@@ -287,21 +298,32 @@ impl KatarouillePage {
             },
 
             Message::SelectKata(kata_id) => {
-                if let AppState::SessionCreate { ref mut selected_kata_id, .. } = self.state {
+                if let AppState::SessionCreate {
+                    ref mut selected_kata_id,
+                    ..
+                } = self.state
+                {
                     *selected_kata_id = Some(kata_id);
                 }
                 Task::none()
             }
 
             Message::NotesChanged(notes) => {
-                if let AppState::SessionCreate { notes: ref mut current_notes, .. } = self.state {
+                if let AppState::SessionCreate {
+                    notes: ref mut current_notes,
+                    ..
+                } = self.state
+                {
                     *current_notes = notes;
                 }
                 Task::none()
             }
 
             Message::ToggleInCourse => {
-                if let AppState::SessionCreate { ref mut in_course, .. } = self.state {
+                if let AppState::SessionCreate {
+                    ref mut in_course, ..
+                } = self.state
+                {
                     *in_course = !*in_course;
                 }
                 Task::none()
@@ -318,7 +340,11 @@ impl KatarouillePage {
                     let session_input = SessionInput {
                         kata_id,
                         in_course,
-                        notes: if notes.is_empty() { None } else { Some(notes.clone()) },
+                        notes: if notes.is_empty() {
+                            None
+                        } else {
+                            Some(notes.clone())
+                        },
                         practiced_at: Utc::now(),
                     };
 
@@ -423,10 +449,7 @@ impl KatarouillePage {
                     col = col.push(text(err).size(16).color(Color::from_rgb(1.0, 0.0, 0.0)));
                 }
 
-                container(col)
-                    .center(Length::Fill)
-                    .padding(20)
-                    .into()
+                container(col).center(Length::Fill).padding(20).into()
             }
 
             AppState::SessionList {
@@ -499,9 +522,7 @@ impl KatarouillePage {
                         if is_selected {
                             if let Some(notes) = &session.notes {
                                 let notes_view = container(
-                                    text(notes)
-                                        .size(14)
-                                        .color(Color::from_rgb(0.8, 0.8, 0.8)),
+                                    text(notes).size(14).color(Color::from_rgb(0.8, 0.8, 0.8)),
                                 )
                                 .padding(10)
                                 .style(|_theme| container::Style {
@@ -520,7 +541,8 @@ impl KatarouillePage {
                     .padding(20);
 
                 if let Some(err) = error {
-                    main_col = main_col.push(text(err).size(16).color(Color::from_rgb(1.0, 0.0, 0.0)));
+                    main_col =
+                        main_col.push(text(err).size(16).color(Color::from_rgb(1.0, 0.0, 0.0)));
                 }
 
                 container(main_col).into()
@@ -601,9 +623,7 @@ impl KatarouillePage {
                     form = form.push(text(err).size(16).color(Color::from_rgb(1.0, 0.0, 0.0)));
                 }
 
-                let main_col = column![header, scrollable(form)]
-                    .spacing(20)
-                    .padding(20);
+                let main_col = column![header, scrollable(form)].spacing(20).padding(20);
 
                 container(main_col).into()
             }

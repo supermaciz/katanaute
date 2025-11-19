@@ -63,8 +63,8 @@ impl Config {
 
 /// Get the config directory path
 fn get_config_dir() -> Result<PathBuf, Box<dyn std::error::Error>> {
-    let proj_dirs = ProjectDirs::from("", "", "katanaute")
-        .ok_or("Failed to determine config directory")?;
+    let proj_dirs =
+        ProjectDirs::from("", "", "katanaute").ok_or("Failed to determine config directory")?;
 
     let config_dir = proj_dirs.config_dir();
 
