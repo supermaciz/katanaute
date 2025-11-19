@@ -5,13 +5,14 @@ defmodule Katanaute.MixProject do
     [
       app: :katanaute,
       version: "0.1.0",
-      elixir: "~> 1.15",
+      elixir: "~> 1.19",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
       compilers: [:phoenix_live_view] ++ Mix.compilers(),
-      listeners: [Phoenix.CodeReloader]
+      listeners: [Phoenix.CodeReloader],
+      test_coverage: [summary: [threshold: 55]]
     ]
   end
 
