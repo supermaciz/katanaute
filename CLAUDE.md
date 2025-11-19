@@ -122,7 +122,7 @@ katanaute/
 
 ### GUI Client: Rust (katarouille/)
 - **Framework**: Iced (Elm Architecture GUI framework)
-- **Language**: Rust 2021 edition
+- **Language**: Rust 2024 edition
 - **Purpose**: Native cross-platform GUI application for session management
 - **Key Features**:
   - Device flow authentication with OAuth2-style flow
