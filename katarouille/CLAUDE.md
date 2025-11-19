@@ -13,7 +13,7 @@ This is a graphical user interface (GUI) application written in Rust using the I
 
 ## Rust Guidelines
 
-- This project uses **Rust 2021 edition**
+- This project uses **Rust 2024 edition**
 - **Always** use `cargo fmt` to format code
 - **Always** handle errors explicitly - avoid `.unwrap()` in production code
 - Use meaningful variable names - avoid single-letter names except in short closures

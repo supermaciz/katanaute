@@ -17,7 +17,7 @@ A graphical user interface application for tracking Uechi-Ryu Karate kata traini
 
 ## Prerequisites
 
-- Rust 1.70+ (uses 2021 edition)
+- Rust 1.85+ (uses 2024 edition)
 - Phoenix backend running on `http://localhost:4000` (see [katanaute/](../katanaute/))
 - OpenGL or Vulkan support for GUI rendering
 
