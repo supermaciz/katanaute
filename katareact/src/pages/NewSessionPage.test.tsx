@@ -94,6 +94,7 @@ describe('NewSessionPage', () => {
     const submitButton = screen.getByText('Create Session')
     await user.click(submitButton)
 
+    // Wait for both API call and navigation to complete
     await waitFor(() => {
       expect(api.createSession).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -102,9 +103,8 @@ describe('NewSessionPage', () => {
           in_course: true,
         })
       )
+      expect(mockNavigate).toHaveBeenCalledWith('/')
     })
-
-    expect(mockNavigate).toHaveBeenCalledWith('/')
   })
 
   it('navigates back when cancel button is clicked', async () => {
