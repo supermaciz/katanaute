@@ -102,13 +102,6 @@ defmodule KatanauteWeb.Router do
     resources "/sessions", SessionController, except: [:new, :edit]
   end
 
-  # React SPA catch-all route (must be last, after API and admin routes)
-  scope "/", KatanauteWeb do
-    pipe_through :browser
-
-    get "/*path", PageController, :react
-  end
-
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:katanaute, :dev_routes) do
     # If you want to use the LiveDashboard in production, you should put
@@ -124,5 +117,12 @@ defmodule KatanauteWeb.Router do
       live_dashboard "/dashboard", metrics: KatanauteWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
+  end
+
+  # React SPA catch-all route (must be last, after API and admin routes)
+  scope "/", KatanauteWeb do
+    pipe_through :browser
+
+    get "/*path", PageController, :react
   end
 end
