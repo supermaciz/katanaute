@@ -217,11 +217,11 @@ func (m Model) View() string {
 	case StartView:
 		return m.renderLoadingView()
 	case ListView:
-		item, ok := m.list.SelectedItem().(*Session)
+		listItem, ok := m.list.SelectedItem().(SessionListItem)
 		if !ok {
 			return m.renderListOnlyView()
 		}
-		return m.renderDetailedView(item)
+		return m.renderDetailedView(listItem.Session)
 	case CreateSessionView:
 		//log.Println("Creating session view")
 		return m.renderCreateSessionView()
@@ -239,7 +239,7 @@ func (m Model) renderListOnlyView() string {
 	return listStyle.Render(m.list.View())
 }
 
-func (m Model) renderDetailedView(session *Session) string {
+func (m Model) renderDetailedView(session *katagocore.Session) string {
 	listView := listStyle.Render(m.list.View())
 	headerView := m.renderSessionHeader(session)
 	notesView := m.renderSessionNotes(session)
@@ -251,14 +251,14 @@ func (m Model) renderDetailedView(session *Session) string {
 	)
 }
 
-func (m Model) renderSessionHeader(session *Session) string {
+func (m Model) renderSessionHeader(session *katagocore.Session) string {
 	if session.InCourse {
 		return headerStyle.Render("  🥋  Dojo Course Session  ")
 	}
 	return headerStyle.Render("  📝  Independent Practice  ")
 }
 
-func (m Model) renderSessionNotes(session *Session) string {
+func (m Model) renderSessionNotes(session *katagocore.Session) string {
 	renderedNotes, err := glamour.Render(session.Notes, "dark")
 	if err != nil {
 		renderedNotes = session.Notes + "\n\n" + err.Error()
