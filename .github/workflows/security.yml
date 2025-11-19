@@ -1,0 +1,113 @@
+name: Security
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    # Run weekly on Monday at 9am UTC
+    - cron: '0 9 * * 1'
+
+jobs:
+  # Rust Security Audit
+  rust-audit:
+    name: Rust Security Audit (Katarouille)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: katarouille
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit
+
+      - name: Run security audit
+        run: cargo audit
+
+  # Go Security Check
+  go-security:
+    name: Go Security Check (Katago)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: katago
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Run Gosec Security Scanner
+        uses: securego/gosec@master
+        with:
+          args: './katago/...'
+
+  # npm Security Audit
+  npm-audit:
+    name: npm Security Audit (React)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: katareact
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate
+
+  # Elixir Security Check
+  elixir-security:
+    name: Elixir Security Check (Phoenix)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: katanaute
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: '1.19'
+          otp-version: '28.0'
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            katanaute/deps
+            katanaute/_build
+          key: ${{ runner.os }}-mix-security-${{ hashFiles('**/mix.lock') }}
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Check for retired dependencies
+        run: mix hex.audit
+
+      - name: Check for security vulnerabilities
+        run: |
+          mix archive.install hex sobelow --force
+          mix sobelow --config
