@@ -516,19 +516,17 @@ impl KatarouillePage {
 
                         session_list = session_list.push(btn);
 
-                        if is_selected {
-                            if let Some(notes) = &session.notes {
-                                let notes_view = container(
-                                    text(notes).size(14).color(Color::from_rgb(0.8, 0.8, 0.8)),
-                                )
-                                .padding(10)
-                                .style(|_theme| container::Style {
-                                    background: Some(Color::from_rgb(0.2, 0.2, 0.2).into()),
-                                    ..Default::default()
-                                });
+                        if is_selected && let Some(notes) = &session.notes {
+                            let notes_view = container(
+                                text(notes).size(14).color(Color::from_rgb(0.8, 0.8, 0.8)),
+                            )
+                            .padding(10)
+                            .style(|_theme| container::Style {
+                                background: Some(Color::from_rgb(0.2, 0.2, 0.2).into()),
+                                ..Default::default()
+                            });
 
-                                session_list = session_list.push(notes_view);
-                            }
+                            session_list = session_list.push(notes_view);
                         }
                     }
                 }
