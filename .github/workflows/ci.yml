@@ -13,12 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        elixir: ['1.15', '1.19']
-        otp: ['26.0', '28.0']
-        exclude:
-          # Elixir 1.15 doesn't support OTP 28
-          - elixir: '1.15'
-            otp: '28.0'
+        elixir: ["1.19"]
+        otp: ["28.1"]
+        # exclude:
+        #   # Elixir 1.15 doesn't support OTP 28
+        #   - elixir: '1.15'
+        #     otp: '28.0'
 
     defaults:
       run:
@@ -62,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: ['18', '20']
+        node: ["18", "20"]
 
     defaults:
       run:
@@ -76,7 +76,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-          cache: 'npm'
+          cache: "npm"
           cache-dependency-path: katareact/package-lock.json
 
       - name: Install dependencies
@@ -157,7 +157,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: ['1.22', '1.23']
+        go: ["1.25"]
 
     defaults:
       run:
