@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { renderWithRouter, mockKatas } from '../test/utils'
+import { renderWithRouter, mockKatas, mockSessions } from '../test/utils'
 import NewSessionPage from './NewSessionPage'
 import { api } from '../services/api'
 
@@ -16,6 +16,7 @@ vi.mock('react-router-dom', async () => {
 })
 
 vi.mock('../services/api')
+const mockedApi = vi.mocked(api, true)
 
 describe('NewSessionPage', () => {
   beforeEach(() => {
@@ -24,7 +25,7 @@ describe('NewSessionPage', () => {
   })
 
   it('renders loading state initially', () => {
-    ;(api.getKatas as any).mockReturnValue(new Promise(() => {}))
+    mockedApi.getKatas.mockReturnValue(new Promise(() => {}))
 
     renderWithRouter(<NewSessionPage />)
 
@@ -32,7 +33,7 @@ describe('NewSessionPage', () => {
   })
 
   it('displays the form after loading katas', async () => {
-    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
+    mockedApi.getKatas.mockResolvedValue({ data: mockKatas })
 
     renderWithRouter(<NewSessionPage />)
 
@@ -47,7 +48,7 @@ describe('NewSessionPage', () => {
   })
 
   it('displays error message when API fails', async () => {
-    ;(api.getKatas as any).mockRejectedValue(new Error('Failed to load katas'))
+    mockedApi.getKatas.mockRejectedValue(new Error('Failed to load katas'))
 
     renderWithRouter(<NewSessionPage />)
 
@@ -57,7 +58,7 @@ describe('NewSessionPage', () => {
   })
 
   it('populates kata dropdown with available katas', async () => {
-    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
+    mockedApi.getKatas.mockResolvedValue({ data: mockKatas })
 
     renderWithRouter(<NewSessionPage />)
 
@@ -71,8 +72,8 @@ describe('NewSessionPage', () => {
 
   it('submits form with correct data', async () => {
     const user = userEvent.setup()
-    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
-    ;(api.createSession as any).mockResolvedValue({ data: { id: 1 } })
+    mockedApi.getKatas.mockResolvedValue({ data: mockKatas })
+    mockedApi.createSession.mockResolvedValue({ data: mockSessions[0] })
 
     renderWithRouter(<NewSessionPage />)
 
@@ -109,7 +110,7 @@ describe('NewSessionPage', () => {
 
   it('navigates back when cancel button is clicked', async () => {
     const user = userEvent.setup()
-    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
+    mockedApi.getKatas.mockResolvedValue({ data: mockKatas })
 
     renderWithRouter(<NewSessionPage />)
 
@@ -125,8 +126,8 @@ describe('NewSessionPage', () => {
 
   it('disables submit button while submitting', async () => {
     const user = userEvent.setup()
-    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
-    ;(api.createSession as any).mockReturnValue(new Promise(() => {})) // Never resolves
+    mockedApi.getKatas.mockResolvedValue({ data: mockKatas })
+    mockedApi.createSession.mockReturnValue(new Promise(() => {})) // Never resolves
 
     renderWithRouter(<NewSessionPage />)
 
@@ -145,8 +146,8 @@ describe('NewSessionPage', () => {
 
   it('shows error message when submission fails', async () => {
     const user = userEvent.setup()
-    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
-    ;(api.createSession as any).mockRejectedValue(new Error('Failed to create session'))
+    mockedApi.getKatas.mockResolvedValue({ data: mockKatas })
+    mockedApi.createSession.mockRejectedValue(new Error('Failed to create session'))
 
     renderWithRouter(<NewSessionPage />)
 
@@ -166,7 +167,7 @@ describe('NewSessionPage', () => {
   })
 
   it('has default datetime value set to current time', async () => {
-    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
+    mockedApi.getKatas.mockResolvedValue({ data: mockKatas })
 
     renderWithRouter(<NewSessionPage />)
 
@@ -179,7 +180,7 @@ describe('NewSessionPage', () => {
   })
 
   it('unchecks "in course" checkbox by default', async () => {
-    ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
+    mockedApi.getKatas.mockResolvedValue({ data: mockKatas })
 
     renderWithRouter(<NewSessionPage />)
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { api } from '../services/api'
@@ -13,13 +13,7 @@ function SessionDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (id) {
-      loadSession()
-    }
-  }, [id])
-
-  async function loadSession() {
+  const loadSession = useCallback(async () => {
     if (!id) return
 
     try {
@@ -37,7 +31,11 @@ function SessionDetailPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [id])
+
+  useEffect(() => {
+    void loadSession()
+  }, [loadSession])
 
   async function handleDelete() {
     if (!id) return

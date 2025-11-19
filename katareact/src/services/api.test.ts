@@ -1,6 +1,15 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { api } from './api'
 
+const fetchMock = vi.fn<Parameters<typeof fetch>, ReturnType<typeof fetch>>()
+
+const createMockResponse = <T>(body: T, init?: { status?: number }) =>
+  ({
+    ok: (init?.status ?? 200) < 400,
+    status: init?.status ?? 200,
+    json: async () => body,
+  }) as unknown as Response
+
 describe('API Client', () => {
   const seedToken = () => localStorage.setItem('katanaute_token', 'test-token')
   const authHeaders = {
@@ -9,7 +18,8 @@ describe('API Client', () => {
   }
 
   beforeEach(() => {
-    global.fetch = vi.fn() as any
+    fetchMock.mockReset()
+    global.fetch = fetchMock as unknown as typeof fetch
     localStorage.clear()
   })
 
@@ -17,10 +27,7 @@ describe('API Client', () => {
     it('fetches sessions from the API', async () => {
       const mockData = { data: [{ id: 1, kata_id: 1 }] }
       seedToken()
-      ;(global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockData,
-      })
+      fetchMock.mockResolvedValueOnce(createMockResponse(mockData))
 
       const result = await api.getSessions()
 
@@ -31,11 +38,7 @@ describe('API Client', () => {
     })
 
     it('throws error on failed request', async () => {
-      ;(global.fetch as any).mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-        json: async () => ({ message: 'Server error' }),
-      })
+      fetchMock.mockResolvedValueOnce(createMockResponse({ message: 'Server error' }, { status: 500 }))
 
       await expect(api.getSessions()).rejects.toThrow('Server error')
     })
@@ -45,10 +48,7 @@ describe('API Client', () => {
     it('fetches a single session by id', async () => {
       const mockData = { data: { id: 1, kata_id: 1 } }
       seedToken()
-      ;(global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockData,
-      })
+      fetchMock.mockResolvedValueOnce(createMockResponse(mockData))
 
       const result = await api.getSession(1)
 
@@ -70,10 +70,7 @@ describe('API Client', () => {
       const mockResponse = { data: { id: 1, ...sessionData } }
 
       seedToken()
-      ;(global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      })
+      fetchMock.mockResolvedValueOnce(createMockResponse(mockResponse))
 
       const result = await api.createSession(sessionData)
 
@@ -92,10 +89,7 @@ describe('API Client', () => {
       const mockResponse = { data: { id: 1, ...sessionData } }
 
       seedToken()
-      ;(global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      })
+      fetchMock.mockResolvedValueOnce(createMockResponse(mockResponse))
 
       const result = await api.updateSession(1, sessionData)
 
@@ -111,10 +105,7 @@ describe('API Client', () => {
   describe('deleteSession', () => {
     it('deletes a session', async () => {
       seedToken()
-      ;(global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        status: 204,
-      })
+      fetchMock.mockResolvedValueOnce(createMockResponse(null, { status: 204 }))
 
       const result = await api.deleteSession(1)
 
@@ -126,10 +117,8 @@ describe('API Client', () => {
     })
 
     it('throws error when delete fails', async () => {
-      ;(global.fetch as any).mockResolvedValueOnce({
-        ok: false,
-        status: 404,
-      })
+      seedToken()
+      fetchMock.mockResolvedValueOnce(createMockResponse(null, { status: 404 }))
 
       await expect(api.deleteSession(999)).rejects.toThrow('HTTP error! status: 404')
     })
@@ -139,10 +128,7 @@ describe('API Client', () => {
     it('fetches all katas', async () => {
       const mockData = { data: [{ id: 1, name: 'FizzBuzz', level: 'yellow' }] }
       seedToken()
-      ;(global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockData,
-      })
+      fetchMock.mockResolvedValueOnce(createMockResponse(mockData))
 
       const result = await api.getKatas()
 
@@ -157,10 +143,7 @@ describe('API Client', () => {
     it('fetches a single kata by id', async () => {
       const mockData = { data: { id: 1, name: 'FizzBuzz', level: 'yellow' } }
       seedToken()
-      ;(global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockData,
-      })
+      fetchMock.mockResolvedValueOnce(createMockResponse(mockData))
 
       const result = await api.getKata(1)
 
