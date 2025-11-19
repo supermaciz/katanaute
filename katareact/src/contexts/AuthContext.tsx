@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import type { User, LoginCredentials, RegisterCredentials } from '../types'
 import { api } from '../services/api'
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null
   token: string | null
   login: (credentials: LoginCredentials) => Promise<void>
