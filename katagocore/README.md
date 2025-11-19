@@ -1,19 +1,25 @@
-# Katagocore - Shared Go Library for Katanaute Clients
+# Katagocore - Shared Go Library
 
-A shared Go library containing common code for Katanaute Go clients (Katafyne and Katago).
+The shared code that powers both Katafyne (GUI) and Katago (terminal) clients.
 
-## Purpose
+## Why Does This Exist?
 
-This library implements DRY principles by consolidating duplicated code between:
-- **Katafyne**: Go + Fyne GUI client
-- **Katago**: Go + Bubble Tea TUI client
+Before katagocore, Katafyne and Katago had almost identical code for authentication, configuration, and API calls - about 95% duplication! This library eliminates that duplication so:
 
-## Features
+- ✅ **One place to fix bugs** - Fix it once, both clients benefit
+- ✅ **Easier to maintain** - Update auth logic in one spot
+- ✅ **Consistent behavior** - Both clients work exactly the same way
+- ✅ **Less code overall** - ~800 duplicated lines → ~350 shared lines
 
-- 🔐 **Device Flow Authentication** - OAuth2-style authentication for desktop/CLI apps
-- ⚙️ **Configuration Management** - XDG-compliant config and token persistence
-- 🌐 **API Client** - HTTP client for Katanaute backend REST API
-- 📦 **Data Models** - Shared data structures (Session, Kata, User)
+## What's Inside?
+
+This library handles all the boring stuff so Katafyne and Katago can focus on being good UIs:
+
+- 🔐 **Login/Authentication** - The whole device flow process
+- 💾 **Saving Your Login** - Remembers you between sessions
+- 🌐 **Talking to the Server** - Gets your sessions, creates new ones, fetches katas
+- 📦 **Data Structures** - The Session, Kata, and User types both clients need
+- ⚙️ **Configuration** - Handles settings and environment variables
 
 ## Package Structure
 
@@ -28,21 +34,25 @@ katagocore/
 └── CLAUDE.md       # Development guidelines
 ```
 
-## Installation
+## Using It in Your Code
 
-This is a local module within the Katanaute monorepo. Import it using:
+If you're building another Go client for Katanaute, here's how to use this library:
 
-```go
-import "github.com/supermaciz/katanaute/katagocore"
-```
-
-In your `go.mod`, add:
+**1. Add it to your `go.mod`:**
 
 ```go
 require github.com/supermaciz/katanaute/katagocore v0.0.0
 
 replace github.com/supermaciz/katanaute/katagocore => ../katagocore
 ```
+
+**2. Import it:**
+
+```go
+import "github.com/supermaciz/katanaute/katagocore"
+```
+
+That's it! Now you have access to all the functions.
 
 ## Usage
 
