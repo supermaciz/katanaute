@@ -62,7 +62,8 @@ func (a *App) showLoginView() {
 	statusLabel := widget.NewLabel("")
 	statusLabel.Wrapping = fyne.TextWrapWord
 
-	loginButton := widget.NewButton("Login with Device Flow", func() {
+	var loginButton *widget.Button
+	loginButton = widget.NewButton("Login with Device Flow", func() {
 		loginButton.Disable()
 		statusLabel.SetText("Starting authentication...")
 
