@@ -155,6 +155,7 @@ describe('SessionsPage', () => {
 
   it('deletes a session when delete button is clicked and confirmed', async () => {
     const user = userEvent.setup()
+    
     ;(api.getSessions as any).mockResolvedValue({ data: mockSessions })
     ;(api.getKatas as any).mockResolvedValue({ data: mockKatas })
     ;(api.deleteSession as any).mockResolvedValue(null)
@@ -169,11 +170,17 @@ describe('SessionsPage', () => {
     })
 
     const deleteButtons = screen.getAllByText('Delete')
+    
+    // Click and wait for the deletion to complete and UI to update
     await user.click(deleteButtons[0])
 
-    expect(window.confirm).toHaveBeenCalledWith('Are you sure you want to delete this session?')
-    // After sorting by date desc, session 2 (newest) is first in the list
-    expect(api.deleteSession).toHaveBeenCalledWith(2)
+    await waitFor(() => {
+      expect(window.confirm).toHaveBeenCalledWith('Are you sure you want to delete this session?')
+      // After sorting by date desc, session 2 (newest) is first in the list
+      expect(api.deleteSession).toHaveBeenCalledWith(2)
+      // Session should be removed from the list
+      expect(screen.queryByText('Roman Numerals')).not.toBeInTheDocument()
+    })
   })
 
   it('does not delete session when user cancels', async () => {

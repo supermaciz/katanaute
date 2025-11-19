@@ -10,7 +10,14 @@ interface RenderOptions {
 export function renderWithRouter(ui: ReactElement, { route = '/' }: RenderOptions = {}): RenderResult {
   window.history.pushState({}, 'Test page', route)
 
-  return render(ui, { wrapper: BrowserRouter })
+  // Add future flags to silence React Router warnings
+  const RouterWrapper = ({ children }: { children: React.ReactNode }) => (
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      {children}
+    </BrowserRouter>
+  )
+
+  return render(ui, { wrapper: RouterWrapper })
 }
 
 export const mockSessions: Session[] = [
