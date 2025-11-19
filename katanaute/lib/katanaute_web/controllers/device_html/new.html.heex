@@ -11,7 +11,7 @@
   <.form :let={f} for={%{}} as={:device} action={~p"/admin/device"} method="post">
     <%= if @error do %>
       <div class="rounded-md bg-red-50 p-4 mb-4">
-        <p class="text-sm text-red-800"><%= @error %></p>
+        <p class="text-sm text-red-800">{@error}</p>
       </div>
     <% end %>
 
