@@ -68,7 +68,7 @@ cd katago && go build && ./katago
 
 ## Repository Structure
 
-This is a monorepo containing six main components:
+This is a monorepo containing six main components and a shared Go library:
 
 ```
 katanaute/
@@ -86,6 +86,9 @@ katanaute/
 ├── katago/             # Terminal UI client (Go + Bubble Tea)
 │   ├── CLAUDE.md       # Go TUI development guidelines
 │   └── README.md       # Go TUI documentation
+├── katagocore/         # Shared Go library for katafyne and katago
+│   ├── CLAUDE.md       # Library development guidelines
+│   └── README.md       # Library documentation
 └── CLAUDE.md           # This file - overall project guidelines
 ```
 
@@ -443,6 +446,14 @@ When working on a specific component, **ALWAYS** refer to its CLAUDE.md file:
   - Markdown rendering with Glamour
   - Go-specific coding conventions
   - Debugging with DEBUG mode
+
+- **Go Shared Library**: See `katagocore/CLAUDE.md` for:
+  - Shared library design principles
+  - Device flow authentication implementation
+  - Configuration management patterns
+  - API client functions
+  - Stateless function design
+  - Client adaptation strategies
 
 ## Commit Conventions
 

@@ -1,4 +1,4 @@
-package main
+package katagocore
 
 import (
 	"encoding/json"
@@ -11,6 +11,12 @@ import (
 type ConfigFile struct {
 	APIToken string `json:"api_token"`
 	BaseURL  string `json:"base_url"`
+}
+
+// Config holds the runtime configuration
+type Config struct {
+	BaseURL  string
+	APIToken string
 }
 
 // GetConfigDir returns the XDG-compliant config directory
@@ -87,6 +93,29 @@ func SaveConfig(config *ConfigFile) error {
 	}
 
 	return nil
+}
+
+// NewConfig creates a new Config instance with defaults
+func NewConfig() (*Config, error) {
+	// Load persisted config
+	configFile, err := LoadConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load config: %w", err)
+	}
+
+	baseURL := "http://localhost:4000/api"
+
+	// Override with environment variable if set
+	if envURL, ok := os.LookupEnv("KATANAUTE_API_URL"); ok {
+		baseURL = envURL
+	} else if configFile.BaseURL != "" {
+		baseURL = configFile.BaseURL
+	}
+
+	return &Config{
+		BaseURL:  baseURL,
+		APIToken: configFile.APIToken,
+	}, nil
 }
 
 // ClearToken removes the API token from the config

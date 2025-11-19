@@ -1,4 +1,4 @@
-package main
+package katagocore
 
 import (
 	"bytes"
@@ -102,9 +102,46 @@ func PollForToken(baseURL, deviceCode string) (*DeviceTokenResponse, error) {
 	return &response.Data, nil
 }
 
-// AuthenticateWithDeviceFlow performs the complete device flow authentication
-// It returns a channel that will receive the token when authentication is complete
-func AuthenticateWithDeviceFlow(baseURL string, onProgress func(string)) (chan string, chan error) {
+// AuthenticateWithDeviceFlow performs the complete device flow authentication (synchronous version)
+func AuthenticateWithDeviceFlow(baseURL string, onCodeReceived func(userCode, verificationURI string)) (string, error) {
+	// Initiate device flow
+	deviceCodeResp, err := InitiateDeviceFlow(baseURL)
+	if err != nil {
+		return "", err
+	}
+
+	// Notify caller with the user code and verification URI
+	onCodeReceived(deviceCodeResp.UserCode, deviceCodeResp.VerificationURI)
+
+	// Poll for authorization
+	interval := time.Duration(deviceCodeResp.Interval) * time.Second
+	if interval == 0 {
+		interval = 5 * time.Second
+	}
+
+	expiresAt := time.Now().Add(time.Duration(deviceCodeResp.ExpiresIn) * time.Second)
+
+	for time.Now().Before(expiresAt) {
+		time.Sleep(interval)
+
+		tokenResp, err := PollForToken(baseURL, deviceCodeResp.DeviceCode)
+		if err != nil {
+			if err.Error() == "authorization_pending" {
+				continue
+			}
+			return "", err
+		}
+
+		// Success! Return the token
+		return tokenResp.AccessToken, nil
+	}
+
+	return "", fmt.Errorf("device authorization timed out")
+}
+
+// AuthenticateWithDeviceFlowAsync performs device flow authentication asynchronously
+// Returns channels for token and error
+func AuthenticateWithDeviceFlowAsync(baseURL string, onProgress func(string)) (chan string, chan error) {
 	tokenChan := make(chan string, 1)
 	errChan := make(chan error, 1)
 

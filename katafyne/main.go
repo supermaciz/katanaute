@@ -6,6 +6,8 @@ import (
 	"sort"
 	"time"
 
+	"github.com/supermaciz/katanaute/katagocore"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
@@ -16,16 +18,16 @@ import (
 
 // App holds the application state
 type App struct {
-	config     *Config
+	config     *katagocore.Config
 	fyneApp    fyne.App
 	mainWindow fyne.Window
-	sessions   []*Session
-	katas      []*Kata
+	sessions   []*katagocore.Session
+	katas      []*katagocore.Kata
 }
 
 func main() {
 	// Load config
-	config, err := NewConfig()
+	config, err := katagocore.NewConfig()
 	if err != nil {
 		log.Fatal("Failed to load config:", err)
 	}
@@ -64,7 +66,7 @@ func (a *App) showLoginView() {
 		loginButton.Disable()
 		statusLabel.SetText("Starting authentication...")
 
-		tokenChan, errChan := AuthenticateWithDeviceFlow(a.config.BaseURL, func(message string) {
+		tokenChan, errChan := katagocore.AuthenticateWithDeviceFlowAsync(a.config.BaseURL, func(message string) {
 			statusLabel.SetText(message)
 		})
 
@@ -74,11 +76,11 @@ func (a *App) showLoginView() {
 			case token := <-tokenChan:
 				if token != "" {
 					// Save token
-					configFile := &ConfigFile{
+					configFile := &katagocore.ConfigFile{
 						APIToken: token,
 						BaseURL:  a.config.BaseURL,
 					}
-					if err := SaveConfig(configFile); err != nil {
+					if err := katagocore.SaveConfig(configFile); err != nil {
 						dialog.ShowError(fmt.Errorf("failed to save config: %w", err), a.mainWindow)
 						loginButton.Enable()
 						return
@@ -235,7 +237,7 @@ func (a *App) showCreateSessionDialog() {
 		},
 		OnSubmit: func() {
 			// Find selected kata
-			var selectedKata *Kata
+			var selectedKata *katagocore.Kata
 			for i, opt := range kataSelect.Options {
 				if opt == kataSelect.Selected {
 					if i < len(a.katas) {
@@ -251,8 +253,8 @@ func (a *App) showCreateSessionDialog() {
 			}
 
 			// Create session
-			session := &SessionInput{
-				Session: Session{
+			session := &katagocore.SessionInput{
+				Session: katagocore.Session{
 					PracticedAt: time.Now(),
 					InCourse:    inCourseCheck.Checked,
 					Notes:       notesEntry.Text,
@@ -260,7 +262,7 @@ func (a *App) showCreateSessionDialog() {
 				KataID: selectedKata.ID,
 			}
 
-			err := CreateSession(a.config, session)
+			err := katagocore.CreateSession(a.config, session)
 			if err != nil {
 				dialog.ShowError(err, a.mainWindow)
 				return
@@ -282,7 +284,7 @@ func (a *App) showCreateSessionDialog() {
 
 // refreshData fetches sessions and katas from the API
 func (a *App) refreshData() {
-	sessions, err := FetchSessions(a.config)
+	sessions, err := katagocore.FetchSessions(a.config)
 	if err != nil {
 		dialog.ShowError(fmt.Errorf("failed to fetch sessions: %w", err), a.mainWindow)
 		return
@@ -295,7 +297,7 @@ func (a *App) refreshData() {
 
 	a.sessions = sessions
 
-	katas, err := FetchKatas(a.config)
+	katas, err := katagocore.FetchKatas(a.config)
 	if err != nil {
 		dialog.ShowError(fmt.Errorf("failed to fetch katas: %w", err), a.mainWindow)
 		return
@@ -306,11 +308,11 @@ func (a *App) refreshData() {
 
 // logout clears the stored token and returns to login view
 func (a *App) logout() {
-	configFile := &ConfigFile{
+	configFile := &katagocore.ConfigFile{
 		APIToken: "",
 		BaseURL:  a.config.BaseURL,
 	}
-	if err := SaveConfig(configFile); err != nil {
+	if err := katagocore.SaveConfig(configFile); err != nil {
 		dialog.ShowError(err, a.mainWindow)
 		return
 	}
