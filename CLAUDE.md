@@ -1,6 +1,6 @@
 # Katanaute - Kata Training Tracker
 
-A multi-client (Uechi-Ryu) Karate kata training tracker application with a Phoenix backend, React web frontend, Rust GUI client, and Go terminal UI client.
+A multi-client (Uechi-Ryu) Karate kata training tracker application with a Phoenix backend, React web frontend, and multiple native clients (Rust GUI, Go GUI, Go TUI).
 
 > **Note**: This file contains comprehensive development guidelines for the entire monorepo. For quick-start instructions, see [README.md](./README.md). For component-specific guidelines, see the CLAUDE.md files in each subdirectory.
 
@@ -20,6 +20,9 @@ cd katareact && npm install && npm run dev
 # Rust GUI
 cd katarouille && cargo build && cargo run
 
+# Go GUI (Fyne)
+cd katafyne && go build && ./katafyne
+
 # Go TUI
 cd katago && go build && ./katago
 ```
@@ -36,6 +39,7 @@ cd katago && go build && ./katago
 - Phoenix: [katanaute/CLAUDE.md](./katanaute/CLAUDE.md)
 - React: [katareact/CLAUDE.md](./katareact/CLAUDE.md)
 - Rust GUI: [katarouille/CLAUDE.md](./katarouille/CLAUDE.md)
+- Go GUI: [katafyne/CLAUDE.md](./katafyne/CLAUDE.md)
 - Go TUI: [katago/CLAUDE.md](./katago/CLAUDE.md)
 
 ## Table of Contents
@@ -64,7 +68,7 @@ cd katago && go build && ./katago
 
 ## Repository Structure
 
-This is a monorepo containing four main components:
+This is a monorepo containing six main components:
 
 ```
 katanaute/
@@ -76,6 +80,9 @@ katanaute/
 ├── katarouille/        # GUI client (Rust + Iced)
 │   ├── CLAUDE.md       # Rust GUI development guidelines
 │   └── README.md       # Rust GUI documentation
+├── katafyne/           # GUI client (Go + Fyne)
+│   ├── CLAUDE.md       # Go GUI development guidelines
+│   └── README.md       # Go GUI documentation
 ├── katago/             # Terminal UI client (Go + Bubble Tea)
 │   ├── CLAUDE.md       # Go TUI development guidelines
 │   └── README.md       # Go TUI documentation
@@ -122,6 +129,19 @@ katanaute/
   - Token persistence in XDG-compliant config directory
   - Offline-capable (once authenticated)
   - Cross-platform (Linux, macOS, Windows)
+
+### GUI Client: Go (katafyne/)
+- **Framework**: Fyne (declarative GUI framework)
+- **Language**: Go 1.18+
+- **Purpose**: Native cross-platform GUI application for session management
+- **Key Features**:
+  - Device flow authentication with OAuth2-style flow
+  - Native GUI with clean, modern interface
+  - View and create training sessions
+  - Split-pane layout for session list and details
+  - Token persistence in XDG-compliant config directory
+  - Cross-platform (Linux, macOS, Windows)
+  - Simple MVC-like architecture
 
 ### CLI Client: Go TUI (katago/)
 - **Framework**: Bubble Tea (terminal UI framework)
@@ -367,7 +387,15 @@ npm run preview            # Preview production build
 # Note: For Phoenix deployment, use `mix react.build` from katanaute/
 ```
 
-#### Go TUI
+#### Go GUI (Katafyne)
+```bash
+go build                    # Compile binary
+go fmt ./...               # Format code
+./katafyne                 # Run GUI client
+go run .                   # Run without building
+```
+
+#### Go TUI (Katago)
 ```bash
 go build                    # Compile binary
 go fmt ./...               # Format code
@@ -392,6 +420,20 @@ When working on a specific component, **ALWAYS** refer to its CLAUDE.md file:
   - Vitest testing practices
   - API integration patterns
   - Form handling and validation
+
+- **Rust GUI**: See `katarouille/CLAUDE.md` for:
+  - Iced Elm Architecture patterns
+  - MVU (Model-View-Update) design
+  - Device flow authentication
+  - Token persistence
+  - Rust-specific coding patterns
+
+- **Go GUI**: See `katafyne/CLAUDE.md` for:
+  - Fyne GUI framework patterns
+  - MVC-like architecture
+  - Device flow authentication
+  - Widget and container layout
+  - Go-specific coding conventions
 
 - **Go TUI**: See `katago/CLAUDE.md` for:
   - Bubble Tea MVU (Model-View-Update) architecture
@@ -428,6 +470,13 @@ feat(katarouille): implement session editing
 fix(katarouille): handle authentication errors
 test(katarouille): add API client tests
 docs(katarouille): update installation guide
+```
+
+### Go GUI
+```
+feat(katafyne): add session deletion feature
+fix(katafyne): handle network errors gracefully
+docs(katafyne): update installation guide
 ```
 
 ### Go TUI
@@ -558,7 +607,8 @@ mix ecto.migrate
 ### Why Multiple Clients?
 - **React**: Modern web interface for full-featured management
 - **Katarouille (Rust GUI)**: Native cross-platform desktop application with offline capability
-- **Go TUI**: Quick terminal access for developers
+- **Katafyne (Go GUI)**: Native cross-platform desktop application with simple, clean UI
+- **Go TUI (Katago)**: Quick terminal access for developers
 - **Phoenix LiveView**: Built-in real-time web option
 - All share the same backend API
 
@@ -587,7 +637,12 @@ VITE_API_URL=http://localhost:4000/api    # Backend API URL
 KATANAUTE_API_URL=http://localhost:4000/api    # Backend API URL
 ```
 
-### Go TUI
+### Go GUI (Katafyne)
+```bash
+KATANAUTE_API_URL=http://localhost:4000/api    # Backend API URL
+```
+
+### Go TUI (Katago)
 ```bash
 KATANAUTE_API_URL=http://localhost:4000/api    # Backend API URL
 DEBUG=1                                         # Enable debug logging to debug.log
@@ -692,29 +747,30 @@ When making changes:
 - ✅ Phoenix LiveView web UI with session authentication
 - ✅ React SPA with full session management and auth
 - ✅ Rust GUI (Katarouille) with device flow authentication
-- ✅ Go TUI with device flow authentication
+- ✅ Go GUI (Katafyne) with device flow authentication
+- ✅ Go TUI (Katago) with device flow authentication
 - ✅ Comprehensive test coverage (Phoenix, React)
 - ✅ Color-coded kata level system
 - ✅ Markdown notes support
 - ✅ Session sorting by date
-- ✅ Split-view layout in Go TUI
-- ✅ Native cross-platform GUI (Katarouille)
+- ✅ Split-view layout in Go clients
+- ✅ Native cross-platform GUIs (Katarouille, Katafyne)
 
 **Known Limitations**
-- Session editing limited to LiveView (not in React, Katarouille, or Go TUI)
+- Session editing limited to LiveView (not in React or native clients)
 - Session deletion available in LiveView and React only
 - SQLite database (not suitable for production scale)
-- No tests for Rust GUI or Go TUI
+- No tests for native clients (Katarouille, Katafyne, Katago)
 - No email confirmation flow (confirmed_at field exists but not enforced)
 
 **Future Enhancements** (See component TODOs)
-- Session editing in React frontend, Katarouille, and Go TUI
-- Session deletion in Katarouille and Go TUI
-- Unit tests for Rust GUI and Go TUI
+- Session editing in React frontend and native clients
+- Session deletion in native clients (Katarouille, Katafyne, Katago)
+- Unit tests for native clients
 - Email confirmation and password reset flows
 - Multi-factor authentication
 - Session filtering and search
 - Statistics and progress tracking
 - PostgreSQL support for production
-- Error recovery UI in Katarouille and Go TUI
-- Markdown rendering in Katarouille
+- Error recovery UI in native clients
+- Markdown rendering in native GUI clients
