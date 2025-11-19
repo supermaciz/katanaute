@@ -51,6 +51,7 @@ pub struct DeviceCodeResponse {
     pub device_code: String,
     pub user_code: String,
     pub verification_uri: String,
+    #[allow(dead_code)]
     pub expires_in: i32,
     pub interval: i32,
 }
@@ -59,7 +60,9 @@ pub struct DeviceCodeResponse {
 #[derive(Debug, Deserialize)]
 pub struct TokenResponse {
     pub access_token: String,
+    #[allow(dead_code)]
     pub token_type: String,
+    #[allow(dead_code)]
     pub user: User,
 }
 

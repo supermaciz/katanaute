@@ -79,7 +79,6 @@ enum Message {
 
     // General
     Logout,
-    None,
 }
 
 impl KatarouillePage {
@@ -407,12 +406,10 @@ impl KatarouillePage {
                 };
                 Task::none()
             }
-
-            Message::None => Task::none(),
         }
     }
 
-    fn view(&self) -> Element<Message> {
+    fn view(&self) -> Element<'_, Message> {
         let content: Element<_> = match &self.state {
             AppState::Loading => container(text("Loading...").size(24))
                 .center(Length::Fill)
