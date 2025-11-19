@@ -7,7 +7,7 @@ import '@testing-library/jest-dom/vitest'
 // See: https://github.com/testing-library/user-event/issues/1115
 const originalError = console.error
 beforeAll(() => {
-  console.error = (...args: any[]) => {
+  console.error = (...args: Parameters<typeof console.error>) => {
     if (
       typeof args[0] === 'string' &&
       args[0].includes('Warning: An update to') &&

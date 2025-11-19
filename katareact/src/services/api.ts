@@ -82,11 +82,11 @@ export const api = {
     return handleResponse<Session[]>(response)
   },
 
-  async getSession(id: number): Promise<ApiResponse<Session>> {
+  async getSession(id: number): Promise<ApiResponse<Session | null>> {
     const response = await fetch(`${API_BASE_URL}/sessions/${id}`, {
       headers: getAuthHeaders(),
     })
-    return handleResponse<Session>(response)
+    return handleResponse<Session | null>(response)
   },
 
   async createSession(sessionData: SessionInput): Promise<ApiResponse<Session>> {
