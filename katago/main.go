@@ -5,35 +5,9 @@ import (
 	"log"
 	"os"
 
+	"github.com/supermaciz/katanaute/katagocore"
 	tea "github.com/charmbracelet/bubbletea"
 )
-
-type Config struct {
-	katanauteBaseURL string
-	apiToken         string
-}
-
-func NewConfig() (*Config, error) {
-	// Load persisted config
-	configFile, err := LoadConfig()
-	if err != nil {
-		return nil, fmt.Errorf("failed to load config: %w", err)
-	}
-
-	baseURL := "http://localhost:4000/api"
-
-	// Override with environment variable if set
-	if envURL, ok := os.LookupEnv("KATANAUTE_API_URL"); ok {
-		baseURL = envURL
-	} else if configFile.BaseURL != "" {
-		baseURL = configFile.BaseURL
-	}
-
-	return &Config{
-		katanauteBaseURL: baseURL,
-		apiToken:         configFile.APIToken,
-	}, nil
-}
 
 func main() {
 	if len(os.Getenv("DEBUG")) > 0 {
@@ -45,18 +19,18 @@ func main() {
 		defer f.Close()
 	}
 
-	config, err := NewConfig()
+	config, err := katagocore.NewConfig()
 	if err != nil {
 		fmt.Println("Error loading config:", err)
 		os.Exit(1)
 	}
 
-	log.Println("Using Katanaute API URL:", config.katanauteBaseURL)
+	log.Println("Using Katanaute API URL:", config.BaseURL)
 
 	// Check if user needs to authenticate
-	if config.apiToken == "" {
+	if config.APIToken == "" {
 		fmt.Println("You are not authenticated. Starting login flow...")
-		token, err := AuthenticateWithDeviceFlow(config.katanauteBaseURL, func(userCode, verificationURI string) {
+		token, err := katagocore.AuthenticateWithDeviceFlow(config.BaseURL, func(userCode, verificationURI string) {
 			fmt.Println("\nTo authenticate, please:")
 			fmt.Printf("1. Visit: %s\n", verificationURI)
 			fmt.Printf("2. Enter code: %s\n\n", userCode)
@@ -68,16 +42,16 @@ func main() {
 		}
 
 		// Save token to config
-		configFile := &ConfigFile{
+		configFile := &katagocore.ConfigFile{
 			APIToken: token,
-			BaseURL:  config.katanauteBaseURL,
+			BaseURL:  config.BaseURL,
 		}
-		if err := SaveConfig(configFile); err != nil {
+		if err := katagocore.SaveConfig(configFile); err != nil {
 			fmt.Println("Failed to save config:", err)
 			os.Exit(1)
 		}
 
-		config.apiToken = token
+		config.APIToken = token
 		fmt.Println("Authentication successful!")
 		fmt.Println("Starting TUI...")
 	}

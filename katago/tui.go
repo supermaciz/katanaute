@@ -6,6 +6,8 @@ import (
 	"sort"
 	"time"
 
+	"github.com/supermaciz/katanaute/katagocore"
+
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
@@ -36,17 +38,17 @@ var headerStyle = lipgloss.NewStyle().
 var formStyle = lipgloss.NewStyle().Margin(2, 1)
 
 type Model struct {
-	config     *Config
+	config     *katagocore.Config
 	list       list.Model
 	spinner    spinner.Model
-	sessions   []*Session
-	katas      []*Kata
+	sessions   []*katagocore.Session
+	katas      []*katagocore.Kata
 	viewType   viewType
 	form       *huh.Form
-	newSession *SessionInput
+	newSession *katagocore.SessionInput
 }
 
-func NewModel(config *Config) Model {
+func NewModel(config *katagocore.Config) Model {
 	s := spinner.New()
 	s.Spinner = spinner.Hamburger
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
@@ -57,16 +59,16 @@ func NewModel(config *Config) Model {
 	}
 }
 
-func checkServer(config *Config) tea.Msg {
-	sessions, err := FetchSessions(config)
+func checkServer(config *katagocore.Config) tea.Msg {
+	sessions, err := katagocore.FetchSessions(config)
 	if err != nil {
 		return errMsg{err}
 	}
 	return sessions
 }
 
-func fetchKataCmd(config *Config) tea.Msg {
-	katas, err := FetchKatas(config)
+func fetchKataCmd(config *katagocore.Config) tea.Msg {
+	katas, err := katagocore.FetchKatas(config)
 	if err != nil {
 		return err
 	}
@@ -89,10 +91,10 @@ type errMsg struct{ err error }
 // error interface on the message.
 func (e errMsg) Error() string { return e.err.Error() }
 
-func toItems(sessions []*Session) []list.Item {
+func toItems(sessions []*katagocore.Session) []list.Item {
 	items := make([]list.Item, len(sessions))
 	for i, session := range sessions {
-		items[i] = session
+		items[i] = SessionListItem{session}
 	}
 	return items
 }
@@ -120,7 +122,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case errMsg:
 		log.Println("Error:", msg.err)
 		return m, tea.Quit
-	case []*Session:
+	case []*katagocore.Session:
 		m.viewType = ListView
 		m.sessions = msg
 		sort.Slice(m.sessions, func(i, j int) bool {
@@ -132,7 +134,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.list.AdditionalFullHelpKeys = customKeys
 		m.list, cmd = m.list.Update(msg)
 		return m, cmd
-	case []*Kata:
+	case []*katagocore.Kata:
 		log.Println("Got katas")
 		m.viewType = CreateSessionView
 		m.katas = msg
@@ -149,7 +151,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		checkServerCmd := func() tea.Msg {
 			return checkServer(m.config)
 		}
-		err := CreateSession(m.config, m.newSession)
+		err := katagocore.CreateSession(m.config, m.newSession)
 		if err != nil {
 			log.Println("Error creating session:", err)
 		}
@@ -178,7 +180,7 @@ func (m *Model) buildCreateSessionForm() {
 	for i, kata := range m.katas {
 		kataOptions[i] = huh.NewOption(kata.Name, kata.ID)
 	}
-	m.newSession = new(SessionInput)
+	m.newSession = new(katagocore.SessionInput)
 	var dateTimeVal string
 	m.form = huh.NewForm(
 		huh.NewGroup(

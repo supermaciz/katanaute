@@ -1,10 +1,11 @@
-package main
+package katagocore
 
 import (
 	"fmt"
 	"time"
 )
 
+// Kata represents a kata in the curriculum
 type Kata struct {
 	ID    int    `json:"id"`
 	Name  string `json:"name"`
@@ -15,6 +16,7 @@ func (k Kata) String() string {
 	return fmt.Sprintf("%s (%s)", k.Name, k.Level)
 }
 
+// Session represents a training session
 type Session struct {
 	ID          int       `json:"id,omitempty"`
 	InCourse    bool      `json:"in_course"`
@@ -23,23 +25,15 @@ type Session struct {
 	Kata        *Kata     `json:"kata,omitempty"`
 }
 
+// SessionInput is used when creating a new session
 type SessionInput struct {
 	Session
 	KataID int `json:"kata_id"`
 }
 
-func (s Session) FilterValue() string {
-	return s.Kata.Name
-}
-
-func (s Session) Title() string {
-	return s.Kata.Name
-}
-
-func (s Session) Description() string {
-	return fmt.Sprintf("(%s)", s.PracticedAt.Format("2006-01-02"))
-}
-
-func (s Session) String() string {
-	return fmt.Sprintf("%s (%s): %s", s.Kata.Name, s.PracticedAt, s.Notes)
+// User represents a user in the system
+type User struct {
+	ID          int     `json:"id"`
+	Email       string  `json:"email"`
+	ConfirmedAt *string `json:"confirmed_at"`
 }
