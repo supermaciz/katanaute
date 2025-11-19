@@ -1,6 +1,6 @@
 module katafyne
 
-go 1.24.7
+go 1.25
 
 require github.com/supermaciz/katanaute/katagocore v0.0.0
 
