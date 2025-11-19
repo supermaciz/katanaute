@@ -11,7 +11,7 @@
 [![Rust](https://img.shields.io/badge/Rust-2021-000000?logo=rust&logoColor=white)](https://www.rust-lang.org/)
 [![Go](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go&logoColor=white)](https://go.dev/)
 
-A multi-client Uechi-Ryu Karate kata training tracker with Phoenix backend serving a React web UI, plus Rust GUI and Go terminal clients.
+A multi-client Uechi-Ryu Karate kata training tracker with Phoenix backend serving a React web UI, plus native GUI clients (Rust, Go) and terminal interfaces (Go).
 
 ## Purpose
 
@@ -19,14 +19,21 @@ It's useless. I'm doing this for fun and to learn some stuff.
 
 ## Project Structure
 
-This is a monorepo with four integrated components:
+This is a monorepo with six integrated clients plus a shared library:
 
+### Core
 - **katanaute/** - Phoenix 1.8 backend with REST API and LiveView admin UI (Elixir)
 - **katareact/** - Modern React 18 web frontend served by Phoenix (TypeScript + Tailwind CSS)
+
+### Native Clients
 - **katarouille/** - Native GUI client with device flow auth (Rust + Iced)
+- **katafyne/** - Native GUI client with device flow auth (Go + Fyne)
 - **katago/** - Terminal UI client with device flow auth (Go + Bubble Tea)
 
-All clients share the same Phoenix backend and SQLite database.
+### Shared Library
+- **katagocore/** - Shared Go library for katafyne and katago (auth, config, API client)
+
+All clients connect to the same Phoenix backend and SQLite database.
 
 ## Quick Start
 
@@ -55,17 +62,25 @@ npm run dev           # Start dev server on http://localhost:3000
 
 Visit [http://localhost:3000](http://localhost:3000) for the React UI with hot reload.
 
-### Rust GUI Client
+### Native GUI Clients
 
+**Rust GUI (Katarouille)**
 ```bash
 cd katarouille
 cargo build
 cargo run              # Requires backend running on localhost:4000
 ```
 
-The GUI will walk you through device authentication on first run.
+**Go GUI (Katafyne)**
+```bash
+cd katafyne
+go build
+./katafyne            # Requires backend running on localhost:4000
+```
 
-### Go Terminal Client
+Both GUIs will walk you through device authentication on first run.
+
+### Terminal Client (Go TUI)
 
 ```bash
 cd katago
@@ -80,10 +95,11 @@ Use arrow keys or j/k to navigate, 'a' to add sessions, Ctrl+C to quit.
 - **Session Tracking**: Record kata practice sessions with date/time, notes (Markdown), and course tracking
 - **User Authentication**: Secure login with email/password, plus device flow for GUI/terminal clients
 - **Multiple Interfaces**:
-  - **React Web UI** (served by Phoenix at `/`)
-  - **LiveView Admin** (Phoenix admin at `/admin`)
-  - **Rust GUI** (native cross-platform desktop app)
-  - **Go TUI** (terminal interface)
+  - **React Web UI** (served by Phoenix at `/`) - main web interface
+  - **LiveView Admin** (Phoenix admin at `/admin`) - admin interface
+  - **Rust GUI** (Katarouille) - native cross-platform desktop app
+  - **Go GUI** (Katafyne) - native cross-platform desktop app
+  - **Go TUI** (Katago) - terminal interface
 - **Color-Coded Levels**: Visual badges for kata progression (Yellow → Shodan)
 - **RESTful API**: JSON API with Bearer token authentication
 - **Developer-Friendly**: Comprehensive tests, hot reload, SQLite for easy setup
@@ -155,24 +171,21 @@ All API endpoints return JSON with `{ data: [...] }` format.
   VITE_API_URL=http://localhost:4000/api
   ```
 
-### Rust GUI
-- **API URL**: `http://localhost:4000/api` (default)
-- **Override**:
-  ```bash
-  export KATANAUTE_API_URL=http://your-server:port/api
-  ```
-- **Config Storage**: XDG-compliant config directory (`~/.config/katarouille/`)
+### Native Clients
 
-### Go TUI
+All native clients (Katarouille, Katafyne, Katago) use the same configuration:
+
 - **API URL**: `http://localhost:4000/api` (default)
 - **Override**:
   ```bash
   export KATANAUTE_API_URL=http://your-server:port/api
   ```
-- **Debug Mode**:
-  ```bash
-  DEBUG=1 ./katago  # Logs to debug.log
-  ```
+- **Config Storage**: XDG-compliant directory (`~/.config/katanaute/`)
+
+**Go TUI Debug Mode**:
+```bash
+DEBUG=1 ./katago  # Logs to debug.log
+```
 
 ## Development
 
@@ -270,11 +283,11 @@ docker run -p 4000:4000 \
 - Check Vite proxy config in `katareact/vite.config.js`
 - Inspect browser Network tab for failed requests
 
-### Go TUI shows empty list
+### Native clients can't connect
 - Ensure backend is running: `cd katanaute && mix phx.server`
 - Verify database has data: `mix run priv/repo/seeds.exs`
 - Check API URL: `export KATANAUTE_API_URL=http://localhost:4000/api`
-- Enable debug mode: `DEBUG=1 ./katago` and check `debug.log`
+- For Go TUI, enable debug: `DEBUG=1 ./katago` and check `debug.log`
 
 ## Project Status
 
@@ -283,8 +296,11 @@ docker run -p 4000:4000 \
 - ✅ Phoenix backend with authenticated REST API
 - ✅ React SPA served by Phoenix at `/` (main web UI)
 - ✅ Phoenix LiveView admin UI at `/admin`
-- ✅ Rust GUI client with device flow auth
-- ✅ Go terminal UI with device flow auth
+- ✅ Three native clients:
+  - Rust GUI (Katarouille) with offline capability
+  - Go GUI (Katafyne) with clean, modern interface
+  - Go TUI (Katago) for terminal lovers
+- ✅ Shared Go library (katagocore) for DRY code
 - ✅ Comprehensive test coverage (Phoenix, React)
 - ✅ Markdown notes support
 - ✅ Color-coded kata level system
@@ -292,18 +308,19 @@ docker run -p 4000:4000 \
 
 **Known Limitations**
 - Session editing limited (available in LiveView only)
-- Session deletion not available in Rust GUI or Go TUI
+- Session deletion not available in native clients
 - SQLite only (not production-ready for large scale)
-- No tests for Rust GUI or Go TUI
+- No tests for native clients (Katarouille, Katafyne, Katago)
 
 **Future Enhancements**
-- Session editing in React, Rust GUI, and Go TUI
-- Session deletion in Rust GUI and Go TUI
+- Session editing in React and native clients
+- Session deletion in native clients
 - Session filtering and search
 - Statistics and progress tracking
 - PostgreSQL support for production
 - Multi-factor authentication
 - Email confirmation flow
+- Unit tests for native clients
 
 ## Documentation
 
@@ -312,7 +329,9 @@ For comprehensive development guidelines, see:
 - **[katanaute/CLAUDE.md](./katanaute/CLAUDE.md)** - Phoenix backend development
 - **[katareact/CLAUDE.md](./katareact/CLAUDE.md)** - React frontend development
 - **[katarouille/CLAUDE.md](./katarouille/CLAUDE.md)** - Rust GUI development
+- **[katafyne/CLAUDE.md](./katafyne/CLAUDE.md)** - Go GUI development
 - **[katago/CLAUDE.md](./katago/CLAUDE.md)** - Go TUI development
+- **[katagocore/CLAUDE.md](./katagocore/CLAUDE.md)** - Go shared library development
 
 ## Resources
 
