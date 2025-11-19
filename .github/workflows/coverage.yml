@@ -1,0 +1,76 @@
+name: Code Coverage
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  # Phoenix Backend Coverage
+  phoenix-coverage:
+    name: Phoenix Backend Coverage
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: katanaute
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: '1.19'
+          otp-version: '28.0'
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            katanaute/deps
+            katanaute/_build
+          key: ${{ runner.os }}-mix-coverage-${{ hashFiles('**/mix.lock') }}
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Run tests with coverage
+        run: mix test --cover
+
+      - name: Generate coverage report
+        run: mix test --cover --export-coverage default
+
+  # React Frontend Coverage
+  react-coverage:
+    name: React Frontend Coverage
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: katareact
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: katareact/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npm run test:coverage -- --run
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./katareact/coverage/coverage-final.json
+          flags: react
+          name: react-coverage
+          fail_ci_if_error: false

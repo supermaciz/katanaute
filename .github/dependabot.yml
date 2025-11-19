@@ -1,0 +1,48 @@
+version: 2
+updates:
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+  # Phoenix Backend (Elixir)
+  - package-ecosystem: "mix"
+    directory: "/katanaute"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "elixir"
+      - "phoenix"
+
+  # React Frontend (npm)
+  - package-ecosystem: "npm"
+    directory: "/katareact"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "npm"
+      - "react"
+
+  # Rust GUI (Cargo)
+  - package-ecosystem: "cargo"
+    directory: "/katarouille"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "rust"
+
+  # Go TUI (Go modules)
+  - package-ecosystem: "gomod"
+    directory: "/katago"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "go"
