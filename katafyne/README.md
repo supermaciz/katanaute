@@ -1,49 +1,48 @@
-# Katafyne - GUI Client for Katanaute
+# Katafyne - Simple Desktop App for Kata Training
 
-A native cross-platform GUI client for the Katanaute kata training tracker, built with Go and Fyne.
+Track your karate training sessions with a clean, modern desktop interface. Built with Go and Fyne for a native feel on all platforms.
 
-## Features
+## What Can It Do?
 
-- 🔐 **Device Flow Authentication** - Secure OAuth2-style authentication for desktop apps
-- 📱 **Native GUI** - Cross-platform native interface using Fyne
-- 📋 **Session Management** - View and create training sessions
-- 🥋 **Kata Library** - Browse available katas with level indicators
-- 💾 **Token Persistence** - Automatic token storage in XDG-compliant config directory
-- 🎨 **Clean Interface** - Modern, intuitive split-pane layout
+- 📋 **View Your Sessions** - See all your training history in one place
+- ➕ **Add New Sessions** - Record what you practiced today
+- 🥋 **Browse Katas** - See all available katas with colored belt levels
+- 🔐 **Secure Login** - Easy authentication that works offline after first login
+- 💾 **Remember You** - Stays logged in between uses
+- 🎨 **Clean Interface** - Simple split-screen layout that's easy to navigate
 
-## Screenshots
+## What It Looks Like
 
-### Login Screen
-The device flow authentication presents a user code and verification URL.
+**When you start the app for the first time:**
+- You'll see a simple login screen
+- Click "Login" and you'll get a code
+- Open that website in your browser, enter the code, and you're in!
 
-### Main View
-- Left pane: List of training sessions sorted by date
-- Right pane: Detailed view of selected session
-- Buttons: Refresh, Add Session, Logout
+**After you're logged in:**
+- **Left side**: List of all your training sessions (newest first)
+- **Right side**: Details of the session you clicked on
+- **Top buttons**: Refresh list, Add new session, Logout
 
-## Installation
+## How to Get Started
 
-### Prerequisites
+### Step 1: Install What You Need
 
-- Go 1.18 or later
-- Fyne dependencies (see below)
-
-### Linux Dependencies
-
-On Linux, you'll need the following packages:
+**On Linux**, you'll need some system packages first:
 
 ```bash
-# Debian/Ubuntu
+# Ubuntu/Debian
 sudo apt-get install gcc libgl1-mesa-dev xorg-dev
 
 # Fedora
-sudo dnf install gcc libXcursor-devel libXrandr-devel mesa-libGL-devel libXi-devel libXinerama-devel libXxf86vm-devel
+sudo dnf install gcc libXcursor-devel libXrandr-devel mesa-libGL-devel libXi-devel
 
 # Arch
 sudo pacman -S go gcc libxcursor libxrandr libxinerama libxi mesa
 ```
 
-### Build
+**On macOS** or **Windows**, you don't need anything extra!
+
+### Step 2: Build the App
 
 ```bash
 cd katafyne
@@ -52,78 +51,100 @@ go mod tidy
 go build
 ```
 
-### Run
+### Step 3: Run It
 
 ```bash
 ./katafyne
 ```
 
-Or directly:
+That's it! The app will open up ready to use.
 
-```bash
-go run .
-```
+## Connecting to Your Server
 
-## Configuration
+**Default**: Katafyne assumes your backend server is running on your computer at `http://localhost:4000/api`.
 
-### API URL
-
-By default, Katafyne connects to `http://localhost:4000/api`.
-
-Override with environment variable:
+**Using a different server?** Just set this before running the app:
 
 ```bash
 export KATANAUTE_API_URL=https://your-server.com/api
 ./katafyne
 ```
 
-### Token Storage
+### Where Your Login Info is Saved
 
-Authentication tokens are stored in:
-- Linux: `~/.config/katanaute/config.json`
-- macOS: `~/Library/Application Support/katanaute/config.json`
-- Windows: `%APPDATA%\katanaute\config.json`
+After you log in, Katafyne remembers you by saving a token here:
+- **Linux**: `~/.config/katanaute/config.json`
+- **macOS**: `~/Library/Application Support/katanaute/config.json`
+- **Windows**: `%APPDATA%\katanaute\config.json`
 
-The config file contains:
-```json
-{
-  "api_token": "your-token-here",
-  "base_url": "http://localhost:4000/api"
-}
+Don't worry - the token is secure and you can delete it anytime by logging out.
+
+## How to Use It
+
+### Your First Time
+
+1. Click the **"Login"** button
+2. You'll see a website address and a code (like "ABCD-1234")
+3. Open that website in your browser
+4. Type in the code
+5. Click "Approve"
+6. Come back to the app - you're logged in!
+
+(You only need to do this once. After that, the app remembers you.)
+
+### Looking at Your Training History
+
+- All your sessions are on the **left side**, newest first
+- **Click on any session** to see the details on the right
+- You'll see:
+  - Which kata you practiced
+  - What belt level it is (shown in color)
+  - When you did it
+  - Any notes you wrote
+  - If it was part of a structured course (look for the 📚 icon)
+
+### Recording a New Training Session
+
+1. Click **"Add Session"** at the top
+2. Pick which kata you practiced from the list
+3. Type any notes about the session (you can use Markdown formatting if you want)
+4. Check the box if this was part of your structured training course
+5. Click **"Create"**
+
+Done! Your new session appears in the list.
+
+### Logging Out
+
+Click **"Logout"** at the top. This removes your saved login and takes you back to the login screen.
+
+## Something Not Working?
+
+### The app won't start
+
+**On Linux**: You might be missing some system packages. Scroll up to "Step 1: Install What You Need" and make sure you installed everything.
+
+**On any system**: Try rebuilding:
+```bash
+go clean
+go mod tidy
+go build
 ```
 
-## Usage
+### Can't log in
 
-### First Launch
+- Make sure the backend server is running (usually `mix phx.server` in the katanaute folder)
+- Check you typed the code correctly (it's case-sensitive!)
+- Make sure you clicked "Approve" on the website
 
-1. Click "Login with Device Flow"
-2. A verification URL and user code will be displayed
-3. Visit the URL in your browser
-4. Enter the user code when prompted
-5. Approve the authorization request
-6. The app will automatically detect authorization and proceed
+### Not seeing your sessions
 
-### Viewing Sessions
+- Check if the backend server is running
+- Try logging out and logging back in
+- Make sure you're connecting to the right server (see "Connecting to Your Server" above)
 
-- Sessions are listed on the left, sorted by date (newest first)
-- Click a session to view details on the right
-- Sessions show:
-  - Kata name and level badge
-  - Practice date and time
-  - Course indicator (📚 if part of structured course)
-  - Notes (Markdown format)
+### Still stuck?
 
-### Creating a Session
-
-1. Click "Add Session"
-2. Select a kata from the dropdown
-3. Enter training notes (Markdown supported)
-4. Check "Part of structured course" if applicable
-5. Click "Create"
-
-### Logout
-
-Click "Logout" to clear your token and return to the login screen.
+Open an issue on GitHub with what went wrong. We're here to help!
 
 ## Architecture
 
@@ -131,43 +152,23 @@ Katafyne follows a simple MVC-like architecture:
 
 ```
 main.go     - Application entry point and UI logic
-api.go      - API client (FetchSessions, CreateSession, FetchKatas)
-auth.go     - Device flow authentication
-config.go   - Configuration and token persistence
-models.go   - Data structures (Session, Kata, User)
 ```
+
+All the heavy lifting (authentication, configuration, API calls) is handled by the shared **katagocore** library.
 
 ### Device Flow Sequence
 
-1. **Initiate**: `POST /api/auth/device/code`
-   - Receive device_code and user_code
-2. **Display**: Show user_code and verification_uri to user
-3. **Poll**: `POST /api/auth/device/token` with device_code
-   - Poll every 5 seconds until authorized
-4. **Store**: Save access_token to config file
-5. **Use**: Include token in all subsequent API requests
-
-## Development
-
-### Code Style
-
-```bash
-go fmt ./...
-```
-
-### Testing
-
-(TODO: Add tests)
-
-```bash
-go test ./...
-```
+1. **Initiate**: `POST /api/auth/device/code` - Get a user code
+2. **Display**: Show the code and website to the user
+3. **Poll**: `POST /api/auth/device/token` - Check if user approved (every 5 seconds)
+4. **Store**: Save the access token for future use
+5. **Use**: Include token in all API requests
 
 ## Comparison with Other Clients
 
-| Feature | Katafyne (Go + Fyne) | Katarouille (Rust + Iced) | Katago (Go + Bubble Tea) |
-|---------|---------------------|--------------------------|-------------------------|
-| Platform | GUI (cross-platform) | GUI (cross-platform) | TUI (terminal) |
+| Feature | Katafyne (Go + Fyne) | Katarouille (Rust + Iced) | Katago (Go TUI) |
+|---------|---------------------|--------------------------|-----------------|
+| Platform | Desktop GUI | Desktop GUI | Terminal |
 | Language | Go | Rust | Go |
 | Auth | Device Flow | Device Flow | Device Flow |
 | View Sessions | ✅ | ✅ | ✅ |
@@ -176,50 +177,18 @@ go test ./...
 | Delete Sessions | ❌ | ❌ | ❌ |
 | Offline Mode | ❌ | ✅ | ❌ |
 
-## Troubleshooting
+**When to use Katafyne**:
+- You want a simple, clean GUI
+- You prefer Go over Rust
+- You don't need offline support
+- You want the easiest setup
 
-### App won't start - missing dependencies
+## For Developers
 
-Install platform-specific dependencies (see Installation section above).
-
-### Authentication fails
-
-- Ensure backend is running at the configured URL
-- Check that you entered the correct user code
-- Verify you're logged in to the web interface before authorizing
-
-### Sessions not loading
-
-- Verify backend is accessible
-- Check token is valid (try logging out and back in)
-- Look for error dialogs in the app
-
-### Build errors
-
-```bash
-# Clean and rebuild
-go clean
-go mod tidy
-go build
-```
-
-## Contributing
-
-When contributing to Katafyne:
-
-1. Follow Go conventions and `go fmt`
-2. Keep UI logic in `main.go`
-3. Keep API logic in `api.go`
-4. Test with backend running locally
-5. Update this README for new features
+Want to contribute or customize? Check out:
+- **[CLAUDE.md](./CLAUDE.md)** - Development guidelines
+- **[katagocore/](../katagocore/)** - Shared Go library documentation
 
 ## License
 
-Part of the Katanaute monorepo. See main repository for license information.
-
-## Related Projects
-
-- **katanaute** - Phoenix backend (Elixir)
-- **katareact** - React web frontend
-- **katarouille** - Rust GUI client (Iced)
-- **katago** - Go terminal UI client (Bubble Tea)
+Part of the Katanaute project. Use it however you want - it's a learning project!
