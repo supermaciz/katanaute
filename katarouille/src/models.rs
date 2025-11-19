@@ -74,13 +74,13 @@ impl Kata {
     /// Get color for the kata level badge
     pub fn level_color(&self) -> [f32; 3] {
         match self.level.as_str() {
-            "yellow" => [1.0, 0.9, 0.0],    // Yellow
-            "orange" => [1.0, 0.6, 0.0],    // Orange
-            "green" => [0.0, 0.8, 0.0],     // Green
-            "blue" => [0.0, 0.5, 1.0],      // Blue
-            "brown" => [0.6, 0.4, 0.2],     // Brown
-            "shodan" => [0.1, 0.1, 0.1],    // Black
-            _ => [0.5, 0.5, 0.5],           // Gray (fallback)
+            "yellow" => [1.0, 0.9, 0.0], // Yellow
+            "orange" => [1.0, 0.6, 0.0], // Orange
+            "green" => [0.0, 0.8, 0.0],  // Green
+            "blue" => [0.0, 0.5, 1.0],   // Blue
+            "brown" => [0.6, 0.4, 0.2],  // Brown
+            "shodan" => [0.1, 0.1, 0.1], // Black
+            _ => [0.5, 0.5, 0.5],        // Gray (fallback)
         }
     }
 }
