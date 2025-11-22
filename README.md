@@ -19,7 +19,7 @@ It's useless. I'm doing this for fun and to learn some stuff.
 
 ## Project Structure
 
-This is a monorepo with six integrated clients plus a shared library:
+This is a monorepo with seven integrated clients plus shared libraries:
 
 ### Core
 - **katanaute/** - Phoenix 1.8 backend with REST API and LiveView admin UI (Elixir)
@@ -27,11 +27,14 @@ This is a monorepo with six integrated clients plus a shared library:
 
 ### Native Clients
 - **katarouille/** - Native GUI client with device flow auth (Rust + Iced)
+- **gtkata/** - Native GUI client with device flow auth (Rust + GTK4 + libadwaita)
+- **gtkata/** - Native GUI client with device flow auth (Rust + GTK4 + libadwaita)
 - **katafyne/** - Native GUI client with device flow auth (Go + Fyne)
 - **katago/** - Terminal UI client with device flow auth (Go + Bubble Tea)
 
-### Shared Library
+### Shared Libraries
 - **katagocore/** - Shared Go library for katafyne and katago (auth, config, API client)
+- **katarustcore/** - Shared Rust library for katarouille and gtkata (auth, config, API client, models)
 
 All clients connect to the same Phoenix backend and SQLite database.
 

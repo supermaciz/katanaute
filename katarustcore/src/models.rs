@@ -75,7 +75,6 @@ pub struct ErrorResponse {
 
 impl Kata {
     /// Get color for the kata level badge
-    #[allow(dead_code)]
     pub fn level_color(&self) -> [f32; 3] {
         match self.level.as_str() {
             "yellow" => [1.0, 0.9, 0.0], // Yellow

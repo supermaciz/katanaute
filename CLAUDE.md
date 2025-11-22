@@ -72,7 +72,7 @@ cd katago && go build && ./katago
 
 ## Repository Structure
 
-This is a monorepo containing seven main components and a shared Go library:
+This is a monorepo containing seven main components and shared libraries:
 
 ```
 katanaute/
@@ -95,6 +95,8 @@ katanaute/
 │   └── README.md       # Go TUI documentation
 ├── katagocore/         # Shared Go library for katafyne and katago
 │   ├── CLAUDE.md       # Library development guidelines
+│   └── README.md       # Library documentation
+├── katarustcore/       # Shared Rust library for katarouille and gtkata
 │   └── README.md       # Library documentation
 └── CLAUDE.md           # This file - overall project guidelines
 ```
@@ -139,6 +141,7 @@ katanaute/
   - Token persistence in XDG-compliant config directory
   - Offline-capable (once authenticated)
   - Cross-platform (Linux, macOS, Windows)
+- **Shared Library**: Uses `katarustcore` for API client, auth, config, and models
 
 ### GUI Client: Rust with GTK4 (gtkata/)
 - **Framework**: GTK4 + libadwaita (GNOME native widgets)
@@ -153,6 +156,20 @@ katanaute/
   - Token persistence in XDG-compliant config directory
   - Linux-native (GNOME/GTK ecosystem)
   - libadwaita adaptive layouts
+- **Shared Library**: Uses `katarustcore` for API client, auth, config, and models
+
+### Rust Shared Library (katarustcore/)
+- **Framework**: Library crate with tokio async runtime
+- **Language**: Rust 2024 edition
+- **Purpose**: Shared functionality for all Rust clients
+- **Key Features**:
+  - HTTP API client with reqwest
+  - Device flow authentication helpers
+  - XDG-compliant configuration management
+  - Shared data models with serde serialization
+  - Token persistence and management
+  - Async utilities built on tokio
+- **Used By**: Katarouille (Iced), GTKata (GTK4)
 
 ### GUI Client: Go (katafyne/)
 - **Framework**: Fyne (declarative GUI framework)
