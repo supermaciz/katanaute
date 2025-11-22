@@ -6,7 +6,7 @@ mod models;
 
 use adw::prelude::*;
 use api::ApiClient;
-use auth::{initiate_device_flow, poll_for_authorization};
+use auth::*;
 use config::Config;
 use glib::clone;
 use gtk4::prelude::*;
@@ -119,6 +119,11 @@ impl AppState {
     }
 }
 
+/// Replace the entire navigation stack with the provided page so root transitions never hang.
+fn set_root_page(nav_view: &adw::NavigationView, page: &adw::NavigationPage) {
+    nav_view.replace(&[page.clone()]);
+}
+
 fn build_ui(app: &adw::Application) {
     // Load custom CSS for belt badges
     let provider = gtk4::CssProvider::new();
@@ -145,6 +150,20 @@ fn build_ui(app: &adw::Application) {
     // Create navigation view for managing different screens
     let nav_view = adw::NavigationView::new();
 
+    // Install logout action once on the application
+    let logout_action = gio::SimpleAction::new("logout", None);
+    logout_action.connect_activate(clone!(
+        #[weak]
+        nav_view,
+        #[strong]
+        state,
+        move |_, _| {
+            state.borrow_mut().clear_token();
+            show_authentication(&nav_view, state.clone());
+        }
+    ));
+    app.add_action(&logout_action);
+
     // Check if user is authenticated
     let is_authenticated = state.borrow().config.api_token.is_some();
 
@@ -160,170 +179,7 @@ fn build_ui(app: &adw::Application) {
     window.present();
 }
 
-fn show_authentication(nav_view: &adw::NavigationView, state: Rc<RefCell<AppState>>) {
-    let content = gtk4::Box::new(gtk4::Orientation::Vertical, 24);
-    content.set_valign(gtk4::Align::Center);
-    content.set_halign(gtk4::Align::Center);
-    content.set_margin_top(48);
-    content.set_margin_bottom(48);
-    content.set_margin_start(48);
-    content.set_margin_end(48);
-
-    // Title
-    let title = gtk4::Label::new(Some("GTKata"));
-    title.add_css_class("title-1");
-    content.append(&title);
-
-    let subtitle = gtk4::Label::new(Some("Kata Training Tracker"));
-    subtitle.add_css_class("title-3");
-    content.append(&subtitle);
-
-    // Status label
-    let status_label = gtk4::Label::new(Some("Please authenticate to continue"));
-    status_label.set_wrap(true);
-    status_label.set_justify(gtk4::Justification::Center);
-    content.append(&status_label);
-
-    // User code display (initially hidden)
-    let user_code_box = gtk4::Box::new(gtk4::Orientation::Vertical, 12);
-    user_code_box.set_visible(false);
-
-    let user_code_label = gtk4::Label::new(None);
-    user_code_label.add_css_class("title-2");
-    user_code_box.append(&user_code_label);
-
-    let verification_label = gtk4::Label::new(None);
-    verification_label.set_wrap(true);
-    verification_label.set_selectable(true);
-    user_code_box.append(&verification_label);
-
-    content.append(&user_code_box);
-
-    // Login button
-    let login_button = gtk4::Button::with_label("Login");
-    login_button.add_css_class("suggested-action");
-    login_button.add_css_class("pill");
-    login_button.set_halign(gtk4::Align::Center);
-    content.append(&login_button);
-
-    // Error label
-    let error_label = gtk4::Label::new(None);
-    error_label.add_css_class("error");
-    error_label.set_wrap(true);
-    error_label.set_visible(false);
-    content.append(&error_label);
-
-    // Create navigation page
-    let page = adw::NavigationPage::builder()
-        .title("Authentication")
-        .tag("auth")
-        .child(&content)
-        .can_pop(false)
-        .build();
-
-    nav_view.add(&page);
-
-    // Login button handler
-    login_button.connect_clicked(clone!(
-        #[weak]
-        nav_view,
-        #[strong]
-        state,
-        #[weak]
-        status_label,
-        #[weak]
-        user_code_box,
-        #[weak]
-        user_code_label,
-        #[weak]
-        verification_label,
-        #[weak]
-        login_button,
-        #[weak]
-        error_label,
-        move |_| {
-            login_button.set_sensitive(false);
-            status_label.set_text("Initiating authentication...");
-            error_label.set_visible(false);
-
-            let api_client = state.borrow().api_client.clone();
-
-            glib::spawn_future_local(clone!(
-                #[weak]
-                nav_view,
-                #[strong]
-                state,
-                #[weak]
-                status_label,
-                #[weak]
-                user_code_box,
-                #[weak]
-                user_code_label,
-                #[weak]
-                verification_label,
-                #[weak]
-                login_button,
-                #[weak]
-                error_label,
-                async move {
-                    match initiate_device_flow(&api_client).await {
-                        Ok(flow_info) => {
-                            user_code_label.set_text(&flow_info.user_code);
-                            verification_label.set_text(&format!(
-                                "Visit {} and enter the code above",
-                                flow_info.verification_uri
-                            ));
-                            user_code_box.set_visible(true);
-                            status_label.set_text("Waiting for authorization...");
-
-                            let device_code = flow_info.device_code.clone();
-                            let interval = flow_info.interval;
-
-                            glib::spawn_future_local(clone!(
-                                #[weak]
-                                nav_view,
-                                #[strong]
-                                state,
-                                #[weak]
-                                error_label,
-                                async move {
-                                    let api_client = state.borrow().api_client.clone();
-                                    match poll_for_authorization(&api_client, device_code, interval)
-                                        .await
-                                    {
-                                        Ok(token) => {
-                                            state.borrow_mut().save_token(token);
-                                            show_session_list(&nav_view, state.clone());
-                                        }
-                                        Err(e) => {
-                                            error_label
-                                                .set_text(&format!("Authentication failed: {}", e));
-                                            error_label.set_visible(true);
-                                            login_button.set_sensitive(true);
-                                        }
-                                    }
-                                }
-                            ));
-                        }
-                        Err(e) => {
-                            error_label
-                                .set_text(&format!("Failed to initiate authentication: {}", e));
-                            error_label.set_visible(true);
-                            login_button.set_sensitive(true);
-                        }
-                    }
-                }
-            ));
-        }
-    ));
-}
-
 fn show_session_list(nav_view: &adw::NavigationView, state: Rc<RefCell<AppState>>) {
-    // Clear navigation stack and show session list
-    if let Some(_) = nav_view.find_page("auth") {
-        nav_view.pop_to_tag("auth");
-    }
-
     let toolbar_view = adw::ToolbarView::new();
 
     // Header bar
@@ -385,26 +241,7 @@ fn show_session_list(nav_view: &adw::NavigationView, state: Rc<RefCell<AppState>
         .can_pop(false)
         .build();
 
-    // Logout action
-    let logout_action = gio::SimpleAction::new("logout", None);
-    logout_action.connect_activate(clone!(
-        #[weak]
-        nav_view,
-        #[strong]
-        state,
-        move |_, _| {
-            state.borrow_mut().clear_token();
-            show_authentication(&nav_view, state.clone());
-        }
-    ));
-
-    if let Some(window) = nav_view.root().and_downcast::<adw::ApplicationWindow>() {
-        if let Some(app) = window.application() {
-            app.add_action(&logout_action);
-        }
-    }
-
-    nav_view.add(&page);
+    set_root_page(nav_view, &page);
 
     // Load sessions
     load_sessions(
@@ -448,6 +285,165 @@ fn show_session_list(nav_view: &adw::NavigationView, state: Rc<RefCell<AppState>
             show_session_create(&nav_view, state.clone());
         }
     ));
+}
+
+fn show_authentication(nav_view: &adw::NavigationView, state: Rc<RefCell<AppState>>) {
+    let content = gtk4::Box::new(gtk4::Orientation::Vertical, 24);
+    content.set_valign(gtk4::Align::Center);
+    content.set_halign(gtk4::Align::Center);
+    content.set_margin_top(48);
+    content.set_margin_bottom(48);
+    content.set_margin_start(48);
+    content.set_margin_end(48);
+
+    // Title
+    let title = gtk4::Label::new(Some("GTKata"));
+    title.add_css_class("title-1");
+    content.append(&title);
+
+    let subtitle = gtk4::Label::new(Some("Kata Training Tracker"));
+    subtitle.add_css_class("title-3");
+    content.append(&subtitle);
+
+    // Status label
+    let status_label = gtk4::Label::new(Some("Please authenticate to continue"));
+    status_label.set_wrap(true);
+    status_label.set_justify(gtk4::Justification::Center);
+    content.append(&status_label);
+
+    // User code display (initially hidden)
+    let user_code_box = gtk4::Box::new(gtk4::Orientation::Vertical, 12);
+    user_code_box.set_visible(false);
+
+    let user_code_label = gtk4::Label::new(None);
+    user_code_label.add_css_class("title-2");
+    user_code_box.append(&user_code_label);
+
+    let verification_label = gtk4::Label::new(None);
+    verification_label.set_wrap(true);
+    verification_label.set_selectable(true);
+    verification_label.set_use_markup(true);
+    user_code_box.append(&verification_label);
+
+    content.append(&user_code_box);
+
+    // Login button
+    let login_button = gtk4::Button::with_label("Login");
+    login_button.add_css_class("suggested-action");
+    login_button.add_css_class("pill");
+    login_button.set_halign(gtk4::Align::Center);
+    content.append(&login_button);
+
+    // Error label
+    let error_label = gtk4::Label::new(None);
+    error_label.add_css_class("error");
+    error_label.set_wrap(true);
+    error_label.set_visible(false);
+    content.append(&error_label);
+
+    login_button.connect_clicked(clone!(
+        #[strong]
+        state,
+        #[weak]
+        nav_view,
+        #[weak]
+        login_button,
+        #[weak]
+        status_label,
+        #[weak]
+        user_code_box,
+        #[weak]
+        user_code_label,
+        #[weak]
+        verification_label,
+        #[weak]
+        error_label,
+        move |_| {
+            error_label.set_visible(false);
+            user_code_box.set_visible(false);
+            status_label.set_text("Requesting verification code...");
+            login_button.set_sensitive(false);
+
+            let api_client = state.borrow().api_client.clone();
+
+            glib::spawn_future_local(clone!(
+                #[strong]
+                state,
+                #[weak]
+                nav_view,
+                #[weak]
+                login_button,
+                #[weak]
+                status_label,
+                #[weak]
+                user_code_box,
+                #[weak]
+                user_code_label,
+                #[weak]
+                verification_label,
+                #[weak]
+                error_label,
+                async move {
+                    match initiate_device_flow(&api_client).await {
+                        Ok(flow_info) => {
+                            let device_code = flow_info.device_code.clone();
+                            let interval = flow_info.interval;
+
+                            user_code_label.set_text(&flow_info.user_code);
+                            let verification_url = format!(
+                                "{}?user_code={}",
+                                flow_info.verification_uri, flow_info.user_code
+                            );
+                            let escaped_url = glib::markup_escape_text(&verification_url);
+                            let verification_markup = format!(
+                                "Visit <a href=\"{url}\">{display}</a> and enter the code above",
+                                url = verification_url,
+                                display = escaped_url
+                            );
+                            verification_label.set_markup(&verification_markup);
+                            user_code_box.set_visible(true);
+                            status_label.set_text("Waiting for authorization...");
+
+                            match poll_for_authorization(&api_client, device_code, interval).await {
+                                Ok(token) => {
+                                    status_label
+                                        .set_text("Authentication successful! Loading sessions...");
+                                    state.borrow_mut().save_token(token);
+                                    show_session_list(&nav_view, state.clone());
+                                }
+                                Err(e) => {
+                                    error_label.set_text(&format!(
+                                        "Failed to complete authorization: {}",
+                                        e
+                                    ));
+                                    error_label.set_visible(true);
+                                    status_label
+                                        .set_text("Authorization failed. Please try again.");
+                                    login_button.set_sensitive(true);
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            error_label.set_text(&format!("Failed to initiate login: {}", e));
+                            error_label.set_visible(true);
+                            status_label.set_text("Please authenticate to continue");
+                            login_button.set_sensitive(true);
+                        }
+                    }
+                }
+            ));
+        }
+    ));
+
+    // Create navigation page
+    let page = adw::NavigationPage::builder()
+        .title("Authentication")
+        .tag("auth")
+        .child(&content)
+        .can_pop(false)
+        .build();
+
+    set_root_page(nav_view, &page);
 }
 
 fn load_sessions(
@@ -661,46 +657,46 @@ fn show_session_details(
     content_box.append(&info_group);
 
     // Notes group (if notes exist)
-    if let Some(notes) = &session.notes {
-        if !notes.trim().is_empty() {
-            let notes_group = adw::PreferencesGroup::new();
-            notes_group.set_title("Notes");
+    if let Some(notes) = &session.notes
+        && !notes.trim().is_empty()
+    {
+        let notes_group = adw::PreferencesGroup::new();
+        notes_group.set_title("Notes");
 
-            // Try to render as markdown, fallback to plain text
-            match markdown::render_input(notes, markdown::RenderConfig::default()) {
-                Ok(viewport) => {
-                    // Wrap in clamp to limit width and scrolled window for scrolling
-                    let clamp = adw::Clamp::builder()
-                        .maximum_size(800)
-                        .tightening_threshold(400)
-                        .build();
+        // Try to render as markdown, fallback to plain text
+        match markdown::render_input(notes, markdown::RenderConfig::default()) {
+            Ok(viewport) => {
+                // Wrap in clamp to limit width and scrolled window for scrolling
+                let clamp = adw::Clamp::builder()
+                    .maximum_size(800)
+                    .tightening_threshold(400)
+                    .build();
 
-                    let scrolled = gtk4::ScrolledWindow::new();
-                    scrolled.set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic);
-                    scrolled.set_min_content_height(200);
-                    scrolled.set_child(Some(&viewport));
+                let scrolled = gtk4::ScrolledWindow::new();
+                scrolled.set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic);
+                scrolled.set_min_content_height(200);
+                scrolled.set_child(Some(&viewport));
 
-                    clamp.set_child(Some(&scrolled));
-                    notes_group.add(&clamp);
-                }
-                Err(_) => {
-                    // Fallback to plain text label if markdown rendering fails
-                    let notes_label = gtk4::Label::new(Some(notes));
-                    notes_label.set_wrap(true);
-                    notes_label.set_wrap_mode(gtk4::pango::WrapMode::Word);
-                    notes_label.set_xalign(0.0); // Left-align
-                    notes_label.set_margin_top(12);
-                    notes_label.set_margin_bottom(12);
-                    notes_label.set_margin_start(12);
-                    notes_label.set_margin_end(12);
-                    notes_label.add_css_class("body");
-
-                    notes_group.add(&notes_label);
-                }
+                clamp.set_child(Some(&scrolled));
+                notes_group.add(&clamp);
             }
+            Err(_) => {
+                // Fallback to plain text label if markdown rendering fails
+                let notes_label = gtk4::Label::new(Some(notes));
+                notes_label.set_wrap(true);
+                notes_label.set_wrap_mode(gtk4::pango::WrapMode::Word);
+                notes_label.set_xalign(0.0); // Left-align
+                notes_label.set_margin_top(12);
+                notes_label.set_margin_bottom(12);
+                notes_label.set_margin_start(12);
+                notes_label.set_margin_end(12);
+                notes_label.add_css_class("body");
 
-            content_box.append(&notes_group);
+                notes_group.add(&notes_label);
+            }
         }
+
+        content_box.append(&notes_group);
     }
 
     // Create scrolled window for content
@@ -921,8 +917,8 @@ fn build_session_form(
 
             // Create new datetime with selected date and time using from_unix_local
             let timestamp = selected_date.to_unix();
-            if let Ok(base_datetime) = glib::DateTime::from_unix_local(timestamp) {
-                if let Ok(combined_datetime) = glib::DateTime::new(
+            if let Ok(base_datetime) = glib::DateTime::from_unix_local(timestamp)
+                && let Ok(combined_datetime) = glib::DateTime::new(
                     &base_datetime.timezone(),
                     selected_date.year(),
                     selected_date.month(),
@@ -930,12 +926,11 @@ fn build_session_form(
                     hour,
                     minute,
                     0.0,
-                ) {
-                    *selected_datetime.borrow_mut() = Some(combined_datetime.clone());
-                    // Update the subtitle to show selected date
-                    date_row
-                        .set_subtitle(&combined_datetime.format("%Y-%m-%d").unwrap_or_default());
-                }
+                )
+            {
+                *selected_datetime.borrow_mut() = Some(combined_datetime.clone());
+                // Update the subtitle to show selected date
+                date_row.set_subtitle(&combined_datetime.format("%Y-%m-%d").unwrap_or_default());
             }
         }
     ));
@@ -951,8 +946,8 @@ fn build_session_form(
             if let Ok((hour, minute)) = parse_time(&time_text) {
                 let calendar_date = calendar.date();
                 let timestamp = calendar_date.to_unix();
-                if let Ok(base_datetime) = glib::DateTime::from_unix_local(timestamp) {
-                    if let Ok(combined_datetime) = glib::DateTime::new(
+                if let Ok(base_datetime) = glib::DateTime::from_unix_local(timestamp)
+                    && let Ok(combined_datetime) = glib::DateTime::new(
                         &base_datetime.timezone(),
                         calendar_date.year(),
                         calendar_date.month(),
@@ -960,9 +955,9 @@ fn build_session_form(
                         hour,
                         minute,
                         0.0,
-                    ) {
-                        *selected_datetime.borrow_mut() = Some(combined_datetime);
-                    }
+                    )
+                {
+                    *selected_datetime.borrow_mut() = Some(combined_datetime);
                 }
             }
         }
@@ -1037,7 +1032,7 @@ fn build_session_form(
         #[weak]
         create_button,
         move |_| {
-            let kata_id = selected_kata_id.borrow().clone();
+            let kata_id = *selected_kata_id.borrow();
             if kata_id.is_none() {
                 error_label.set_text("Please select a kata");
                 error_label.set_visible(true);
@@ -1047,8 +1042,8 @@ fn build_session_form(
             let selected_dt = selected_datetime.borrow().clone();
             let practiced_at = if let Some(dt) = selected_dt {
                 // Convert glib::DateTime to chrono::DateTime<Utc>
-                let timestamp = dt.to_unix() as i64;
-                chrono::DateTime::from_timestamp(timestamp, 0).unwrap_or_else(|| chrono::Utc::now())
+                let timestamp = dt.to_unix();
+                chrono::DateTime::from_timestamp(timestamp, 0).unwrap_or_else(chrono::Utc::now)
             } else {
                 chrono::Utc::now()
             };
@@ -1114,7 +1109,7 @@ fn parse_time(time_str: &str) -> Result<(i32, i32), ()> {
     let minute: i32 = parts[1].parse().map_err(|_| ())?;
 
     // Validate ranges
-    if hour < 0 || hour > 23 || minute < 0 || minute > 59 {
+    if !(0..=23).contains(&hour) || !(0..=59).contains(&minute) {
         return Err(());
     }
 
