@@ -1,15 +1,9 @@
-mod api;
-mod auth;
-mod config;
-mod models;
-
-use api::ApiClient;
-use auth::{initiate_device_flow, poll_for_authorization};
 use chrono::Utc;
-use config::Config;
 use iced::widget::{button, column, container, row, scrollable, text, text_input};
 use iced::{Alignment, Color, Element, Length, Task};
-use models::{Kata, Session, SessionInput};
+use katarustcore::{
+    ApiClient, Config, Kata, Session, SessionInput, initiate_device_flow, poll_for_authorization,
+};
 
 fn main() -> iced::Result {
     iced::application(
@@ -59,7 +53,7 @@ enum Message {
 
     // Authentication
     StartAuthentication,
-    DeviceFlowInitiated(Result<auth::DeviceFlowInfo, String>),
+    DeviceFlowInitiated(Result<katarustcore::DeviceFlowInfo, String>),
     AuthenticationComplete(Result<String, String>),
 
     // Session list

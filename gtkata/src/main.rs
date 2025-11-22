@@ -1,18 +1,11 @@
-mod api;
-mod auth;
-mod config;
 mod markdown;
-mod models;
 
 use adw::prelude::*;
-use api::ApiClient;
-use auth::*;
-use config::Config;
 use glib::clone;
 use gtk4::prelude::*;
 use gtk4::{gdk, gio, glib};
+use katarustcore::{ApiClient, initiate_device_flow, poll_for_authorization, Config, Kata, Session, SessionInput};
 use libadwaita as adw;
-use models::{Kata, Session, SessionInput};
 use std::cell::RefCell;
 use std::rc::Rc;
 use tokio::runtime::Runtime;

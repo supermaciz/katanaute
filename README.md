@@ -11,338 +11,199 @@
 [![Rust](https://img.shields.io/badge/Rust-2024-000000?logo=rust&logoColor=white)](https://www.rust-lang.org/)
 [![Go](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go&logoColor=white)](https://go.dev/)
 
-A multi-client Uechi-Ryu Karate kata training tracker with Phoenix backend serving a React web UI, plus native GUI clients (Rust, Go) and terminal interfaces (Go).
+A kata training tracker for the Uechi-Ryu curriculum. Phoenix powers the backend + LiveView admin, React delivers the main web UI, and a whole family of native clients (Rust + Go GUIs and a Go TUI) talk to the same API. I built it to learn, experiment, and have fun—it is not meant to be "production ready".
 
-## Purpose
+---
 
-It's useless. I'm doing this for fun and to learn some stuff.
+## Highlights
+- **One backend, many faces** – Phoenix 1.8 serves the REST API, LiveView admin, and static React build. The same services fuel every native client.
+- **Device flow authentication** – GUI/TUI clients use an OAuth2-style device code flow so you never type a password into a terminal window.
+- **Markdown-friendly session notes** – every practice entry stores belt level, timestamp, structured flag, and free-form Markdown notes.
+- **SQLite everywhere** – simple local dev storage that you can reset in a single command.
+- **Learning playground** – expect duplicated features, rough edges, and some unfinished ideas. That's intentional.
 
-## Project Structure
+---
 
-This is a monorepo with six integrated clients plus a shared library:
+## Repository Map
 
-### Core
-- **katanaute/** - Phoenix 1.8 backend with REST API and LiveView admin UI (Elixir)
-- **katareact/** - Modern React 18 web frontend served by Phoenix (TypeScript + Tailwind CSS)
+| Path | What lives there? | Language |
+| --- | --- | --- |
+| `katanaute/` | Phoenix backend, REST API, LiveView admin, React asset build pipeline | Elixir |
+| `katareact/` | React 18 SPA served out of Phoenix' `/` route | TypeScript |
+| `katarouille/` | Native GUI (Iced) with offline-friendly flow | Rust |
+| `gtkata/` | GNOME/GTK4 GUI using libadwaita patterns | Rust |
+| `katafyne/` | Cross-platform desktop GUI using Fyne | Go |
+| `katago/` | Bubble Tea terminal client | Go |
+| `katagocore/` | Shared Go auth/API helper lib | Go |
+| `katarustcore/` | Shared Rust auth/API helper crate | Rust |
 
-### Native Clients
-- **katarouille/** - Native GUI client with device flow auth (Rust + Iced)
-- **katafyne/** - Native GUI client with device flow auth (Go + Fyne)
-- **katago/** - Terminal UI client with device flow auth (Go + Bubble Tea)
+Each component ships with its own `CLAUDE.md` that explains conventions and TODOs.
 
-### Shared Library
-- **katagocore/** - Shared Go library for katafyne and katago (auth, config, API client)
-
-All clients connect to the same Phoenix backend and SQLite database.
+---
 
 ## Quick Start
 
-### All-in-One: Backend + React Web UI
-
+### Backend + React (served together)
 ```bash
 cd katanaute
-mix setup              # Install deps, create DB, run migrations, seed data
-mix react.build        # Build React frontend and copy to Phoenix static dir
-mix phx.server         # Start server on http://localhost:4000
+mix setup           # deps, DB, migrations, seeds
+mix react.build     # build the React SPA into priv/static/react
+mix phx.server      # http://localhost:4000 (React) + /admin (LiveView)
 ```
 
-Now visit:
-- [http://localhost:4000](http://localhost:4000) - **React UI** (main web interface)
-- [http://localhost:4000/admin](http://localhost:4000/admin) - **LiveView Admin** (Phoenix admin interface)
+Visit:
+- `http://localhost:4000` – React SPA (primary interface)
+- `http://localhost:4000/admin` – LiveView admin UI with Phoenix LiveDashboard-style ergonomics
 
-### React Development (with hot reload)
-
-For React development with Vite hot reload:
-
+### React dev server (Vite)
 ```bash
 cd katareact
-npm install            # or: bun install
-npm run dev           # Start dev server on http://localhost:3000
+npm install         # or bun install
+npm run dev         # http://localhost:3000 with API proxy
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) for the React UI with hot reload.
-
-### Native GUI Clients
-
-**Rust GUI (Katarouille)**
-```bash
-cd katarouille
-cargo build
-cargo run              # Requires backend running on localhost:4000
-```
-
-**Go GUI (Katafyne)**
-```bash
-cd katafyne
-go build
-./katafyne            # Requires backend running on localhost:4000
-```
-
-Both GUIs will walk you through device authentication on first run.
-
-### Terminal Client (Go TUI)
+### Native clients
+All of them expect the backend on `http://localhost:4000` by default.
 
 ```bash
-cd katago
-go build
-./katago              # Requires backend running on localhost:4000
+# Rust GUI (Iced)
+cd katarouille && cargo run
+
+# Rust GUI (GTK4)
+cd gtkata && cargo run
+
+# Go GUI (Fyne)
+cd katafyne && go build && ./katafyne
+
+# Go TUI (Bubble Tea)
+cd katago && go build && ./katago   # press 'a' to add a session, j/k to navigate
 ```
 
-Use arrow keys or j/k to navigate, 'a' to add sessions, Ctrl+C to quit.
+Each client guides you through the device code auth flow the first time it launches.
 
-## Features
+---
 
-- **Session Tracking**: Record kata practice sessions with date/time, notes (Markdown), and course tracking
-- **User Authentication**: Secure login with email/password, plus device flow for GUI/terminal clients
-- **Multiple Interfaces**:
-  - **React Web UI** (served by Phoenix at `/`) - main web interface
-  - **LiveView Admin** (Phoenix admin at `/admin`) - admin interface
-  - **Rust GUI** (Katarouille) - native cross-platform desktop app
-  - **Go GUI** (Katafyne) - native cross-platform desktop app
-  - **Go TUI** (Katago) - terminal interface
-- **Color-Coded Levels**: Visual badges for kata progression (Yellow → Shodan)
-- **RESTful API**: JSON API with Bearer token authentication
-- **Developer-Friendly**: Comprehensive tests, hot reload, SQLite for easy setup
+## Development Workflow
 
-## Architecture
+### Backend (Phoenix)
+- `mix phx.server` (or `iex -S mix phx.server`) to boot the API + LiveView.
+- `mix react.build` bundles the SPA into `priv/static/react`.
+- `mix test` / `mix precommit` keeps formatting + tests honest.
+- `mix ecto.reset` drops/creates/migrates/seeds the SQLite DB.
+
+Phoenix' LiveView + PubSub toolset (see the [Phoenix docs](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html)) keeps the admin UI reactive without piling on extra JS.
+
+### React
+- `npm run dev` for hot reload.
+- `npm test` (Vitest + RTL) in watch mode.
+- To create the Phoenix-served build, run `npm run build` followed by `cd ../katanaute && mix react.build`.
+
+### Database + Seeds
+- SQLite lives under `katanaute/dev.db` (git-ignored).
+- Seeds: edit `katanaute/priv/repo/seeds.exs`, then rerun `mix ecto.reset` or `mix run priv/repo/seeds.exs`.
+
+### Tests Summary
+- Backend: ExUnit under `katanaute/test`.
+- React: Vitest.
+- Native clients: manual testing only (future TODOs live in each component doc).
+
+---
+
+## Architecture & Data Model
 
 ### Data Model
+- **Kata** – name + belt level (yellow → shodan).
+- **Session** – `practiced_at`, `in_course` flag, Markdown `notes`, belongs to a Kata.
 
-**Kata** (curriculum items)
-- Name (e.g., "Sanchin", "Seisan", "Seichin")
-- Level: yellow, orange, green, blue, brown, shodan
+### Routing
+- `/` – React SPA served from Phoenix static assets.
+- `/admin` – LiveView admin, session auth, device approvals.
+- `/api` – JSON API returning `{ data: ... }` payloads.
 
-**Session** (training records)
-- Practiced at (UTC datetime)
-- In course (boolean - part of structured learning)
-- Notes (Markdown text)
-- Associated kata
+Key endpoints:
+- `POST /api/auth/register` / `POST /api/auth/token` – email/password auth.
+- `POST /api/auth/device/code` & `POST /api/auth/device/token` – OAuth2-style device flow used by native clients.
+- `GET/POST/PUT/DELETE /api/sessions` – authenticated CRUD with kata preloads.
+- `GET /api/katas` – browseable curriculum without signing in.
 
-### Routes
+Phoenix' Channel + PubSub infrastructure ([docs](https://hexdocs.pm/phoenix/channels.html)) keeps the admin UI and other connected clients in sync when sessions change.
 
-The application has three main route prefixes:
-
-**`/` - React SPA (Main Web UI)**
-- Served from Phoenix static directory
-- Client-side routing with React Router
-- Modern TypeScript interface with Tailwind CSS
-
-**`/admin` - LiveView Admin Interface**
-- `/admin/sessions` - Session management
-- `/admin/users/register` - User registration
-- `/admin/users/log_in` - Admin login
-- `/admin/device` - Device authorization flow
-
-**`/api` - REST API**
-All API endpoints return JSON with `{ data: [...] }` format.
-
-- **Authentication** (public):
-  - `POST /api/auth/register` - Create account
-  - `POST /api/auth/token` - Login (get Bearer token)
-  - `POST /api/auth/device/code` - Start device flow (for GUI/TUI clients)
-  - `POST /api/auth/device/token` - Poll device authorization
-- **Sessions** (requires auth):
-  - `GET /api/sessions` - List all sessions
-  - `POST /api/sessions` - Create session
-  - `GET/PUT/DELETE /api/sessions/:id` - Manage session
-- **Katas** (public):
-  - `GET /api/katas` - List all katas
+---
 
 ## Configuration
 
 ### Backend
-- **Port**: 4000 (default)
-- **Database**: SQLite in `katanaute/dev.db`
-- **Config**: `katanaute/config/{dev,test,prod}.exs`
+- `SECRET_KEY_BASE` – generate via `mix phx.gen.secret`.
+- `DATABASE_PATH` – optional custom SQLite location (defaults inside repo).
+- `PORT` – default 4000.
 
-### React Frontend
-
-**Production (served by Phoenix)**:
-- Built with `mix react.build` from `katanaute/` directory
-- Served from `priv/static/react/` at root path `/`
-- Assets reference `/react/assets/` (configured in `vite.config.ts`)
-
-**Development (standalone Vite server)**:
-- Runs on port 3000 with hot reload
-- API proxy: `/api` → `http://localhost:4000`
-- Start with `npm run dev` from `katareact/`
-- Optional `.env` file:
-  ```bash
-  VITE_API_URL=http://localhost:4000/api
-  ```
-
-### Native Clients
-
-All native clients (Katarouille, Katafyne, Katago) use the same configuration:
-
-- **API URL**: `http://localhost:4000/api` (default)
-- **Override**:
-  ```bash
-  export KATANAUTE_API_URL=http://your-server:port/api
-  ```
-- **Config Storage**: XDG-compliant directory (`~/.config/katanaute/`)
-
-**Go TUI Debug Mode**:
+### React
+Create `.env` in `katareact/` to override API location:
 ```bash
-DEBUG=1 ./katago  # Logs to debug.log
+VITE_API_URL=http://localhost:4000/api
 ```
 
-## Development
-
-### Running Tests
-
-**Backend (Phoenix)**
+### Native clients
+All support `KATANAUTE_API_URL`:
 ```bash
-cd katanaute
-mix test              # Run all tests
-mix precommit         # Format, compile, test
+export KATANAUTE_API_URL=http://your-host:4000/api
 ```
 
-**Frontend (React)**
+`katago` also respects `DEBUG=1` to dump logs into `debug.log` so you can see Bubble Tea state transitions.
+
+---
+
+## Docker (optional)
+
+The Dockerfile lives under `katanaute/`. Build from repo root so the Phoenix build step can copy the React app:
 ```bash
-cd katareact
-npm test              # Run tests in watch mode
-npm run build         # Production build (to dist/)
-
-# For Phoenix deployment:
-cd ../katanaute
-mix react.build       # Build React and copy to priv/static/react/
-```
-
-### Database Management
-
-```bash
-cd katanaute
-mix ecto.reset        # Drop, create, migrate, seed
-mix ecto.migrate      # Run pending migrations
-mix run priv/repo/seeds.exs  # Seed data only
-```
-
-### Adding Katas
-
-Edit `katanaute/priv/repo/seeds.exs` and run:
-```bash
-cd katanaute
-mix ecto.reset
-```
-
-Or use the API/LiveView to add them dynamically.
-
-## Docker Deployment
-
-### Building the Docker Image
-
-The Dockerfile is configured to build both the Phoenix backend and React frontend. It must be built from the **monorepo root** (not from inside `katanaute/`) so the build context includes both directories:
-
-```bash
-# From the monorepo root directory (katanaute/)
 docker build -f katanaute/Dockerfile -t katanaute .
 ```
 
-The build process:
-1. Installs Elixir and Node.js dependencies
-2. Compiles Phoenix application
-3. Runs `mix react.build` to build the React frontend
-4. Compiles Phoenix assets
-5. Creates a production release
-
-### Running the Container
-
+Run it with the expected secrets + mounted volume for SQLite persistence:
 ```bash
 docker run -p 4000:4000 \
-  -e SECRET_KEY_BASE="your-secret-key" \
+  -e SECRET_KEY_BASE="$(mix phx.gen.secret)" \
   -e DATABASE_PATH="/app/data/katanaute.db" \
   -v katanaute-data:/app/data \
   katanaute
 ```
 
-**Required Environment Variables:**
-- `SECRET_KEY_BASE` - Generate with `mix phx.gen.secret`
-- `DATABASE_PATH` - Path to SQLite database file
+For anything beyond tinkering consider Postgres + a proper reverse proxy.
 
-**Optional Environment Variables:**
-- `PORT` - Server port (default: 4000)
-- `PHX_HOST` - Hostname for URL generation
-
-### Production Considerations
-
-- The current Dockerfile uses SQLite, which requires persistent volume for the database
-- For production scale, consider migrating to PostgreSQL
-- Ensure `SECRET_KEY_BASE` is securely generated and stored
-- Configure proper reverse proxy (nginx, Caddy) with SSL/TLS
+---
 
 ## Troubleshooting
+- **Backend refuses to start** – check port 4000 usage (`lsof -i :4000`), run `mix deps.get`, or `mix ecto.reset` the DB.
+- **React can't reach the API** – ensure Phoenix is running, verify Vite proxy rules, inspect browser network tab.
+- **Native client stuck waiting** – confirm device auth screen at `/admin/device`, set `KATANAUTE_API_URL`, and seed the DB so something exists to fetch.
+- **TUI formatting weirdness** – never use `fmt.Println`; the Bubble Tea app logs via `log.Println` when `DEBUG=1`.
 
-### Backend won't start
-- Check if port 4000 is in use: `lsof -i :4000`
-- Ensure dependencies: `cd katanaute && mix deps.get`
-- Reset corrupted database: `mix ecto.reset`
-
-### React can't connect to API
-- Verify backend is running on port 4000
-- Check Vite proxy config in `katareact/vite.config.js`
-- Inspect browser Network tab for failed requests
-
-### Native clients can't connect
-- Ensure backend is running: `cd katanaute && mix phx.server`
-- Verify database has data: `mix run priv/repo/seeds.exs`
-- Check API URL: `export KATANAUTE_API_URL=http://localhost:4000/api`
-- For Go TUI, enable debug: `DEBUG=1 ./katago` and check `debug.log`
+---
 
 ## Project Status
 
-**Current Features**
-- ✅ User authentication (email/password + device flow)
-- ✅ Phoenix backend with authenticated REST API
-- ✅ React SPA served by Phoenix at `/` (main web UI)
-- ✅ Phoenix LiveView admin UI at `/admin`
-- ✅ Three native clients:
-  - Rust GUI (Katarouille) with offline capability
-  - Go GUI (Katafyne) with clean, modern interface
-  - Go TUI (Katago) for terminal lovers
-- ✅ Shared Go library (katagocore) for DRY code
-- ✅ Comprehensive test coverage (Phoenix, React)
-- ✅ Markdown notes support
-- ✅ Color-coded kata level system
-- ✅ Dual-UI architecture (React for users, LiveView for admin)
+**What already works**
+- ✅ Phoenix backend with REST API + LiveView admin
+- ✅ React SPA served through Phoenix
+- ✅ Device flow across all native clients
+- ✅ Shared Go/Rust libraries for duplicated logic
+- ✅ Markdown session notes + belt levels
+- ✅ GitHub Actions CI + coverage + security workflows
 
-**Known Limitations**
-- Session editing limited (available in LiveView only)
-- Session deletion not available in native clients
-- SQLite only (not production-ready for large scale)
-- No tests for native clients (Katarouille, Katafyne, Katago)
+**Known gaps / future experiments**
+- Session editing/deleting missing in native clients
+- SQLite-only (no Postgres story yet)
+- No automated tests for GUIs/TUI
+- Email confirmation + MFA still on the whiteboard
+- Filtering/search/statistics dashboards still ideas
 
-**Future Enhancements**
-- Session editing in React and native clients
-- Session deletion in native clients
-- Session filtering and search
-- Statistics and progress tracking
-- PostgreSQL support for production
-- Multi-factor authentication
-- Email confirmation flow
-- Unit tests for native clients
+---
 
-## Documentation
+## Documentation & Resources
+- **Repo-wide architecture notes** – [CLAUDE.md](./CLAUDE.md)
+- **Component guides** – each directory contains a tailored `CLAUDE.md` (or README for the native apps) with TODOs and helper commands.
+- **Phoenix framework references** – [LiveView docs](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html), [Channel/PubSub overview](https://hexdocs.pm/phoenix/channels.html).
+- **React, Tailwind, Bubble Tea, Iced, GTK4, Fyne** – follow the official docs linked from each component guide.
 
-For comprehensive development guidelines, see:
-- **[CLAUDE.md](./CLAUDE.md)** - Overall project architecture and guidelines
-- **[katanaute/CLAUDE.md](./katanaute/CLAUDE.md)** - Phoenix backend development
-- **[katareact/CLAUDE.md](./katareact/CLAUDE.md)** - React frontend development
-- **[katarouille/CLAUDE.md](./katarouille/CLAUDE.md)** - Rust GUI development
-- **[katafyne/CLAUDE.md](./katafyne/CLAUDE.md)** - Go GUI development
-- **[katago/CLAUDE.md](./katago/CLAUDE.md)** - Go TUI development
-- **[katagocore/CLAUDE.md](./katagocore/CLAUDE.md)** - Go shared library development
-
-## Resources
-
-- [Phoenix Framework](https://hexdocs.pm/phoenix/overview.html)
-- [Ecto](https://hexdocs.pm/ecto/Ecto.html)
-- [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html)
-- [React](https://react.dev/)
-- [Vite](https://vitejs.dev/)
-- [Bubble Tea](https://github.com/charmbracelet/bubbletea)
-- [Tailwind CSS](https://tailwindcss.com/)
-
-## License
-
-This is a personal learning project. Use it however you want.
+Use this repo however you like; it exists so I can keep leveling up just like the kata log it tracks.
