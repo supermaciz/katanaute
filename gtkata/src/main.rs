@@ -10,7 +10,7 @@ use auth::{initiate_device_flow, poll_for_authorization};
 use config::Config;
 use glib::clone;
 use gtk4::prelude::*;
-use gtk4::{gio, glib};
+use gtk4::{gdk, gio, glib};
 use libadwaita as adw;
 use models::{Kata, Session, SessionInput};
 use std::cell::RefCell;
@@ -18,6 +18,47 @@ use std::rc::Rc;
 use tokio::runtime::Runtime;
 
 const APP_ID: &str = "org.katanaute.GTKata";
+
+const BELT_CSS: &str = r#"
+.belt-pill {
+  padding: 0 6px;
+  min-width: 60px;
+  text-align: center;
+}
+
+/* Light belts: dark text */
+.belt-yellow {
+  background-color: #ffe500;
+  color: #000000;
+}
+
+.belt-orange {
+  background-color: #ff9900;
+  color: #000000;
+}
+
+/* Darker belts: light text */
+.belt-green {
+  background-color: #00a63a;
+  color: #ffffff;
+}
+
+.belt-blue {
+  background-color: #0068d9;
+  color: #ffffff;
+}
+
+.belt-brown {
+  background-color: #795548;
+  color: #ffffff;
+}
+
+/* Shodan: near-black so it's readable in both modes */
+.belt-shodan {
+  background-color: #191919;
+  color: #ffffff;
+}
+"#;
 
 fn main() -> glib::ExitCode {
     // Start a Tokio runtime so reqwest and tokio utilities have an executor.
@@ -79,6 +120,18 @@ impl AppState {
 }
 
 fn build_ui(app: &adw::Application) {
+    // Load custom CSS for belt badges
+    let provider = gtk4::CssProvider::new();
+    #[allow(deprecated)]
+    provider.load_from_data(BELT_CSS);
+    if let Some(display) = gdk::Display::default() {
+        gtk4::style_context_add_provider_for_display(
+            &display,
+            &provider,
+            gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
+        );
+    }
+
     let state = Rc::new(RefCell::new(AppState::new()));
 
     // Create main window
@@ -470,34 +523,39 @@ fn create_session_row(
     let date_str = session.practiced_at.format("%Y-%m-%d").to_string();
     row.set_subtitle(&date_str);
 
-    // Add kata level badge
+    // Add kata level badge and in-course indicator in a container for alignment
     if let Some(kata) = &session.kata {
         let level_label = gtk4::Label::new(Some(&kata.level));
         level_label.add_css_class("caption");
         level_label.add_css_class("pill");
+        level_label.add_css_class("belt-pill");
 
-        // Add color styling based on level
-        let color_class = match kata.level.as_str() {
-            "yellow" => "warning",
-            "orange" => "warning",
-            "green" => "success",
-            "blue" => "accent",
-            "brown" => "error",
-            "shodan" => "error",
+        // Belt-specific color classes
+        let belt_class = match kata.level.as_str() {
+            "yellow" => "belt-yellow",
+            "orange" => "belt-orange",
+            "green" => "belt-green",
+            "blue" => "belt-blue",
+            "brown" => "belt-brown",
+            "shodan" => "belt-shodan",
             _ => "",
         };
-        if !color_class.is_empty() {
-            level_label.add_css_class(color_class);
+        if !belt_class.is_empty() {
+            level_label.add_css_class(belt_class);
         }
 
-        row.add_suffix(&level_label);
-    }
+        // Create a container for belt badge and optional in-course icon
+        let badge_container = gtk4::Box::new(gtk4::Orientation::Horizontal, 6);
 
-    // Add in-course indicator
-    if session.in_course {
-        let course_icon = gtk4::Image::from_icon_name("emblem-default-symbolic");
-        course_icon.set_tooltip_text(Some("Part of course"));
-        row.add_suffix(&course_icon);
+        // Keep belts visually aligned by placing the icon before the badge
+        if session.in_course {
+            let course_icon = gtk4::Image::from_icon_name("emblem-default-symbolic");
+            course_icon.set_tooltip_text(Some("Part of course"));
+            badge_container.append(&course_icon);
+        }
+        badge_container.append(&level_label);
+
+        row.add_suffix(&badge_container);
     }
 
     // Add chevron for expandable row
@@ -559,19 +617,19 @@ fn show_session_details(
         let level_label = gtk4::Label::new(Some(&kata.level));
         level_label.add_css_class("caption");
         level_label.add_css_class("pill");
+        level_label.add_css_class("belt-pill");
 
-        // Add color styling based on level
-        let color_class = match kata.level.as_str() {
-            "yellow" => "warning",
-            "orange" => "warning",
-            "green" => "success",
-            "blue" => "accent",
-            "brown" => "error",
-            "shodan" => "error",
+        let belt_class = match kata.level.as_str() {
+            "yellow" => "belt-yellow",
+            "orange" => "belt-orange",
+            "green" => "belt-green",
+            "blue" => "belt-blue",
+            "brown" => "belt-brown",
+            "shodan" => "belt-shodan",
             _ => "",
         };
-        if !color_class.is_empty() {
-            level_label.add_css_class(color_class);
+        if !belt_class.is_empty() {
+            level_label.add_css_class(belt_class);
         }
 
         kata_row.add_suffix(&level_label);
@@ -741,6 +799,22 @@ fn build_session_form(
 
         let level_label = gtk4::Label::new(Some(&kata.level));
         level_label.add_css_class("caption");
+        level_label.add_css_class("pill");
+        level_label.add_css_class("belt-pill");
+
+        let belt_class = match kata.level.as_str() {
+            "yellow" => "belt-yellow",
+            "orange" => "belt-orange",
+            "green" => "belt-green",
+            "blue" => "belt-blue",
+            "brown" => "belt-brown",
+            "shodan" => "belt-shodan",
+            _ => "",
+        };
+        if !belt_class.is_empty() {
+            level_label.add_css_class(belt_class);
+        }
+
         row.add_suffix(&level_label);
 
         let check = gtk4::CheckButton::new();
