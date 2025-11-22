@@ -266,7 +266,9 @@ fn show_authentication(nav_view: &adw::NavigationView, state: Rc<RefCell<AppStat
 
 fn show_session_list(nav_view: &adw::NavigationView, state: Rc<RefCell<AppState>>) {
     // Clear navigation stack and show session list
-    nav_view.pop_to_tag("auth");
+    if let Some(_) = nav_view.find_page("auth") {
+        nav_view.pop_to_tag("auth");
+    }
 
     let toolbar_view = adw::ToolbarView::new();
 
@@ -356,6 +358,7 @@ fn show_session_list(nav_view: &adw::NavigationView, state: Rc<RefCell<AppState>
         list_box.clone(),
         status_label.clone(),
         content_stack.clone(),
+        nav_view,
     );
 
     // Refresh button handler
@@ -368,12 +371,15 @@ fn show_session_list(nav_view: &adw::NavigationView, state: Rc<RefCell<AppState>
         status_label,
         #[weak]
         content_stack,
+        #[weak]
+        nav_view,
         move |_| {
             load_sessions(
                 state.clone(),
                 list_box.clone(),
                 status_label.clone(),
                 content_stack.clone(),
+                &nav_view,
             );
         }
     ));
@@ -395,6 +401,7 @@ fn load_sessions(
     list_box: gtk4::ListBox,
     status_label: gtk4::Label,
     content_stack: gtk4::Stack,
+    nav_view: &adw::NavigationView,
 ) {
     status_label.set_text("Loading sessions...");
     content_stack.set_visible_child_name("status");
@@ -410,6 +417,8 @@ fn load_sessions(
         status_label,
         #[weak]
         content_stack,
+        #[weak]
+        nav_view,
         async move {
             match api_client.fetch_sessions().await {
                 Ok(mut sessions) => {
@@ -428,7 +437,7 @@ fn load_sessions(
                     } else {
                         // Add sessions to list
                         for session in sessions {
-                            let row = create_session_row(&session);
+                            let row = create_session_row(&session, &nav_view, state.clone());
                             list_box.append(&row);
                         }
                         content_stack.set_visible_child_name("sessions");
@@ -443,7 +452,11 @@ fn load_sessions(
     ));
 }
 
-fn create_session_row(session: &Session) -> adw::ActionRow {
+fn create_session_row(
+    session: &Session,
+    nav_view: &adw::NavigationView,
+    state: Rc<RefCell<AppState>>,
+) -> adw::ActionRow {
     let row = adw::ActionRow::new();
 
     let kata_name = session
@@ -493,7 +506,136 @@ fn create_session_row(session: &Session) -> adw::ActionRow {
     // Make row activatable to show details
     row.set_activatable(true);
 
+    // Connect click handler to show session details
+    let session_clone = session.clone();
+    row.connect_activated(clone!(
+        #[weak]
+        nav_view,
+        #[strong]
+        state,
+        move |_| {
+            show_session_details(&nav_view, state.clone(), session_clone.clone());
+        }
+    ));
+
     row
+}
+
+fn show_session_details(
+    nav_view: &adw::NavigationView,
+    _state: Rc<RefCell<AppState>>,
+    session: Session,
+) {
+    let toolbar_view = adw::ToolbarView::new();
+
+    // Header bar with back button
+    let header_bar = adw::HeaderBar::new();
+    toolbar_view.add_top_bar(&header_bar);
+
+    // Main content
+    let content_box = gtk4::Box::new(gtk4::Orientation::Vertical, 24);
+    content_box.set_margin_top(24);
+    content_box.set_margin_bottom(24);
+    content_box.set_margin_start(24);
+    content_box.set_margin_end(24);
+
+    // Session info group
+    let info_group = adw::PreferencesGroup::new();
+    info_group.set_title("Session Details");
+
+    // Kata name row
+    let kata_row = adw::ActionRow::new();
+    kata_row.set_title("Kata");
+    let kata_name = session
+        .kata
+        .as_ref()
+        .map(|k| k.name.as_str())
+        .unwrap_or("Unknown");
+    kata_row.set_subtitle(kata_name);
+
+    // Add kata level badge
+    if let Some(kata) = &session.kata {
+        let level_label = gtk4::Label::new(Some(&kata.level));
+        level_label.add_css_class("caption");
+        level_label.add_css_class("pill");
+
+        // Add color styling based on level
+        let color_class = match kata.level.as_str() {
+            "yellow" => "warning",
+            "orange" => "warning",
+            "green" => "success",
+            "blue" => "accent",
+            "brown" => "error",
+            "shodan" => "error",
+            _ => "",
+        };
+        if !color_class.is_empty() {
+            level_label.add_css_class(color_class);
+        }
+
+        kata_row.add_suffix(&level_label);
+    }
+    info_group.add(&kata_row);
+
+    // Date and time row
+    let datetime_row = adw::ActionRow::new();
+    datetime_row.set_title("Practice Date");
+    let datetime_str = session
+        .practiced_at
+        .format("%Y-%m-%d %H:%M UTC")
+        .to_string();
+    datetime_row.set_subtitle(&datetime_str);
+    info_group.add(&datetime_row);
+
+    // In-course row
+    let course_row = adw::ActionRow::new();
+    course_row.set_title("Part of Course");
+    if session.in_course {
+        course_row.set_subtitle("Yes");
+        let course_icon = gtk4::Image::from_icon_name("emblem-default-symbolic");
+        course_row.add_suffix(&course_icon);
+    } else {
+        course_row.set_subtitle("No");
+    }
+    info_group.add(&course_row);
+
+    content_box.append(&info_group);
+
+    // Notes group (if notes exist)
+    if let Some(notes) = &session.notes {
+        if !notes.trim().is_empty() {
+            let notes_group = adw::PreferencesGroup::new();
+            notes_group.set_title("Notes");
+
+            let notes_label = gtk4::Label::new(Some(notes));
+            notes_label.set_wrap(true);
+            notes_label.set_wrap_mode(gtk4::pango::WrapMode::Word);
+            notes_label.set_xalign(0.0); // Left-align
+            notes_label.set_margin_top(12);
+            notes_label.set_margin_bottom(12);
+            notes_label.set_margin_start(12);
+            notes_label.set_margin_end(12);
+            notes_label.add_css_class("body");
+
+            notes_group.add(&notes_label);
+            content_box.append(&notes_group);
+        }
+    }
+
+    // Create scrolled window for content
+    let scrolled = gtk4::ScrolledWindow::new();
+    scrolled.set_child(Some(&content_box));
+    scrolled.set_vexpand(true);
+
+    toolbar_view.set_content(Some(&scrolled));
+
+    let page = adw::NavigationPage::builder()
+        .title("Session Details")
+        .tag("session-details")
+        .child(&toolbar_view)
+        .build();
+
+    nav_view.push(&page);
 }
 
 fn show_session_create(nav_view: &adw::NavigationView, state: Rc<RefCell<AppState>>) {
@@ -604,6 +746,132 @@ fn build_session_form(
 
     form_box.append(&kata_group);
 
+    // Date and time selection group
+    let datetime_group = adw::PreferencesGroup::new();
+    datetime_group.set_title("Practice Date and Time");
+
+    // Create calendar for date selection
+    let calendar = gtk4::Calendar::new();
+    calendar.set_show_heading(true);
+    calendar.set_show_day_names(true);
+    calendar.set_show_week_numbers(false);
+
+    // Set calendar to current date using select_day (available in v4_12)
+    let now =
+        glib::DateTime::now_local().unwrap_or_else(|_| glib::DateTime::from_unix_utc(0).unwrap());
+    calendar.select_day(&now);
+
+    // Create time entry
+    let time_entry = gtk4::Entry::new();
+    time_entry.set_placeholder_text(Some("HH:MM (24-hour format)"));
+    time_entry.set_text(&now.format("%H:%M").unwrap_or_default());
+    time_entry.set_max_length(5);
+
+    // Date row with calendar
+    let date_row = adw::ActionRow::new();
+    date_row.set_title("Date");
+    date_row.set_subtitle(&now.format("%Y-%m-%d").unwrap_or_default());
+
+    let date_button = gtk4::Button::new();
+    date_button.set_label("Change Date");
+    date_button.add_css_class("flat");
+
+    // Create popover for calendar
+    let calendar_popover = gtk4::Popover::new();
+    calendar_popover.set_child(Some(&calendar));
+    calendar_popover.set_parent(&date_button);
+
+    date_button.connect_clicked(clone!(
+        #[weak]
+        calendar_popover,
+        move |_| {
+            calendar_popover.popup();
+        }
+    ));
+
+    date_row.add_suffix(&date_button);
+    datetime_group.add(&date_row);
+
+    // Time row
+    let time_row = adw::ActionRow::new();
+    time_row.set_title("Time");
+    time_row.add_suffix(&time_entry);
+    datetime_group.add(&time_row);
+
+    // Store selected datetime
+    let selected_datetime: Rc<RefCell<Option<glib::DateTime>>> =
+        Rc::new(RefCell::new(Some(now.clone())));
+
+    // Update selected datetime when calendar date changes
+    calendar.connect_day_selected(clone!(
+        #[strong]
+        selected_datetime,
+        #[weak]
+        time_entry,
+        #[weak]
+        date_row,
+        move |calendar| {
+            let selected_date = calendar.date();
+            let time_text = time_entry.text().to_string();
+
+            // Parse time or use current time
+            let (hour, minute) = if let Ok((h, m)) = parse_time(&time_text) {
+                (h, m)
+            } else {
+                (now.hour(), now.minute())
+            };
+
+            // Create new datetime with selected date and time using from_unix_local
+            let timestamp = selected_date.to_unix();
+            if let Ok(base_datetime) = glib::DateTime::from_unix_local(timestamp) {
+                if let Ok(combined_datetime) = glib::DateTime::new(
+                    &base_datetime.timezone(),
+                    selected_date.year(),
+                    selected_date.month(),
+                    selected_date.day_of_month(),
+                    hour,
+                    minute,
+                    0.0,
+                ) {
+                    *selected_datetime.borrow_mut() = Some(combined_datetime.clone());
+                    // Update the subtitle to show selected date
+                    date_row
+                        .set_subtitle(&combined_datetime.format("%Y-%m-%d").unwrap_or_default());
+                }
+            }
+        }
+    ));
+
+    // Update selected datetime when time entry changes
+    time_entry.connect_changed(clone!(
+        #[strong]
+        selected_datetime,
+        #[weak]
+        calendar,
+        move |entry| {
+            let time_text = entry.text().to_string();
+            if let Ok((hour, minute)) = parse_time(&time_text) {
+                let calendar_date = calendar.date();
+                let timestamp = calendar_date.to_unix();
+                if let Ok(base_datetime) = glib::DateTime::from_unix_local(timestamp) {
+                    if let Ok(combined_datetime) = glib::DateTime::new(
+                        &base_datetime.timezone(),
+                        calendar_date.year(),
+                        calendar_date.month(),
+                        calendar_date.day_of_month(),
+                        hour,
+                        minute,
+                        0.0,
+                    ) {
+                        *selected_datetime.borrow_mut() = Some(combined_datetime);
+                    }
+                }
+            }
+        }
+    ));
+
+    form_box.append(&datetime_group);
+
     // Notes entry
     let notes_group = adw::PreferencesGroup::new();
     notes_group.set_title("Notes (optional)");
@@ -660,6 +928,8 @@ fn build_session_form(
         state,
         #[strong]
         selected_kata_id,
+        #[strong]
+        selected_datetime,
         #[weak]
         notes_entry,
         #[weak]
@@ -676,6 +946,15 @@ fn build_session_form(
                 return;
             }
 
+            let selected_dt = selected_datetime.borrow().clone();
+            let practiced_at = if let Some(dt) = selected_dt {
+                // Convert glib::DateTime to chrono::DateTime<Utc>
+                let timestamp = dt.to_unix() as i64;
+                chrono::DateTime::from_timestamp(timestamp, 0).unwrap_or_else(|| chrono::Utc::now())
+            } else {
+                chrono::Utc::now()
+            };
+
             let buffer = notes_entry.buffer();
             let notes_text = buffer
                 .text(&buffer.start_iter(), &buffer.end_iter(), false)
@@ -690,7 +969,7 @@ fn build_session_form(
                 kata_id: kata_id.unwrap(),
                 in_course: course_switch.is_active(),
                 notes,
-                practiced_at: chrono::Utc::now(),
+                practiced_at,
             };
 
             create_button.set_sensitive(false);
@@ -724,4 +1003,22 @@ fn build_session_form(
             ));
         }
     ));
+}
+
+/// Parse time string in HH:MM format and return (hour, minute)
+fn parse_time(time_str: &str) -> Result<(i32, i32), ()> {
+    let parts: Vec<&str> = time_str.split(':').collect();
+    if parts.len() != 2 {
+        return Err(());
+    }
+
+    let hour: i32 = parts[0].parse().map_err(|_| ())?;
+    let minute: i32 = parts[1].parse().map_err(|_| ())?;
+
+    // Validate ranges
+    if hour < 0 || hour > 23 || minute < 0 || minute > 59 {
+        return Err(());
+    }
+
+    Ok((hour, minute))
 }
