@@ -1,7 +1,9 @@
 use chrono::Utc;
 use iced::widget::{button, column, container, row, scrollable, text, text_input};
 use iced::{Alignment, Color, Element, Length, Task};
-use katarustcore::{ApiClient, initiate_device_flow, poll_for_authorization, Config, Kata, Session, SessionInput};
+use katarustcore::{
+    ApiClient, Config, Kata, Session, SessionInput, initiate_device_flow, poll_for_authorization,
+};
 
 fn main() -> iced::Result {
     iced::application(
