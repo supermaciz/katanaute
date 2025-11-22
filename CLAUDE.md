@@ -1,6 +1,6 @@
 # Katanaute - Kata Training Tracker
 
-A multi-client (Uechi-Ryu) Karate kata training tracker application with a Phoenix backend, React web frontend, and multiple native clients (Rust GUI, Go GUI, Go TUI).
+A multi-client (Uechi-Ryu) Karate kata training tracker application with a Phoenix backend, React web frontend, and multiple native clients (Rust GUI with Iced, Rust GUI with GTK4, Go GUI with Fyne, Go TUI with Bubble Tea).
 
 > **Note**: This file contains comprehensive development guidelines for the entire monorepo. For quick-start instructions, see [README.md](./README.md). For component-specific guidelines, see the CLAUDE.md files in each subdirectory.
 
@@ -17,8 +17,11 @@ cd katanaute && mix setup && mix react.build && mix phx.server
 cd katareact && npm install && npm run dev
 # Dev server at http://localhost:3000 with API proxy
 
-# Rust GUI
+# Rust GUI (Iced)
 cd katarouille && cargo build && cargo run
+
+# Rust GUI (GTK4 + libadwaita)
+cd gtkata && cargo build && cargo run
 
 # Go GUI (Fyne)
 cd katafyne && go build && ./katafyne
@@ -38,7 +41,8 @@ cd katago && go build && ./katago
 **Component Documentation**
 - Phoenix: [katanaute/CLAUDE.md](./katanaute/CLAUDE.md)
 - React: [katareact/CLAUDE.md](./katareact/CLAUDE.md)
-- Rust GUI: [katarouille/CLAUDE.md](./katarouille/CLAUDE.md)
+- Rust GUI (Iced): [katarouille/CLAUDE.md](./katarouille/CLAUDE.md)
+- Rust GUI (GTK4): [gtkata/CLAUDE.md](./gtkata/CLAUDE.md)
 - Go GUI: [katafyne/CLAUDE.md](./katafyne/CLAUDE.md)
 - Go TUI: [katago/CLAUDE.md](./katago/CLAUDE.md)
 
@@ -68,7 +72,7 @@ cd katago && go build && ./katago
 
 ## Repository Structure
 
-This is a monorepo containing six main components and a shared Go library:
+This is a monorepo containing seven main components and a shared Go library:
 
 ```
 katanaute/
@@ -80,6 +84,9 @@ katanaute/
 ├── katarouille/        # GUI client (Rust + Iced)
 │   ├── CLAUDE.md       # Rust GUI development guidelines
 │   └── README.md       # Rust GUI documentation
+├── gtkata/             # GUI client (Rust + GTK4 + libadwaita)
+│   ├── CLAUDE.md       # GTK4 GUI development guidelines
+│   └── README.md       # GTK4 GUI documentation
 ├── katafyne/           # GUI client (Go + Fyne)
 │   ├── CLAUDE.md       # Go GUI development guidelines
 │   └── README.md       # Go GUI documentation
@@ -120,7 +127,7 @@ katanaute/
   - Built and served from Phoenix static directory
   - LiveView admin UI accessible at `/admin`
 
-### GUI Client: Rust (katarouille/)
+### GUI Client: Rust with Iced (katarouille/)
 - **Framework**: Iced (Elm Architecture GUI framework)
 - **Language**: Rust 2024 edition
 - **Purpose**: Native cross-platform GUI application for session management
@@ -132,6 +139,20 @@ katanaute/
   - Token persistence in XDG-compliant config directory
   - Offline-capable (once authenticated)
   - Cross-platform (Linux, macOS, Windows)
+
+### GUI Client: Rust with GTK4 (gtkata/)
+- **Framework**: GTK4 + libadwaita (GNOME native widgets)
+- **Language**: Rust 2024 edition
+- **Purpose**: Native Linux GUI application for session management
+- **Key Features**:
+  - Device flow authentication with OAuth2-style flow
+  - Modern GNOME design following Human Interface Guidelines
+  - View and create training sessions
+  - AdwNavigationView for screen transitions
+  - Color-coded kata level badges
+  - Token persistence in XDG-compliant config directory
+  - Linux-native (GNOME/GTK ecosystem)
+  - libadwaita adaptive layouts
 
 ### GUI Client: Go (katafyne/)
 - **Framework**: Fyne (declarative GUI framework)
@@ -364,7 +385,14 @@ npm run dev                 # Start dev server on http://localhost:3000
 # Independent dev server with Vite hot reload and API proxy
 ```
 
-**4. Go TUI Setup (katago/)**
+**4. Rust GUI (GTK4) Setup (gtkata/)**
+```bash
+cd gtkata
+cargo build
+./target/debug/gtkata      # Requires backend running on localhost:4000
+```
+
+**5. Go TUI Setup (katago/)**
 ```bash
 cd katago
 go build
@@ -388,6 +416,22 @@ npm test                    # Run tests in watch mode
 npm run build              # Production build (outputs to dist/)
 npm run preview            # Preview production build
 # Note: For Phoenix deployment, use `mix react.build` from katanaute/
+```
+
+#### Rust GUI (Iced - Katarouille)
+```bash
+cargo build                 # Compile binary
+cargo fmt                   # Format code
+cargo clippy                # Lint code
+cargo run                   # Run GUI client
+```
+
+#### Rust GUI (GTK4 - GTKata)
+```bash
+cargo build                 # Compile binary
+cargo fmt                   # Format code
+cargo clippy                # Lint code
+cargo run                   # Run GUI client
 ```
 
 #### Go GUI (Katafyne)
@@ -424,11 +468,19 @@ When working on a specific component, **ALWAYS** refer to its CLAUDE.md file:
   - API integration patterns
   - Form handling and validation
 
-- **Rust GUI**: See `katarouille/CLAUDE.md` for:
+- **Rust GUI (Iced)**: See `katarouille/CLAUDE.md` for:
   - Iced Elm Architecture patterns
   - MVU (Model-View-Update) design
   - Device flow authentication
   - Token persistence
+  - Rust-specific coding patterns
+
+- **Rust GUI (GTK4)**: See `gtkata/CLAUDE.md` for:
+  - GTK4 + libadwaita patterns
+  - GNOME Human Interface Guidelines
+  - AdwNavigationView for screen transitions
+  - GLib async operations
+  - Device flow authentication
   - Rust-specific coding patterns
 
 - **Go GUI**: See `katafyne/CLAUDE.md` for:
@@ -475,12 +527,20 @@ test(react): add comprehensive test suite
 style(react): improve responsive layout
 ```
 
-### Rust GUI
+### Rust GUI (Iced)
 ```
 feat(katarouille): implement session editing
 fix(katarouille): handle authentication errors
 test(katarouille): add API client tests
 docs(katarouille): update installation guide
+```
+
+### Rust GUI (GTK4)
+```
+feat(gtkata): implement session editing
+fix(gtkata): handle authentication errors
+test(gtkata): add API client tests
+docs(gtkata): update installation guide
 ```
 
 ### Go GUI
@@ -618,6 +678,7 @@ mix ecto.migrate
 ### Why Multiple Clients?
 - **React**: Modern web interface for full-featured management
 - **Katarouille (Rust GUI)**: Native cross-platform desktop application with offline capability
+- **GTKata (Rust GUI)**: Native Linux application with GNOME/GTK4 integration
 - **Katafyne (Go GUI)**: Native cross-platform desktop application with simple, clean UI
 - **Go TUI (Katago)**: Quick terminal access for developers
 - **Phoenix LiveView**: Built-in real-time web option
@@ -758,6 +819,7 @@ When making changes:
 - ✅ Phoenix LiveView web UI with session authentication
 - ✅ React SPA with full session management and auth
 - ✅ Rust GUI (Katarouille) with device flow authentication
+- ✅ Rust GUI (GTKata) with GTK4/libadwaita and device flow authentication
 - ✅ Go GUI (Katafyne) with device flow authentication
 - ✅ Go TUI (Katago) with device flow authentication
 - ✅ Comprehensive test coverage (Phoenix, React)
@@ -766,17 +828,18 @@ When making changes:
 - ✅ Session sorting by date
 - ✅ Split-view layout in Go clients
 - ✅ Native cross-platform GUIs (Katarouille, Katafyne)
+- ✅ Native GNOME GUI with AdwNavigationView (GTKata)
 
 **Known Limitations**
 - Session editing limited to LiveView (not in React or native clients)
 - Session deletion available in LiveView and React only
 - SQLite database (not suitable for production scale)
-- No tests for native clients (Katarouille, Katafyne, Katago)
+- No tests for native clients (Katarouille, GTKata, Katafyne, Katago)
 - No email confirmation flow (confirmed_at field exists but not enforced)
 
 **Future Enhancements** (See component TODOs)
 - Session editing in React frontend and native clients
-- Session deletion in native clients (Katarouille, Katafyne, Katago)
+- Session deletion in native clients (Katarouille, GTKata, Katafyne, Katago)
 - Unit tests for native clients
 - Email confirmation and password reset flows
 - Multi-factor authentication
@@ -785,3 +848,4 @@ When making changes:
 - PostgreSQL support for production
 - Error recovery UI in native clients
 - Markdown rendering in native GUI clients
+- Session detail view in GTKata
