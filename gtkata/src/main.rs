@@ -1,6 +1,7 @@
 mod api;
 mod auth;
 mod config;
+mod markdown;
 mod models;
 
 use adw::prelude::*;
@@ -607,17 +608,39 @@ fn show_session_details(
             let notes_group = adw::PreferencesGroup::new();
             notes_group.set_title("Notes");
 
-            let notes_label = gtk4::Label::new(Some(notes));
-            notes_label.set_wrap(true);
-            notes_label.set_wrap_mode(gtk4::pango::WrapMode::Word);
-            notes_label.set_xalign(0.0); // Left-align
-            notes_label.set_margin_top(12);
-            notes_label.set_margin_bottom(12);
-            notes_label.set_margin_start(12);
-            notes_label.set_margin_end(12);
-            notes_label.add_css_class("body");
+            // Try to render as markdown, fallback to plain text
+            match markdown::render_input(notes, markdown::RenderConfig::default()) {
+                Ok(viewport) => {
+                    // Wrap in clamp to limit width and scrolled window for scrolling
+                    let clamp = adw::Clamp::builder()
+                        .maximum_size(800)
+                        .tightening_threshold(400)
+                        .build();
 
-            notes_group.add(&notes_label);
+                    let scrolled = gtk4::ScrolledWindow::new();
+                    scrolled.set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic);
+                    scrolled.set_min_content_height(200);
+                    scrolled.set_child(Some(&viewport));
+
+                    clamp.set_child(Some(&scrolled));
+                    notes_group.add(&clamp);
+                }
+                Err(_) => {
+                    // Fallback to plain text label if markdown rendering fails
+                    let notes_label = gtk4::Label::new(Some(notes));
+                    notes_label.set_wrap(true);
+                    notes_label.set_wrap_mode(gtk4::pango::WrapMode::Word);
+                    notes_label.set_xalign(0.0); // Left-align
+                    notes_label.set_margin_top(12);
+                    notes_label.set_margin_bottom(12);
+                    notes_label.set_margin_start(12);
+                    notes_label.set_margin_end(12);
+                    notes_label.add_css_class("body");
+
+                    notes_group.add(&notes_label);
+                }
+            }
+
             content_box.append(&notes_group);
         }
     }
