@@ -3,6 +3,7 @@ mod auth;
 mod config;
 mod models;
 
+use adw::prelude::*;
 use api::ApiClient;
 use auth::{initiate_device_flow, poll_for_authorization};
 use config::Config;
@@ -10,7 +11,6 @@ use glib::clone;
 use gtk4::prelude::*;
 use gtk4::{gio, glib};
 use libadwaita as adw;
-use adw::prelude::*;
 use models::{Kata, Session, SessionInput};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -242,7 +242,8 @@ fn show_authentication(nav_view: &adw::NavigationView, state: Rc<RefCell<AppStat
                                             show_session_list(&nav_view, state.clone());
                                         }
                                         Err(e) => {
-                                            error_label.set_text(&format!("Authentication failed: {}", e));
+                                            error_label
+                                                .set_text(&format!("Authentication failed: {}", e));
                                             error_label.set_visible(true);
                                             login_button.set_sensitive(true);
                                         }
@@ -251,7 +252,8 @@ fn show_authentication(nav_view: &adw::NavigationView, state: Rc<RefCell<AppStat
                             ));
                         }
                         Err(e) => {
-                            error_label.set_text(&format!("Failed to initiate authentication: {}", e));
+                            error_label
+                                .set_text(&format!("Failed to initiate authentication: {}", e));
                             error_label.set_visible(true);
                             login_button.set_sensitive(true);
                         }
@@ -367,7 +369,12 @@ fn show_session_list(nav_view: &adw::NavigationView, state: Rc<RefCell<AppState>
         #[weak]
         content_stack,
         move |_| {
-            load_sessions(state.clone(), list_box.clone(), status_label.clone(), content_stack.clone());
+            load_sessions(
+                state.clone(),
+                list_box.clone(),
+                status_label.clone(),
+                content_stack.clone(),
+            );
         }
     ));
 
@@ -534,12 +541,7 @@ fn show_session_create(nav_view: &adw::NavigationView, state: Rc<RefCell<AppStat
             match api_client.fetch_katas().await {
                 Ok(katas) => {
                     state.borrow_mut().katas = katas.clone();
-                    build_session_form(
-                        &nav_view,
-                        state.clone(),
-                        &content_stack,
-                        katas,
-                    );
+                    build_session_form(&nav_view, state.clone(), &content_stack, katas);
                 }
                 Err(e) => {
                     status_label.set_text(&format!("Error loading katas: {}", e));
@@ -566,6 +568,7 @@ fn build_session_form(
     kata_group.set_title("Select Kata");
 
     let selected_kata_id: Rc<RefCell<Option<i32>>> = Rc::new(RefCell::new(None));
+    let mut first_check: Option<gtk4::CheckButton> = None;
 
     for kata in katas {
         let row = adw::ActionRow::new();
@@ -577,6 +580,13 @@ fn build_session_form(
 
         let check = gtk4::CheckButton::new();
         row.add_prefix(&check);
+
+        // Make check buttons mutually exclusive (radio button behavior)
+        if let Some(ref first) = first_check {
+            check.set_group(Some(first));
+        } else {
+            first_check = Some(check.clone());
+        }
 
         let kata_id = kata.id;
         check.connect_toggled(clone!(
