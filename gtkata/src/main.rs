@@ -779,9 +779,10 @@ fn build_session_form(
     calendar.set_show_day_names(true);
     calendar.set_show_week_numbers(false);
 
-    // Set calendar to current date using select_day (available in v4_12)
+    // Set calendar to current date using select_day (deprecated in v4_20, but kept for compatibility)
     let now =
         glib::DateTime::now_local().unwrap_or_else(|_| glib::DateTime::from_unix_utc(0).unwrap());
+    #[allow(deprecated)]
     calendar.select_day(&now);
 
     // Create time entry
