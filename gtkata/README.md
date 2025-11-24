@@ -1,29 +1,26 @@
 # GTKata - GNOME Kata Training Tracker
 
-A native Linux GUI application for tracking kata training sessions, built with GTK4 and libadwaita following GNOME Human Interface Guidelines.
+GTKata is a native GNOME application for tracking kata training sessions. It is built with GTK4 and libadwaita in Rust and uses the shared `katarustcore` crate for all API, authentication, configuration, and data models. GTKata talks to the Katanaute Phoenix backend and shows the same sessions you see in the web UI and other clients.
 
-![GTKata](https://img.shields.io/badge/GTK-4-blue)
-![libadwaita](https://img.shields.io/badge/libadwaita-1.5-purple)
-![Rust](https://img.shields.io/badge/Rust-2024-orange)
+## What You Can Do
 
-## Features
+- Secure login using the device-code flow implemented in `katarustcore`
+- Browse your training sessions in a GNOME-style list view
+- Inspect a session detail view (kata, belt level, date/time, in-course flag)
+- Read session notes rendered as Markdown with syntax highlighting
+- Create new sessions with calendar/date and time selection
+- Store and reuse your API token via an XDG-compliant config file
 
-- 🔐 **Secure Authentication** - Device flow OAuth2-style authentication
-- 📝 **Session Management** - Create and view training sessions
-- 🎨 **Modern GNOME Design** - libadwaita widgets and styling
-- 🎯 **Kata Tracking** - Track practice across different belt levels
-- 💾 **Persistent Config** - XDG-compliant configuration storage
-- 🌐 **API Integration** - RESTful API communication with Phoenix backend
+## Prerequisites
 
-## Screenshots
+- Linux desktop (GNOME is the primary target)
+- GTK4 and libadwaita development packages
+- Rust toolchain (via `rustup`, Rust 2024 edition)
+- A running Katanaute backend (see `katanaute/README.md`)
 
-*Coming soon*
+### Installing system dependencies
 
-## Installation
-
-### Prerequisites
-
-#### System Dependencies
+The exact package names vary slightly by distro; these examples are known-good starting points:
 
 **Arch Linux:**
 ```bash
@@ -41,56 +38,79 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 sudo dnf install gtk4-devel libadwaita-devel rust cargo
 ```
 
-### Building from Source
+## Quick Start
+
+From the repository root:
 
 ```bash
-# Clone the repository
-cd katanaute/gtkata
+# 1. Start the backend (from katanaute/)
+cd katanaute
+mix setup   # only needed the first time
+mix phx.server
 
-# Build the application
-cargo build --release
-
-# Run the application
-./target/release/gtkata
+# 2. In another terminal, run GTKata
+cd ../gtkata
+cargo run
 ```
+
+On first launch you will see an authentication screen. Press "Login" to start the device flow.
 
 ## Usage
 
-### First Run
+### First Run & Login
 
-1. Start the backend server (see main README)
-2. Launch GTKata: `cargo run` or `./target/release/gtkata`
-3. Click "Login" to start device flow authentication
-4. Visit the verification URL in your browser
-5. Enter the user code shown in the app
-6. Approve the authorization request
-7. GTKata will automatically log you in
+1. Ensure the Katanaute backend is running (default: `http://localhost:4000`).
+2. Start GTKata with `cargo run` (or use the release binary from `target/release/gtkata`).
+3. On the "Authentication" screen, click **Login**.
+4. The app requests a device code via `katarustcore::initiate_device_flow` and shows:
+   - A **user code** you need to type in the browser
+   - A **verification URL** you can click or copy
+5. Open the URL in your browser, enter the code, and approve the request.
+6. GTKata polls the backend via `katarustcore::poll_for_authorization` until approval and then loads your sessions.
 
-### Creating a Session
+### Browsing Sessions
 
-1. Click the "+" button in the header bar
-2. Select a kata from the list
-3. Add optional notes (supports Markdown)
-4. Toggle "Part of Course" if this is structured training
-5. Click "Create Session"
-
-### Viewing Sessions
-
-- Sessions are displayed in a list, newest first
-- Each session shows:
+- The main screen shows your sessions, newest first.
+- Each entry displays:
   - Kata name
   - Practice date
   - Belt level badge (color-coded)
-  - Course indicator (if applicable)
+  - An indicator if the session is part of a course
+- Use the **Refresh** button in the header bar to reload from the backend.
+
+### Session Details & Notes
+
+- Click a session row to open the detail view.
+- You will see:
+  - Kata name and belt badge
+  - Practice date and time (UTC)
+  - Whether it was part of a course
+  - Notes rendered as Markdown
+- Markdown rendering is handled by `src/markdown.rs` using `markdown`, `syntect`, and `html2pango` to build GTK widgets.
+
+### Creating a Session
+
+1. From the sessions list, click the **"+"** button.
+2. GTKata fetches the kata list via `ApiClient::fetch_katas` from `katarustcore`.
+3. Pick a kata (radio-style check buttons).
+4. Choose a date with the calendar, and a time in `HH:MM` format.
+5. Optionally add Markdown notes.
+6. Toggle **"Part of Course"** if this is structured training.
+7. Click **Create Session** to send a `SessionInput` to the backend.
 
 ### Logout
 
-1. Click the menu button (⋮) in the header bar
-2. Select "Logout"
+- Use the menu in the header bar (three-dot menu) and select **Logout**.
+- This clears the stored token via `Config::clear_token` in `katarustcore` and returns you to the login screen.
 
 ## Configuration
 
-Configuration is stored in `~/.config/katanaute/config.json`:
+Configuration is shared between GTKata and other Rust clients via `katarustcore`:
+
+- Config directory: `~/.config/katanaute/`
+- Config file: `config.json`
+
+Example file:
 
 ```json
 {
@@ -99,169 +119,147 @@ Configuration is stored in `~/.config/katanaute/config.json`:
 }
 ```
 
-### Environment Variables
+You normally do not need to edit this file by hand. GTKata calls `Config::load`, `Config::save_token`, and `Config::clear_token` from `katarustcore` to manage it.
 
-- `KATANAUTE_API_URL` - Override the default API URL
+### Environment variables
+
+- `KATANAUTE_API_URL` – override the default API URL for all `katarustcore` consumers.
 
 Example:
+
 ```bash
-KATANAUTE_API_URL=http://localhost:4000/api cargo run
+KATANAUTE_API_URL=https://example.com/api cargo run
 ```
+
+This affects both GTKata and any other binaries using `katarustcore::Config::load`.
 
 ## Architecture
 
-GTKata follows GNOME design patterns:
+GTKata is intentionally thin:
 
-- **AdwNavigationView** - Screen navigation with transitions
-- **AdwToolbarView** - Consistent header bar layout
-- **AdwActionRow** - List items with accessories
-- **AdwPreferencesGroup** - Grouped form controls
+- **Backend contract** (endpoints, device flow, JSON shapes) lives in `katarustcore` and the Phoenix backend.
+- **Shared logic** (API client, authentication helpers, configuration, models) is implemented in `katarustcore`.
+- **GTKata** focuses on GNOME UX: windows, navigation, forms, lists, and Markdown rendering.
 
-### Code Structure
+### Code layout
 
-```
+```text
 gtkata/
-├── src/
-│   ├── main.rs       # UI and application logic
-│   ├── api.rs        # HTTP API client
-│   ├── auth.rs       # Device flow authentication
-│   ├── config.rs     # Configuration management
-│   └── models.rs     # Data models
-├── Cargo.toml        # Dependencies
-├── CLAUDE.md         # Development guidelines
-└── README.md         # This file
+├── Cargo.toml        # GTK4/libadwaita app depending on katarustcore
+└── src/
+    ├── main.rs       # libadwaita UI, AppState, wiring to katarustcore
+    └── markdown.rs   # Markdown -> GTK widgets renderer for session notes
 ```
+
+There is no local `api.rs`, `auth.rs`, `config.rs`, or `models.rs` anymore; if you need to change API behavior, update `katarustcore/` instead.
+
+### GNOME patterns
+
+GTKata follows standard libadwaita patterns:
+
+- `adw::ApplicationWindow` as the main window
+- `adw::NavigationView` with `adw::NavigationPage` for screen transitions
+- `adw::ToolbarView` + `adw::HeaderBar` for top-level chrome
+- `adw::PreferencesGroup` and `adw::ActionRow` for forms and details
+- CSS classes such as `boxed-list`, `pill`, and custom belt classes for styling
 
 ## Development
 
-### Building
+From `gtkata/`:
 
 ```bash
+# Build in debug mode
 cargo build
-```
 
-### Running
-
-```bash
+# Run the application
 cargo run
-```
 
-### Code Quality
+# Optimized release build
+cargo build --release
+./target/release/gtkata
 
-```bash
 # Format code
 cargo fmt
 
-# Lint code
+# Lint
 cargo clippy
 
-# Run tests (when implemented)
+# Tests (none yet, but this will run them once they exist)
 cargo test
 ```
 
-### Development Guidelines
+## Key Dependencies
 
-See [CLAUDE.md](CLAUDE.md) for comprehensive development guidelines including:
-- GTK4 and libadwaita patterns
-- GNOME HIG compliance
-- Async operation handling
-- Widget creation patterns
-- API integration
-- Error handling
+GTKata itself depends on:
 
-## Dependencies
+- `gtk4`, `libadwaita`, `glib` – Rust bindings from the gtk-rs project
+- `katarustcore` – shared API/auth/config/models crate (`../katarustcore`)
+- `tokio` – async runtime used by `katarustcore` and Markdown rendering helpers
+- `chrono` – date/time handling for session timestamps
+- `markdown`, `syntect`, `html2pango` – Markdown parsing and syntax highlighting
+- `anyhow`, `log` – error reporting and logging
 
-- **gtk4** (0.9) - GTK4 Rust bindings
-- **libadwaita** (0.7) - Modern GNOME widgets
-- **glib** (0.20) - GLib async/signals
-- **reqwest** (0.12) - HTTP client
-- **serde** (1.0) - JSON serialization
-- **tokio** (1.0) - Async runtime
-- **directories** (6.0) - XDG directories
-- **chrono** (0.4) - Date/time handling
-
-## GNOME HIG Compliance
-
-GTKata follows GNOME Human Interface Guidelines:
-
-✅ **Consistent** - Uses standard GNOME patterns and widgets  
-✅ **Clear** - Visual hierarchy with typography classes  
-✅ **Accessible** - Proper labels, tooltips, keyboard navigation  
-✅ **Modern** - Latest libadwaita patterns (NavigationView, etc.)  
-✅ **Responsive** - Adaptive layouts with proper spacing  
-
-See: https://developer.gnome.org/hig
-
-## Comparison with Other Clients
-
-| Feature | GTKata | Katarouille | Katafyne | Katago |
-|---------|--------|-------------|----------|--------|
-| Framework | GTK4/libadwaita | Iced | Fyne | Bubble Tea |
-| Platform | Linux (GNOME) | Cross-platform | Cross-platform | Terminal |
-| Design | GNOME HIG | Custom dark | Clean modern | TUI |
-| Auth | Device flow | Device flow | Device flow | Device flow |
-| Sessions | View, Create | View, Create | View, Create | View, Create |
+For the full list and versions, see `gtkata/Cargo.toml` and `katarustcore/Cargo.toml`.
 
 ## Roadmap
 
-- [ ] Session detail view
+Current state (based on the code in this repository):
+
+- [x] Device flow authentication and token persistence
+- [x] Session list with belt badges and course indicator
+- [x] Session detail view
+- [x] Markdown rendering for session notes
 - [ ] Session editing
 - [ ] Session deletion with confirmation
 - [ ] Search and filter
 - [ ] Keyboard shortcuts
 - [ ] Statistics dashboard
-- [ ] Markdown preview for notes
-- [ ] Toast notifications
 - [ ] Preferences dialog
 - [ ] Session export
-
-## Contributing
-
-See [CLAUDE.md](CLAUDE.md) for development guidelines.
-
-1. Follow Rust 2024 edition conventions
-2. Use `cargo fmt` before committing
-3. Run `cargo clippy` to check for issues
-4. Follow GNOME HIG patterns
-5. Use conventional commits: `feat(gtkata):`, `fix(gtkata):`, etc.
-
-## License
-
-Part of the Katanaute project. See main repository for license information.
-
-## Resources
-
-- [GTK4 Documentation](https://gtk-rs.org/gtk4-rs/)
-- [libadwaita Documentation](https://world.pages.gitlab.gnome.org/Rust/libadwaita-rs/)
-- [GNOME HIG](https://developer.gnome.org/hig)
-- [Katanaute Repository](../)
+- [ ] Toast notifications
 
 ## Troubleshooting
 
-### Application won't start
+### Application will not start
 
-- Ensure GTK4 and libadwaita are installed
-- Check display server is running (X11 or Wayland)
-- Try: `GTK_DEBUG=interactive cargo run`
+- Ensure GTK4 and libadwaita are installed (dev packages, not only runtime).
+- Check that a display server (X11 or Wayland) is running.
+- Try inspecting with:
+  ```bash
+  GTK_DEBUG=interactive cargo run
+  ```
 
-### Can't connect to backend
+### Cannot connect to backend
 
-- Verify backend is running: `http://localhost:4000`
-- Check API URL in config or env var
-- Check network connectivity
+- Make sure the Phoenix app in `katanaute/` is running.
+- Confirm the API is reachable at the configured URL (default `http://localhost:4000/api`).
+- Check `KATANAUTE_API_URL` and `~/.config/katanaute/config.json`.
 
-### Build fails
+### Authentication problems
 
-- Update Rust: `rustup update`
-- Clean build: `cargo clean && cargo build`
-- Install system dependencies (see Installation)
+- Ensure `/admin/device` on the backend is reachable in the browser.
+- If you see repeated failures, remove the config file to reset authentication:
+  ```bash
+  rm ~/.config/katanaute/config.json
+  ```
+- Then restart GTKata and go through the login flow again.
 
-### Authentication fails
+### Build failures
 
-- Check backend is running and accessible
-- Verify you can access the verification URL
-- Try removing config file: `rm ~/.config/katanaute/config.json`
+- Update Rust:
+  ```bash
+  rustup update
+  ```
+- Clean and rebuild:
+  ```bash
+  cargo clean && cargo build
+  ```
+- Make sure all GTK4/libadwaita dev packages are installed.
 
-## Support
+## Resources
 
-For issues, questions, or contributions, see the main Katanaute repository.
+- GTK4 Rust bindings: https://gtk-rs.org/gtk4-rs/
+- libadwaita Rust bindings: https://world.pages.gitlab.gnome.org/Rust/libadwaita-rs/
+- GNOME Human Interface Guidelines: https://developer.gnome.org/hig
+- Shared Rust core (`katarustcore`): ../katarustcore/README.md
+- Katanaute backend: ../katanaute/README.md
