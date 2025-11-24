@@ -4,7 +4,9 @@ use adw::prelude::*;
 use glib::clone;
 use gtk4::prelude::*;
 use gtk4::{gdk, gio, glib};
-use katarustcore::{ApiClient, initiate_device_flow, poll_for_authorization, Config, Kata, Session, SessionInput};
+use katarustcore::{
+    ApiClient, Config, Kata, Session, SessionInput, initiate_device_flow, poll_for_authorization,
+};
 use libadwaita as adw;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -667,8 +669,13 @@ fn show_session_details(
 
                 let scrolled = gtk4::ScrolledWindow::new();
                 scrolled.set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic);
-                scrolled.set_min_content_height(200);
+                scrolled.set_min_content_height(160);
+                scrolled.set_vexpand(true);
+                viewport.set_vexpand(true);
                 scrolled.set_child(Some(&viewport));
+
+                // Allow this group to claim extra vertical space in the page
+                notes_group.set_vexpand(true);
 
                 clamp.set_child(Some(&scrolled));
                 notes_group.add(&clamp);
@@ -964,13 +971,14 @@ fn build_session_form(
 
     let notes_entry = gtk4::TextView::new();
     notes_entry.set_wrap_mode(gtk4::WrapMode::Word);
-    notes_entry.set_height_request(120);
+    notes_entry.set_vexpand(true);
     notes_entry.add_css_class("card");
 
     let scrolled = gtk4::ScrolledWindow::new();
     scrolled.set_child(Some(&notes_entry));
-    scrolled.set_height_request(120);
+    scrolled.set_vexpand(true);
 
+    notes_group.set_vexpand(true);
     notes_group.add(&scrolled);
     form_box.append(&notes_group);
 
