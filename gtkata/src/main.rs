@@ -977,6 +977,7 @@ fn build_session_form(
     let scrolled = gtk4::ScrolledWindow::new();
     scrolled.set_child(Some(&notes_entry));
     scrolled.set_vexpand(true);
+    scrolled.set_height_request(200);
 
     notes_group.set_vexpand(true);
     notes_group.add(&scrolled);
