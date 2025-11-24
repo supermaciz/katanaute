@@ -29,7 +29,7 @@ This is a graphical user interface (GUI) application for Linux written in Rust u
 
 ## GTK4 and libadwaita Guidelines
 
-- This project uses **GTK4 0.9** and **libadwaita 0.7**
+- This project uses **GTK4** and **libadwaita**
 - **DO NOT** use relm4 - this is a pure GTK4/libadwaita application
 - Follow GNOME Human Interface Guidelines: https://developer.gnome.org/hig
 
