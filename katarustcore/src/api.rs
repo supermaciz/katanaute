@@ -156,3 +156,22 @@ impl ApiClient {
         Ok(api_response.data)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn set_token_sets_token() {
+        let mut client = ApiClient::new("http://example".into(), None);
+        client.set_token("abc123".into());
+        assert_eq!(client.token, Some("abc123".into()));
+    }
+
+    #[test]
+    fn clear_token_clears_token() {
+        let mut client = ApiClient::new("http://example".into(), Some("initial".into()));
+        client.clear_token();
+        assert!(client.token.is_none());
+    }
+}
