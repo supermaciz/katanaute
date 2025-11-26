@@ -16,8 +16,11 @@ const APP_ID: &str = "org.katanaute.GTKata";
 
 const BELT_CSS: &str = r#"
 .belt-pill {
-  padding: 0 6px;
-  min-width: 60px;
+  padding: 3px 10px;
+  min-width: 56px;
+  min-height: 0;
+  line-height: 1.0;
+  border-radius: 999px;
   text-align: center;
 }
 
@@ -518,8 +521,8 @@ fn create_session_row(
     if let Some(kata) = &session.kata {
         let level_label = gtk4::Label::new(Some(&kata.level));
         level_label.add_css_class("caption");
-        level_label.add_css_class("pill");
         level_label.add_css_class("belt-pill");
+        level_label.set_valign(gtk4::Align::Center);
 
         // Belt-specific color classes
         let belt_class = match kata.level.as_str() {
@@ -537,6 +540,7 @@ fn create_session_row(
 
         // Create a container for belt badge and optional in-course icon
         let badge_container = gtk4::Box::new(gtk4::Orientation::Horizontal, 6);
+        badge_container.set_valign(gtk4::Align::Center);
 
         // Keep belts visually aligned by placing the icon before the badge
         if session.in_course {
@@ -607,8 +611,8 @@ fn show_session_details(
     if let Some(kata) = &session.kata {
         let level_label = gtk4::Label::new(Some(&kata.level));
         level_label.add_css_class("caption");
-        level_label.add_css_class("pill");
         level_label.add_css_class("belt-pill");
+        level_label.set_valign(gtk4::Align::Center);
 
         let belt_class = match kata.level.as_str() {
             "yellow" => "belt-yellow",
@@ -795,8 +799,8 @@ fn build_session_form(
 
         let level_label = gtk4::Label::new(Some(&kata.level));
         level_label.add_css_class("caption");
-        level_label.add_css_class("pill");
         level_label.add_css_class("belt-pill");
+        level_label.set_valign(gtk4::Align::Center);
 
         let belt_class = match kata.level.as_str() {
             "yellow" => "belt-yellow",
