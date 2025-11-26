@@ -119,7 +119,7 @@ impl AppState {
 
 /// Replace the entire navigation stack with the provided page so root transitions never hang.
 fn set_root_page(nav_view: &adw::NavigationView, page: &adw::NavigationPage) {
-    nav_view.replace(&[page.clone()]);
+    nav_view.replace(std::slice::from_ref(page));
 }
 
 fn build_ui(app: &adw::Application) {
