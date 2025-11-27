@@ -104,6 +104,30 @@ impl ApiClient {
         Ok(api_response.data)
     }
 
+    /// Delete a session by id
+    pub async fn delete_session(&self, session_id: i32) -> Result<(), Box<dyn std::error::Error>> {
+        let url = format!("{}/sessions/{}", self.base_url, session_id);
+
+        let mut request = self.client.delete(&url);
+
+        if let Some(token) = &self.token {
+            request = request.header("Authorization", format!("Bearer {}", token));
+        }
+
+        let response = request.send().await?;
+
+        if response.status() == 401 {
+            return Err("Unauthorized: please login first".into());
+        }
+
+        if response.status() != 204 {
+            let error_text = response.text().await?;
+            return Err(format!("Failed to delete session: {}", error_text).into());
+        }
+
+        Ok(())
+    }
+
     /// Initiate device flow authentication
     pub async fn initiate_device_flow(
         &self,
@@ -165,6 +189,41 @@ impl ApiClient {
 mod tests {
     use super::*;
 
+    use hyper::service::{make_service_fn, service_fn};
+    use hyper::{Body, Method, Request, Response, Server};
+    use tokio::net::TcpListener;
+    use tokio::sync::oneshot;
+
+    use std::convert::Infallible;
+    use std::sync::{Arc, Mutex};
+
+    async fn start_mock_server(
+        responder: impl Fn(Request<Body>) -> Response<Body> + Send + Sync + 'static,
+    ) -> Result<(String, oneshot::Sender<()>), Box<dyn std::error::Error>> {
+        let listener = TcpListener::bind("127.0.0.1:0").await?;
+        let addr = listener.local_addr()?;
+        let (shutdown_tx, shutdown_rx) = oneshot::channel();
+        let responder = Arc::new(responder);
+        let responder_clone = responder.clone();
+
+        let server = Server::from_tcp(listener.into_std()?)?
+            .serve(make_service_fn(move |_conn| {
+                let responder = responder_clone.clone();
+                async move {
+                    Ok::<_, Infallible>(service_fn(move |req: Request<Body>| {
+                        let responder = responder.clone();
+                        async move { Ok::<_, Infallible>(responder(req)) }
+                    }))
+                }
+            }))
+            .with_graceful_shutdown(async {
+                let _ = shutdown_rx.await;
+            });
+
+        tokio::spawn(server);
+        Ok((format!("http://{}", addr), shutdown_tx))
+    }
+
     #[test]
     fn set_token_sets_token() {
         let mut client = ApiClient::new("http://example".into(), None);
@@ -177,5 +236,65 @@ mod tests {
         let mut client = ApiClient::new("http://example".into(), Some("initial".into()));
         client.clear_token();
         assert!(client.token.is_none());
+    }
+
+    #[tokio::test]
+    async fn delete_session_sends_authorization_and_handles_no_content(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let captured_auth = Arc::new(Mutex::new(None));
+        let captured_auth_clone = captured_auth.clone();
+
+        let (base, shutdown) = start_mock_server(move |req| {
+            if req.method() == Method::DELETE && req.uri().path() == "/api/sessions/42" {
+                let auth_header = req
+                    .headers()
+                    .get("authorization")
+                    .and_then(|h| h.to_str().ok())
+                    .map(|h| h.to_string());
+                *captured_auth_clone.lock().unwrap() = auth_header;
+                return Response::builder().status(204).body(Body::empty()).unwrap();
+            }
+
+            Response::builder().status(404).body(Body::empty()).unwrap()
+        })
+        .await?;
+
+        let client = ApiClient::new(format!("{}/api", base), Some("token123".into()));
+        let result = client.delete_session(42).await;
+
+        shutdown.send(()).ok();
+
+        assert!(result.is_ok());
+        assert_eq!(
+            captured_auth.lock().unwrap().as_deref(),
+            Some("Bearer token123")
+        );
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn delete_session_returns_error_on_failure() -> Result<(), Box<dyn std::error::Error>> {
+        let (base, shutdown) = start_mock_server(|req| {
+            if req.method() == Method::DELETE && req.uri().path() == "/api/sessions/99" {
+                return Response::builder()
+                    .status(500)
+                    .body(Body::from("boom"))
+                    .unwrap();
+            }
+
+            Response::builder().status(404).body(Body::empty()).unwrap()
+        })
+        .await?;
+
+        let client = ApiClient::new(format!("{}/api", base), Some("token123".into()));
+        let result = client.delete_session(99).await;
+
+        shutdown.send(()).ok();
+
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Failed to delete session: boom"));
+
+        Ok(())
     }
 }
