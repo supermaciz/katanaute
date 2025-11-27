@@ -75,8 +75,12 @@ impl ApiClient {
     ) -> Result<Session, Box<dyn std::error::Error>> {
         let url = format!("{}/sessions", self.base_url);
 
-        let mut body = HashMap::new();
-        body.insert("session", session);
+        #[derive(serde::Serialize)]
+        struct CreateSessionRequest {
+            session: SessionInput,
+        }
+
+        let body = CreateSessionRequest { session };
 
         let mut request = self.client.post(&url).json(&body);
 
