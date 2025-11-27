@@ -577,7 +577,7 @@ fn create_session_row(
 
 fn show_session_details(
     nav_view: &adw::NavigationView,
-    _state: Rc<RefCell<AppState>>,
+    state: Rc<RefCell<AppState>>,
     session: Session,
 ) {
     let toolbar_view = adw::ToolbarView::new();
@@ -703,6 +703,30 @@ fn show_session_details(
         content_box.append(&notes_group);
     }
 
+    // Danger zone group for deletion
+    let danger_group = adw::PreferencesGroup::new();
+
+    // Error label for deletion failures
+    let delete_error_label = gtk4::Label::new(None);
+    delete_error_label.add_css_class("error");
+    delete_error_label.set_wrap(true);
+    delete_error_label.set_visible(false);
+    danger_group.add(&delete_error_label);
+
+    // Delete session button
+    let delete_button = gtk4::Button::with_label("Delete Session");
+    delete_button.add_css_class("destructive-action");
+    delete_button.add_css_class("pill");
+    delete_button.set_halign(gtk4::Align::Start);
+
+    // Disable button if session has no ID (shouldn't happen, but be safe)
+    if session.id.is_none() {
+        delete_button.set_sensitive(false);
+    }
+
+    danger_group.add(&delete_button);
+    content_box.append(&danger_group);
+
     // Create scrolled window for content
     let scrolled = gtk4::ScrolledWindow::new();
     scrolled.set_child(Some(&content_box));
@@ -715,6 +739,96 @@ fn show_session_details(
         .tag("session-details")
         .child(&toolbar_view)
         .build();
+
+    // Delete button handler
+    if let Some(session_id) = session.id {
+        delete_button.connect_clicked(clone!(
+            #[weak]
+            nav_view,
+            #[strong]
+            state,
+            #[weak]
+            delete_error_label,
+            #[weak]
+            delete_button,
+            move |_| {
+                // Create confirmation dialog
+                let dialog = adw::AlertDialog::builder()
+                    .heading("Delete Session?")
+                    .body("This action cannot be undone. The session will be permanently deleted.")
+                    .build();
+
+                // Add responses
+                dialog.add_responses(&[("cancel", "Cancel"), ("delete", "Delete")]);
+
+                // Style delete button as destructive
+                dialog.set_response_appearance("delete", adw::ResponseAppearance::Destructive);
+
+                // Set default and close responses
+                dialog.set_default_response(Some("cancel"));
+                dialog.set_close_response("cancel");
+
+                // Handle response
+                dialog.connect_response(
+                    None,
+                    clone!(
+                        #[weak]
+                        nav_view,
+                        #[strong]
+                        state,
+                        #[weak]
+                        delete_error_label,
+                        #[weak]
+                        delete_button,
+                        move |_, response| {
+                            if response == "delete" {
+                                // Disable button and hide errors during deletion
+                                delete_button.set_sensitive(false);
+                                delete_error_label.set_visible(false);
+
+                                let api_client = state.borrow().api_client.clone();
+
+                                glib::spawn_future_local(clone!(
+                                    #[weak]
+                                    nav_view,
+                                    #[weak]
+                                    delete_error_label,
+                                    #[weak]
+                                    delete_button,
+                                    #[strong]
+                                    state,
+                                    async move {
+                                        match api_client.delete_session(session_id).await {
+                                            Ok(_) => {
+                                                // Remove session from state
+                                                state
+                                                    .borrow_mut()
+                                                    .sessions
+                                                    .retain(|s| s.id != Some(session_id));
+
+                                                // Go back to session list and refresh it
+                                                show_session_list(&nav_view, state.clone());
+                                            }
+                                            Err(e) => {
+                                                delete_error_label.set_text(&format!(
+                                                    "Failed to delete session: {}",
+                                                    e
+                                                ));
+                                                delete_error_label.set_visible(true);
+                                                delete_button.set_sensitive(true);
+                                            }
+                                        }
+                                    }
+                                ));
+                            }
+                        }
+                    ),
+                );
+
+                dialog.present(Some(&nav_view));
+            }
+        ));
+    }
 
     nav_view.push(&page);
 }
