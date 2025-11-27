@@ -129,7 +129,7 @@ mod tests {
         let _guard = env_lock();
         let temp = tempfile::TempDir::new()?;
         unsafe { std::env::set_var("XDG_CONFIG_HOME", temp.path()) };
-        
+
         // Write config file with a different URL
         let config_dir = temp.path().join("katanaute");
         fs::create_dir_all(&config_dir)?;
@@ -138,17 +138,17 @@ mod tests {
             "base_url": "http://from-file"
         });
         fs::write(&config_file, serde_json::to_string_pretty(&config_content)?)?;
-        
+
         // Set env var to override
         unsafe { std::env::set_var("KATANAUTE_API_URL", "http://from-env") };
-        
+
         let cfg = Config::load()?;
         assert_eq!(cfg.base_url, "http://from-env");
-        
+
         // Clean up env vars
         unsafe { std::env::remove_var("XDG_CONFIG_HOME") };
         unsafe { std::env::remove_var("KATANAUTE_API_URL") };
-        
+
         Ok(())
     }
 
@@ -157,7 +157,7 @@ mod tests {
         let _guard = env_lock();
         let temp = tempfile::TempDir::new()?;
         unsafe { std::env::set_var("XDG_CONFIG_HOME", temp.path()) };
-        
+
         // Write config file with a specific URL
         let config_dir = temp.path().join("katanaute");
         fs::create_dir_all(&config_dir)?;
@@ -166,16 +166,16 @@ mod tests {
             "base_url": "http://from-file"
         });
         fs::write(&config_file, serde_json::to_string_pretty(&config_content)?)?;
-        
+
         // Ensure env var is not set
         unsafe { std::env::remove_var("KATANAUTE_API_URL") };
-        
+
         let cfg = Config::load()?;
         assert_eq!(cfg.base_url, "http://from-file");
-        
+
         // Clean up env var
         unsafe { std::env::remove_var("XDG_CONFIG_HOME") };
-        
+
         Ok(())
     }
 
@@ -184,28 +184,28 @@ mod tests {
         let _guard = env_lock();
         let temp = tempfile::TempDir::new()?;
         unsafe { std::env::set_var("XDG_CONFIG_HOME", temp.path()) };
-        
+
         // Initial load should have no token
         let cfg = Config::load()?;
         assert!(cfg.api_token.is_none());
-        
+
         // Save token
         cfg.save_token("secret-token".to_string())?;
-        
+
         // Load again should have the token
         let cfg2 = Config::load()?;
         assert_eq!(cfg2.api_token, Some("secret-token".to_string()));
-        
+
         // Clear token
         cfg2.clear_token()?;
-        
+
         // Load again should have no token
         let cfg3 = Config::load()?;
         assert!(cfg3.api_token.is_none());
-        
+
         // Clean up env var
         unsafe { std::env::remove_var("XDG_CONFIG_HOME") };
-        
+
         Ok(())
     }
 }
