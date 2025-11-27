@@ -61,12 +61,14 @@ mod tests {
     use hyper::{Body, Method, Request, Response, Server};
     use serde_json::json;
     use std::convert::Infallible;
-    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicUsize, Ordering};
     use tokio::net::TcpListener;
     use tokio::sync::oneshot;
 
-    async fn start_device_token_server(responder: impl Fn(usize) -> Response<Body> + Send + Sync + 'static) -> Result<(String, oneshot::Sender<()>), Box<dyn std::error::Error>> {
+    async fn start_device_token_server(
+        responder: impl Fn(usize) -> Response<Body> + Send + Sync + 'static,
+    ) -> Result<(String, oneshot::Sender<()>), Box<dyn std::error::Error>> {
         let listener = TcpListener::bind("127.0.0.1:0").await?;
         let addr = listener.local_addr()?;
         let (shutdown_tx, shutdown_rx) = oneshot::channel();
@@ -84,11 +86,15 @@ mod tests {
                         let counter = counter.clone();
                         let responder = responder.clone();
                         async move {
-                            if req.method() == Method::POST && req.uri().path() == "/api/auth/device/token" {
+                            if req.method() == Method::POST
+                                && req.uri().path() == "/api/auth/device/token"
+                            {
                                 let idx = counter.fetch_add(1, Ordering::SeqCst);
                                 return Ok::<_, Infallible>(responder(idx));
                             }
-                            Ok::<_, Infallible>(Response::builder().status(404).body(Body::empty()).unwrap())
+                            Ok::<_, Infallible>(
+                                Response::builder().status(404).body(Body::empty()).unwrap(),
+                            )
                         }
                     }))
                 }
@@ -102,12 +108,14 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn poll_for_authorization_retries_and_returns_token() -> Result<(), Box<dyn std::error::Error>> {
+    async fn poll_for_authorization_retries_and_returns_token()
+    -> Result<(), Box<dyn std::error::Error>> {
         let device_code = "test-device-code".to_string();
 
         let (base, shutdown) = start_device_token_server(|idx| {
             if idx == 0 {
-                let body = json!({"error": "authorization_pending", "error_description": null}).to_string();
+                let body = json!({"error": "authorization_pending", "error_description": null})
+                    .to_string();
                 return Response::builder()
                     .status(200)
                     .header("content-type", "application/json")
@@ -142,7 +150,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn poll_for_authorization_fails_on_non_pending_error() -> Result<(), Box<dyn std::error::Error>> {
+    async fn poll_for_authorization_fails_on_non_pending_error()
+    -> Result<(), Box<dyn std::error::Error>> {
         let device_code = "test-device-code".to_string();
 
         let (base, shutdown) = start_device_token_server(|_| {

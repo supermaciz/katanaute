@@ -239,8 +239,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn delete_session_sends_authorization_and_handles_no_content(
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    async fn delete_session_sends_authorization_and_handles_no_content()
+    -> Result<(), Box<dyn std::error::Error>> {
         let captured_auth = Arc::new(Mutex::new(None));
         let captured_auth_clone = captured_auth.clone();
 
@@ -293,7 +293,12 @@ mod tests {
         shutdown.send(()).ok();
 
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Failed to delete session: boom"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Failed to delete session: boom")
+        );
 
         Ok(())
     }

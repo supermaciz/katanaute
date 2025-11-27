@@ -94,43 +94,71 @@ mod tests {
 
     #[test]
     fn level_color_yellow() {
-        let kata = Kata { id: 1, name: "Test".into(), level: "yellow".into() };
+        let kata = Kata {
+            id: 1,
+            name: "Test".into(),
+            level: "yellow".into(),
+        };
         assert_eq!(kata.level_color(), [1.0, 0.9, 0.0]);
     }
 
     #[test]
     fn level_color_orange() {
-        let kata = Kata { id: 1, name: "Test".into(), level: "orange".into() };
+        let kata = Kata {
+            id: 1,
+            name: "Test".into(),
+            level: "orange".into(),
+        };
         assert_eq!(kata.level_color(), [1.0, 0.6, 0.0]);
     }
 
     #[test]
     fn level_color_green() {
-        let kata = Kata { id: 1, name: "Test".into(), level: "green".into() };
+        let kata = Kata {
+            id: 1,
+            name: "Test".into(),
+            level: "green".into(),
+        };
         assert_eq!(kata.level_color(), [0.0, 0.8, 0.0]);
     }
 
     #[test]
     fn level_color_blue() {
-        let kata = Kata { id: 1, name: "Test".into(), level: "blue".into() };
+        let kata = Kata {
+            id: 1,
+            name: "Test".into(),
+            level: "blue".into(),
+        };
         assert_eq!(kata.level_color(), [0.0, 0.5, 1.0]);
     }
 
     #[test]
     fn level_color_brown() {
-        let kata = Kata { id: 1, name: "Test".into(), level: "brown".into() };
+        let kata = Kata {
+            id: 1,
+            name: "Test".into(),
+            level: "brown".into(),
+        };
         assert_eq!(kata.level_color(), [0.6, 0.4, 0.2]);
     }
 
     #[test]
     fn level_color_shodan() {
-        let kata = Kata { id: 1, name: "Test".into(), level: "shodan".into() };
+        let kata = Kata {
+            id: 1,
+            name: "Test".into(),
+            level: "shodan".into(),
+        };
         assert_eq!(kata.level_color(), [0.1, 0.1, 0.1]);
     }
 
     #[test]
     fn level_color_fallback_for_unknown_level() {
-        let kata = Kata { id: 1, name: "Test".into(), level: "foobar".into() };
+        let kata = Kata {
+            id: 1,
+            name: "Test".into(),
+            level: "foobar".into(),
+        };
         assert_eq!(kata.level_color(), [0.5, 0.5, 0.5]);
     }
 }
