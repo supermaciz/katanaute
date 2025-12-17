@@ -54,43 +54,44 @@ RUN mix local.hex --force \
 ENV MIX_ENV="prod"
 
 # install mix dependencies
-COPY mix.exs mix.lock ./
+COPY katanaute/mix.exs katanaute/mix.lock ./
 RUN mix deps.get --only $MIX_ENV
 RUN mkdir config
 
 # copy compile-time config files before we compile dependencies
 # to ensure any relevant config change will trigger the dependencies
 # to be re-compiled.
-COPY config/config.exs config/${MIX_ENV}.exs config/
+COPY katanaute/config/config.exs katanaute/config/${MIX_ENV}.exs config/
 RUN mix deps.compile
 
 RUN mix assets.setup
 
-COPY priv priv
+COPY katanaute/priv priv
 
 # Copy Mix task for React build
-COPY lib/mix lib/mix
+COPY katanaute/lib/mix lib/mix
 
-COPY lib lib
+COPY katanaute/lib lib
 
 # Compile the release
 RUN mix compile
 
-# Copy React source from parent directory context
-COPY ../katareact ../katareact
+# Copy React source to ../katareact so the mix task can find it
+RUN mkdir -p ../katareact
+COPY katareact ../katareact
 
 # Build React frontend using the Mix task
 RUN mix react.build
 
-COPY assets assets
+COPY katanaute/assets assets
 
 # compile assets
 RUN mix assets.deploy
 
 # Changes to config/runtime.exs don't require recompiling the code
-COPY config/runtime.exs config/
+COPY katanaute/config/runtime.exs config/
 
-COPY rel rel
+COPY katanaute/rel rel
 RUN mix release
 
 # start a new build stage so that the final image will only contain
